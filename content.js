@@ -34,9 +34,10 @@ function задатьАдресСтраницы(сАдрес, лЗаменить
 	location[лЗаменить ? 'replace' : 'assign'](сАдрес);
 }
 
-function вставитьНаСтраницу(фВставить) {
+function вставитьНаСтраницу() {
 	const узСкрипт = document.createElement('script');
-	узСкрипт.textContent = `\n\t\t'use strict';\n\t\t(${фВставить})();\n\t`;
+	// MV3-compliant: Injects the script by URL instead of using textContent.
+	узСкрипт.src = chrome.runtime.getURL('content_injection.js');
 	(document.head || document.documentElement).appendChild(узСкрипт);
 	узСкрипт.remove();
 }
@@ -456,42 +457,6 @@ function вставитьНашуКнопкуВПервыйРаз() {
 	}
 }
 
-function перехватитьФункции() {
-	let _лНеПерехватывать = false;
-	window.addEventListener('tw5-неперехватывать', () => {
-		_лНеПерехватывать = true;
-	});
-	const oTitleDescriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'title');
-	Object.defineProperty(document, 'title', {
-		configurable: oTitleDescriptor.configurable,
-		enumerable: oTitleDescriptor.enumerable,
-		get() {
-			return oTitleDescriptor.get.call(this);
-		},
-		set(title) {
-			if (_лНеПерехватывать) {
-				oTitleDescriptor.set.call(this, title);
-			} else if (this.documentElement.hasAttribute('data-tw5-перенаправление')) {} else {
-				oTitleDescriptor.set.call(this, title);
-				window.dispatchEvent(new CustomEvent('tw5-изменензаголовок'));
-			}
-		}
-	});
-	const fPushState = history.pushState;
-	history.pushState = function(state, title) {
-		if (_лНеПерехватывать) {
-			fPushState.apply(this, arguments);
-		} else if (document.documentElement.hasAttribute('data-tw5-перенаправление')) {} else {
-			const сБыло = location.pathname;
-			fPushState.apply(this, arguments);
-			if (сБыло !== location.pathname) {
-				oTitleDescriptor.set.call(document, 'Twitch');
-				window.dispatchEvent(new CustomEvent('tw5-pushstate'));
-			}
-		}
-	};
-}
-
 function ждатьЗагрузкуДомика() {
 	return new Promise(фВыполнить => {
 		if (document.readyState !== 'loading') {
@@ -557,17 +522,6 @@ function вставитьСторонниеРасширения() {
 	});
 }
 
-function разрешитьРаботуЧата() {
-	const fGetItem = Storage.prototype.getItem;
-	Storage.prototype.getItem = function(сИмя) {
-		let сЗначение = fGetItem.apply(this, arguments);
-		if (сИмя === 'TwitchCache:Layout' && сЗначение) {
-			сЗначение = сЗначение.replace('"isRightColumnClosedByUserAction":true', '"isRightColumnClosedByUserAction":false');
-		}
-		return сЗначение;
-	};
-}
-
 function изменитьСтильЧата() {
 	const узСтиль = document.createElement('link');
 	узСтиль.rel = 'stylesheet';
@@ -608,7 +562,7 @@ function удалитьХвостыСтаройВерсии() {}
 ДобавитьОбработчикИсключений(() => {
 	м_Журнал.Окак(`[content.js] Запущен ${performance.now().toFixed()}мс ${location.href}`);
 	if (разобратьАдрес(location).сСтраница === 'ЧАТ_КАНАЛА') {
-		вставитьНаСтраницу(разрешитьРаботуЧата);
+		вставитьНаСтраницу();
 		if (window.top !== window) {
 			вставитьСторонниеРасширения();
 			изменитьСтильЧата();
@@ -624,7 +578,7 @@ function удалитьХвостыСтаройВерсии() {}
 	м_Настройки.Восстановить().then(() => {
 		измененАдресСтраницы('LOAD');
 		window.addEventListener('tw5-pushstate', обработатьPushState);
-		вставитьНаСтраницу(перехватитьФункции);
+		вставитьНаСтраницу();
 		вставитьНашуКнопкуВПервыйРаз();
 	}).catch(м_Отладка.ПойманоИсключение);
 })();
