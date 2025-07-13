@@ -1,0 +1,51 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        { "header": "origin", "operation": "remove" },
+        { "header": "referer", "operation": "remove" },
+        {
+          "header": "Origin",
+          "operation": "set",
+          "value": "https://www.twitch.tv"
+        },
+        {
+          "header": "Referer",
+          "operation": "set",
+          "value": "https://www.twitch.tv/"
+        }
+      ]
+    },
+    "condition": {
+      "initiatorDomains": ["__MSG_@@extension_id__"],
+      "resourceTypes": ["xmlhttprequest"],
+      "requestDomains": [
+        "twitch.tv",
+        "twitchcdn.net",
+        "ttvnw.net",
+        "jtvnw.net",
+        "live-video.net",
+        "akamaized.net",
+        "cloudfront.net"
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        { "header": "x-frame-options", "operation": "remove" },
+        { "header": "content-security-policy", "operation": "remove" }
+      ]
+    },
+    "condition": {
+      "regexFilter": "^https://www\\.twitch\\.tv/((popout|embed)/.+/chat|.+/chat\\?.*|popout/)$",
+      "resourceTypes": ["sub_frame"]
+    }
+  }
+]
