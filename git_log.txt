@@ -1,0 +1,1 @@
+a00bad2 feat: enhance extension communication and channel handling

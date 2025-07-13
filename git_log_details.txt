@@ -1,0 +1,50 @@
+commit 5255d8fcca971a8c1ab74989bb5e61b013358556
+Author: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>
+Date:   Sun Jul 13 16:50:34 2025 +0000
+
+    Apply patch /tmp/28abcbe8-a19e-4d74-9b14-fa342bc792e7.patch
+
+A	git_log.txt
+
+commit a00bad2317d3d12bc21bf781c2dc893485ee5bb4
+Author: SevWren <mmueller07@gmail.com>
+Date:   Sat Jul 12 20:47:54 2025 -0500
+
+    feat: enhance extension communication and channel handling
+
+    Adds listeners for inter-script communication to facilitate
+    extension functionality, including fetching installed extensions
+    and checking for duplicate channel instances. This improves
+    integration and prevents redundant player instances.
+
+A	LICENSE
+A	_locales/en/messages.json
+A	_locales/ru/messages.json
+A	_metadata/generated_indexed_rulesets/_ruleset1
+A	asmjs.js
+A	autoclaim.js
+A	background.js
+A	common.css
+A	common.js
+A	content.css
+A	content.js
+A	content_injection.js
+A	digest.txt
+A	gql_injection.js
+A	gqltoken.js
+A	manifest.json
+A	manifest.png
+A	player.css
+A	player.html
+A	player.js
+A	player.svg
+A	pointerevent.js
+A	recycler.js
+A	report.css
+A	report.html
+A	rules.json
+A	sources/README
+A	sources/wasm.wat
+A	translate.svg
+A	wasm.wasm
+A	worker.js
