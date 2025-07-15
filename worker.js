@@ -1,40 +1,44 @@
 'use strict';
+/**
+ * @fileoverview This file contains the worker script for processing video and audio segments.
+ * It includes functionality for parsing transport streams, extracting elementary streams,
+ * and creating initialization and media segments for MSE.
+ */
+var MAKE_FIRST_FRAME_KEY = getBrowserEngineVersion() < 50;
 
-var ДЕЛАТЬ_ПЕРВЫЙ_КАДР_КЛЮЧЕВЫМ = получитьВерсиюДвижкаБраузера() < 50;
+var STATE_CHANGE_VARIANT = 9;
 
-var СОСТОЯНИЕ_СМЕНА_ВАРИАНТА = 9;
-
-function Проверить(пУсловие) {
-	if (!пУсловие) {
-		throw new Error('Проверка не пройдена');
+function Check(pCondition) {
+	if (!pCondition) {
+		throw new Error('Check failed');
 	}
 }
 
-function получитьВерсиюДвижкаБраузера() {
-	if (!получитьВерсиюДвижкаБраузера.hasOwnProperty('_чРезультат')) {
+function getBrowserEngineVersion() {
+	if (!getBrowserEngineVersion.hasOwnProperty('_nResult')) {
 		if (navigator.userAgentData) {
 			for (const {brand, version} of navigator.userAgentData.brands) {
 				if (brand === 'Chromium' || brand === 'Google Chrome') {
-					получитьВерсиюДвижкаБраузера._чРезультат = Number.parseInt(version, 10);
+					getBrowserEngineVersion._nResult = Number.parseInt(version, 10);
 					break;
 				}
 			}
 		}
-		if (!получитьВерсиюДвижкаБраузера._чРезультат) {
-			получитьВерсиюДвижкаБраузера._чРезультат = navigator.userAgent ? Number.parseInt(/Chrome\/(\d+)/.exec(navigator.userAgent)[1], 10) : 89;
+		if (!getBrowserEngineVersion._nResult) {
+			getBrowserEngineVersion._nResult = navigator.userAgent ? Number.parseInt(/Chrome\/(\d+)/.exec(navigator.userAgent)[1], 10) : 89;
 		}
 	}
-	return получитьВерсиюДвижкаБраузера._чРезультат;
+	return getBrowserEngineVersion._nResult;
 }
 
-function этоМобильноеУстройство() {
-	if (!этоМобильноеУстройство.hasOwnProperty('_лРезультат')) {
-		этоМобильноеУстройство._лРезультат = navigator.userAgentData ? navigator.userAgentData.mobile : navigator.userAgent.includes('Android');
+function isMobileDevice() {
+	if (!isMobileDevice.hasOwnProperty('_bResult')) {
+		isMobileDevice._bResult = navigator.userAgentData ? navigator.userAgentData.mobile : navigator.userAgent.includes('Android');
 	}
-	return этоМобильноеУстройство._лРезультат;
+	return isMobileDevice._bResult;
 }
 
-if (получитьВерсиюДвижкаБраузера() < 58) {
+if (getBrowserEngineVersion() < 58) {
 	Uint8Array.prototype.copyWithin = function(target, begin, end) {
 		target |= 0;
 		begin |= 0;
@@ -52,310 +56,310 @@ if (получитьВерсиюДвижкаБраузера() < 58) {
 	};
 }
 
-if (получитьВерсиюДвижкаБраузера() >= 70) {
-	var СоздатьDataView = мбБуфер => new DataView(мбБуфер.buffer);
+if (getBrowserEngineVersion() >= 70) {
+	var CreateDataView = abBuffer => new DataView(abBuffer.buffer);
 } else {
-	СоздатьDataView = (мбБуфер => мбБуфер);
-	Uint8Array.prototype.getUint8 = function(у) {
-		у |= 0;
-		return this[у];
+	CreateDataView = (abBuffer => abBuffer);
+	Uint8Array.prototype.getUint8 = function(p) {
+		p |= 0;
+		return this[p];
 	};
-	Uint8Array.prototype.getInt16 = function(у) {
-		у |= 0;
-		return this[у] << 24 >> 16 | this[у + 1 | 0];
+	Uint8Array.prototype.getInt16 = function(p) {
+		p |= 0;
+		return this[p] << 24 >> 16 | this[p + 1 | 0];
 	};
-	Uint8Array.prototype.getUint16 = function(у) {
-		у |= 0;
-		return this[у] << 8 | this[у + 1 | 0];
+	Uint8Array.prototype.getUint16 = function(p) {
+		p |= 0;
+		return this[p] << 8 | this[p + 1 | 0];
 	};
-	Uint8Array.prototype.getInt32 = function(у) {
-		у |= 0;
-		return this[у] << 24 | this[у + 1 | 0] << 16 | this[у + 2 | 0] << 8 | this[у + 3 | 0];
+	Uint8Array.prototype.getInt32 = function(p) {
+		p |= 0;
+		return this[p] << 24 | this[p + 1 | 0] << 16 | this[p + 2 | 0] << 8 | this[p + 3 | 0];
 	};
-	Uint8Array.prototype.getUint32 = function(у) {
-		у |= 0;
-		return (this[у] << 24 | this[у + 1 | 0] << 16 | this[у + 2 | 0] << 8 | this[у + 3 | 0]) >>> 0;
+	Uint8Array.prototype.getUint32 = function(p) {
+		p |= 0;
+		return (this[p] << 24 | this[p + 1 | 0] << 16 | this[p + 2 | 0] << 8 | this[p + 3 | 0]) >>> 0;
 	};
-	Uint8Array.prototype.setInt8 = Uint8Array.prototype.setUint8 = function(у, чЗначение) {
-		у |= 0;
-		чЗначение |= 0;
-		this[у] = чЗначение;
+	Uint8Array.prototype.setInt8 = Uint8Array.prototype.setUint8 = function(p, nValue) {
+		p |= 0;
+		nValue |= 0;
+		this[p] = nValue;
 	};
-	Uint8Array.prototype.setInt16 = Uint8Array.prototype.setUint16 = function(у, чЗначение) {
-		у |= 0;
-		чЗначение |= 0;
-		this[у] = чЗначение >> 8;
-		this[у + 1 | 0] = чЗначение;
+	Uint8Array.prototype.setInt16 = Uint8Array.prototype.setUint16 = function(p, nValue) {
+		p |= 0;
+		nValue |= 0;
+		this[p] = nValue >> 8;
+		this[p + 1 | 0] = nValue;
 	};
-	Uint8Array.prototype.setInt32 = Uint8Array.prototype.setUint32 = function(у, чЗначение) {
-		у |= 0;
-		чЗначение |= 0;
-		this[у] = чЗначение >> 24;
-		this[у + 1 | 0] = чЗначение >> 16;
-		this[у + 2 | 0] = чЗначение >> 8;
-		this[у + 3 | 0] = чЗначение;
+	Uint8Array.prototype.setInt32 = Uint8Array.prototype.setUint32 = function(p, nValue) {
+		p |= 0;
+		nValue |= 0;
+		this[p] = nValue >> 24;
+		this[p + 1 | 0] = nValue >> 16;
+		this[p + 2 | 0] = nValue >> 8;
+		this[p + 3 | 0] = nValue;
 	};
 }
 
-Uint8Array.prototype.getUint64 = function(у) {
-	у |= 0;
-	return ((this[у] << 24 | this[у + 1 | 0] << 16 | this[у + 2 | 0] << 8 | this[у + 3 | 0]) >>> 0) * 4294967296 + ((this[у + 4 | 0] << 24 | this[у + 5 | 0] << 16 | this[у + 6 | 0] << 8 | this[у + 7 | 0]) >>> 0);
+Uint8Array.prototype.getUint64 = function(p) {
+	p |= 0;
+	return ((this[p] << 24 | this[p + 1 | 0] << 16 | this[p + 2 | 0] << 8 | this[p + 3 | 0]) >>> 0) * 4294967296 + ((this[p + 4 | 0] << 24 | this[p + 5 | 0] << 16 | this[p + 6 | 0] << 8 | this[p + 7 | 0]) >>> 0);
 };
 
-Uint8Array.prototype.setInt64 = Uint8Array.prototype.setUint64 = function(у, чЗначение) {
-	у |= 0;
-	var ч = Math.trunc(чЗначение);
-	if (ч < Number.MIN_SAFE_INTEGER || ч > Number.MAX_SAFE_INTEGER) {
-		throw new Error(чЗначение);
+Uint8Array.prototype.setInt64 = Uint8Array.prototype.setUint64 = function(p, nValue) {
+	p |= 0;
+	var n = Math.trunc(nValue);
+	if (n < Number.MIN_SAFE_INTEGER || n > Number.MAX_SAFE_INTEGER) {
+		throw new Error(nValue);
 	}
-	var ч32 = ч / 4294967296 | 0;
-	this[у] = ч32 >> 24;
-	this[у + 1 | 0] = ч32 >> 16;
-	this[у + 2 | 0] = ч32 >> 8;
-	this[у + 3 | 0] = ч32;
-	ч32 = ч | 0;
-	this[у + 4 | 0] = ч32 >> 24;
-	this[у + 5 | 0] = ч32 >> 16;
-	this[у + 6 | 0] = ч32 >> 8;
-	this[у + 7 | 0] = ч32;
+	var n32 = n / 4294967296 | 0;
+	this[p] = n32 >> 24;
+	this[p + 1 | 0] = n32 >> 16;
+	this[p + 2 | 0] = n32 >> 8;
+	this[p + 3 | 0] = n32;
+	n32 = n | 0;
+	this[p + 4 | 0] = n32 >> 24;
+	this[p + 5 | 0] = n32 >> 16;
+	this[p + 6 | 0] = n32 >> 8;
+	this[p + 7 | 0] = n32;
 };
 
 class Wasm {
 	constructor() {
-		this._оМодуль = null;
-		this._оПамять = null;
-		this._оЭкземпляр = null;
+		this._oModule = null;
+		this._oMemory = null;
+		this._oInstance = null;
 	}
-	_РассчитатьРазмерКучи(кбРазмер) {
-		return Math.ceil(кбРазмер) + (Wasm.РАЗМЕР_СТРАНИЦЫ - 1) & ~(Wasm.РАЗМЕР_СТРАНИЦЫ - 1);
+	_CalculateHeapSize(nSize) {
+		return Math.ceil(nSize) + (Wasm.PAGE_SIZE - 1) & ~(Wasm.PAGE_SIZE - 1);
 	}
-	Компилировать() {
-		return fetch('wasm.wasm').then(оОтвет => оОтвет.arrayBuffer()).then(буфКод => WebAssembly.compile ? WebAssembly.compile(буфКод) : new WebAssembly.Module(буфКод)).then(оМодуль => {
-			this._оМодуль = оМодуль;
+	Compile() {
+		return fetch('wasm.wasm').then(oResponse => oResponse.arrayBuffer()).then(bufCode => WebAssembly.compile ? WebAssembly.compile(bufCode) : new WebAssembly.Module(bufCode)).then(oModule => {
+			this._oModule = oModule;
 		});
 	}
-	ВыделитьПамять(кбРазмер) {
-		кбРазмер = this._РассчитатьРазмерКучи(кбРазмер);
-		if (this._оПамять === null) {
-			this._оПамять = new WebAssembly.Memory({
-				initial: кбРазмер / Wasm.РАЗМЕР_СТРАНИЦЫ
+	AllocateMemory(nSize) {
+		nSize = this._CalculateHeapSize(nSize);
+		if (this._oMemory === null) {
+			this._oMemory = new WebAssembly.Memory({
+				initial: nSize / Wasm.PAGE_SIZE
 			});
-			this._оЭкземпляр = new WebAssembly.Instance(this._оМодуль, {
+			this._oInstance = new WebAssembly.Instance(this._oModule, {
 				i: {
-					m: this._оПамять
+					m: this._oMemory
 				}
 			});
 		} else {
-			this._оПамять.grow((кбРазмер - this._оПамять.buffer.byteLength) / Wasm.РАЗМЕР_СТРАНИЦЫ);
+			this._oMemory.grow((nSize - this._oMemory.buffer.byteLength) / Wasm.PAGE_SIZE);
 		}
-		return [ this._оПамять.buffer, this._оЭкземпляр.exports ];
+		return [ this._oMemory.buffer, this._oInstance.exports ];
 	}
-	ОсвободитьПамять() {
-		this._оПамять = null;
-		this._оЭкземпляр = null;
+	FreeMemory() {
+		this._oMemory = null;
+		this._oInstance = null;
 	}
-	static Доступен() {
+	static IsAvailable() {
 		return !!self.WebAssembly;
 	}
 }
 
-Wasm.РАЗМЕР_СТРАНИЦЫ = 65536;
+Wasm.PAGE_SIZE = 65536;
 
 class Asmjs {
-	_РассчитатьРазмерКучи(кбРазмер) {
-		кбРазмер = Math.ceil(кбРазмер);
-		if (кбРазмер <= Wasm.РАЗМЕР_СТРАНИЦЫ) {
-			return Wasm.РАЗМЕР_СТРАНИЦЫ;
+	_CalculateHeapSize(nSize) {
+		nSize = Math.ceil(nSize);
+		if (nSize <= Wasm.PAGE_SIZE) {
+			return Wasm.PAGE_SIZE;
 		}
-		if (кбРазмер < 1 << 24) {
-			return 1 << 32 - Math.clz32(кбРазмер - 1);
+		if (nSize < 1 << 24) {
+			return 1 << 32 - Math.clz32(nSize - 1);
 		}
-		return кбРазмер + 16777215 & 4278190080;
+		return nSize + 16777215 & 4278190080;
 	}
-	Компилировать() {
+	Compile() {
 		importScripts('asmjs.js');
 		return Promise.resolve();
 	}
-	ВыделитьПамять(кбРазмер) {
-		кбРазмер = this._РассчитатьРазмерКучи(кбРазмер);
-		var буфКуча = new ArrayBuffer(кбРазмер);
-		return [ буфКуча, AsmjsModule(self, null, буфКуча) ];
+	AllocateMemory(nSize) {
+		nSize = this._CalculateHeapSize(nSize);
+		var bufHeap = new ArrayBuffer(nSize);
+		return [ bufHeap, AsmjsModule(self, null, bufHeap) ];
 	}
-	ОсвободитьПамять() {}
+	FreeMemory() {}
 }
 
-class ПотокБитов {
-	constructor(мбБуфер, уНачало, уКонец) {
-		Проверить(Number.isInteger(уНачало) && Number.isInteger(уКонец) && уНачало >= 0 && уКонец <= мбБуфер.length && уКонец >= уНачало);
-		this._мбБуфер = мбБуфер;
-		this._уСледующийБайт = уНачало;
-		this._чСледующийБит = 7;
-		this.кБитОсталось = (уКонец - уНачало) * 8;
+class BitStream {
+	constructor(abBuffer, pStart, pEnd) {
+		Check(Number.isInteger(pStart) && Number.isInteger(pEnd) && pStart >= 0 && pEnd <= abBuffer.length && pEnd >= pStart);
+		this._abBuffer = abBuffer;
+		this._pNextByte = pStart;
+		this._nNextBit = 7;
+		this.nBitsLeft = (pEnd - pStart) * 8;
 	}
-	ПропуститьБиты(кБиты) {
-		Проверить(Number.isInteger(кБиты));
-		Проверить((this.кБитОсталось -= кБиты) >= 0);
-		if (кБиты === 1) {
-			if (--this._чСледующийБит < 0) {
-				this._чСледующийБит = 7;
-				++this._уСледующийБайт;
+	SkipBits(nBits) {
+		Check(Number.isInteger(nBits));
+		Check((this.nBitsLeft -= nBits) >= 0);
+		if (nBits === 1) {
+			if (--this._nNextBit < 0) {
+				this._nNextBit = 7;
+				++this._pNextByte;
 			}
 		} else {
-			var ч = this._чСледующийБит - кБиты;
-			if (ч >= 0) {
-				this._чСледующийБит = ч;
+			var n = this._nNextBit - nBits;
+			if (n >= 0) {
+				this._nNextBit = n;
 			} else {
-				ч = -ч - 1;
-				this._чСледующийБит = 7 - (ч & 7);
-				this._уСледующийБайт += (ч >>> 3) + 1;
+				n = -n - 1;
+				this._nNextBit = 7 - (n & 7);
+				this._pNextByte += (n >>> 3) + 1;
 			}
 		}
 	}
-	ПрочестьБиты(кБиты) {
-		Проверить(Number.isInteger(кБиты));
-		Проверить((this.кБитОсталось -= кБиты) >= 0);
-		if (кБиты === 1) {
-			чРезультат = this._мбБуфер[this._уСледующийБайт] >>> this._чСледующийБит & 1;
-			if (--this._чСледующийБит < 0) {
-				this._чСледующийБит = 7;
-				++this._уСледующийБайт;
+	ReadBits(nBits) {
+		Check(Number.isInteger(nBits));
+		Check((this.nBitsLeft -= nBits) >= 0);
+		if (nBits === 1) {
+			nResult = this._abBuffer[this._pNextByte] >>> this._nNextBit & 1;
+			if (--this._nNextBit < 0) {
+				this._nNextBit = 7;
+				++this._pNextByte;
 			}
 		} else {
-			Проверить(кБиты >= 1 && кБиты <= 32);
-			var чРезультат = 0;
-			var чСледующийБитРезультата = кБиты - 1;
-			var чМаска = (1 << this._чСледующийБит + 1) - 1;
+			Check(nBits >= 1 && nBits <= 32);
+			var nResult = 0;
+			var nNextBitResult = nBits - 1;
+			var nMask = (1 << this._nNextBit + 1) - 1;
 			do {
-				var чБиты = this._мбБуфер[this._уСледующийБайт] & чМаска;
-				чРезультат |= this._чСледующийБит < чСледующийБитРезультата ? чБиты << чСледующийБитРезультата - this._чСледующийБит : чБиты >>> this._чСледующийБит - чСледующийБитРезультата;
-				var кБитДобавлено = Math.min(чСледующийБитРезультата, this._чСледующийБит) + 1;
-				if ((this._чСледующийБит -= кБитДобавлено) < 0) {
-					this._чСледующийБит = 7;
-					++this._уСледующийБайт;
-					чМаска = 255;
+				var nBitsRead = this._abBuffer[this._pNextByte] & nMask;
+				nResult |= this._nNextBit < nNextBitResult ? nBitsRead << nNextBitResult - this._nNextBit : nBitsRead >>> this._nNextBit - nNextBitResult;
+				var nBitsAdded = Math.min(nNextBitResult, this._nNextBit) + 1;
+				if ((this._nNextBit -= nBitsAdded) < 0) {
+					this._nNextBit = 7;
+					++this._pNextByte;
+					nMask = 255;
 				}
-			} while ((чСледующийБитРезультата -= кБитДобавлено) >= 0);
+			} while ((nNextBitResult -= nBitsAdded) >= 0);
 		}
-		return чРезультат >>> 0;
+		return nResult >>> 0;
 	}
-	ПрочестьБеззнаковыйЭКГ() {
-		for (var кНачальныеНули = 0; this.ПрочестьБиты(1) === 0; ++кНачальныеНули) {}
-		Проверить(кНачальныеНули <= 31);
-		return кНачальныеНули === 0 ? 0 : (1 << кНачальныеНули >>> 0) - 1 + this.ПрочестьБиты(кНачальныеНули);
+	ReadUnsignedExpGolomb() {
+		for (var nLeadingZeros = 0; this.ReadBits(1) === 0; ++nLeadingZeros) {}
+		Check(nLeadingZeros <= 31);
+		return nLeadingZeros === 0 ? 0 : (1 << nLeadingZeros >>> 0) - 1 + this.ReadBits(nLeadingZeros);
 	}
-	ПрочестьЗнаковыйЭКГ() {
-		var ч = this.ПрочестьБеззнаковыйЭКГ();
-		return (ч & 1) != 0 ? Math.ceil(ч / 2) : -ч / 2;
+	ReadSignedExpGolomb() {
+		var n = this.ReadUnsignedExpGolomb();
+		return (n & 1) != 0 ? Math.ceil(n / 2) : -n / 2;
 	}
-	ПропуститьЭКГ() {
-		for (var кНачальныеНули = 0; this.ПрочестьБиты(1) === 0; ++кНачальныеНули) {}
-		if (кНачальныеНули !== 0) {
-			this.ПропуститьБиты(кНачальныеНули);
+	SkipExpGolomb() {
+		for (var nLeadingZeros = 0; this.ReadBits(1) === 0; ++nLeadingZeros) {}
+		if (nLeadingZeros !== 0) {
+			this.SkipBits(nLeadingZeros);
 		}
 	}
 }
 
 class IsoBaseMedia {
-	constructor(мбБуфер, dvБуфер, уНачало) {
-		Проверить(Number.isInteger(уНачало) && уНачало >= 0 && уНачало <= мбБуфер.length);
-		this.мбБуфер = мбБуфер;
-		this.dvБуфер = dvБуфер;
-		this.уНачало = уНачало;
-		this.уКонец = уНачало;
+	constructor(abBuffer, dvBuffer, pStart) {
+		Check(Number.isInteger(pStart) && pStart >= 0 && pStart <= abBuffer.length);
+		this.abBuffer = abBuffer;
+		this.dvBuffer = dvBuffer;
+		this.pStart = pStart;
+		this.pEnd = pStart;
 	}
-	Завершить() {
-		Проверить(Number.isInteger(this.уКонец) && this.уКонец >= this.уНачало && this.уКонец <= this.мбБуфер.length);
-		return this.мбБуфер.subarray(this.уНачало, this.уКонец);
+	Finish() {
+		Check(Number.isInteger(this.pEnd) && this.pEnd >= this.pStart && this.pEnd <= this.abBuffer.length);
+		return this.abBuffer.subarray(this.pStart, this.pEnd);
 	}
-	AddFullBox(сТип, чВерсия, чФлаги, пСодержимое) {
-		Проверить(сТип.length === 4 && Number.isFinite(чВерсия) && Number.isFinite(чФлаги));
-		Проверить(this.уКонец >= this.уНачало);
-		var уНачало = this.уКонец;
-		Проверить(this.мбБуфер.length - this.уКонец >= 8);
-		this.мбБуфер[уНачало + 4] = сТип.charCodeAt(0);
-		this.мбБуфер[уНачало + 5] = сТип.charCodeAt(1);
-		this.мбБуфер[уНачало + 6] = сТип.charCodeAt(2);
-		this.мбБуфер[уНачало + 7] = сТип.charCodeAt(3);
-		this.уКонец += 8;
-		if (чВерсия !== -1) {
-			Проверить(чВерсия >= 0 && чВерсия <= 255 && чФлаги >= 0 && чФлаги <= 16777215);
-			Проверить(this.мбБуфер.length - this.уКонец >= 4);
-			this.dvБуфер.setUint32(уНачало + 8, чВерсия << 24 | чФлаги);
-			this.уКонец += 4;
+	AddFullBox(sType, nVersion, nFlags, pContent) {
+		Check(sType.length === 4 && Number.isFinite(nVersion) && Number.isFinite(nFlags));
+		Check(this.pEnd >= this.pStart);
+		var pStart = this.pEnd;
+		Check(this.abBuffer.length - this.pEnd >= 8);
+		this.abBuffer[pStart + 4] = sType.charCodeAt(0);
+		this.abBuffer[pStart + 5] = sType.charCodeAt(1);
+		this.abBuffer[pStart + 6] = sType.charCodeAt(2);
+		this.abBuffer[pStart + 7] = sType.charCodeAt(3);
+		this.pEnd += 8;
+		if (nVersion !== -1) {
+			Check(nVersion >= 0 && nVersion <= 255 && nFlags >= 0 && nFlags <= 16777215);
+			Check(this.abBuffer.length - this.pEnd >= 4);
+			this.dvBuffer.setUint32(pStart + 8, nVersion << 24 | nFlags);
+			this.pEnd += 4;
 		}
-		if (typeof пСодержимое == 'number') {
-			Проверить(Number.isInteger(пСодержимое) && пСодержимое >= 0);
-			this.уКонец += пСодержимое;
-			Проверить(this.уКонец <= this.мбБуфер.length);
-		} else if (typeof пСодержимое == 'function') {
-			var у = this.уКонец;
-			пСодержимое();
-			Проверить(Number.isInteger(this.уКонец) && this.уКонец >= у && this.уКонец <= this.мбБуфер.length);
+		if (typeof pContent == 'number') {
+			Check(Number.isInteger(pContent) && pContent >= 0);
+			this.pEnd += pContent;
+			Check(this.pEnd <= this.abBuffer.length);
+		} else if (typeof pContent == 'function') {
+			var p = this.pEnd;
+			pContent();
+			Check(Number.isInteger(this.pEnd) && this.pEnd >= p && this.pEnd <= this.abBuffer.length);
 		} else {
-			this.КопироватьИзМассива(this.уКонец, пСодержимое);
+			this.CopyFromArray(this.pEnd, pContent);
 		}
-		this.dvБуфер.setUint32(уНачало, this.уКонец - уНачало);
+		this.dvBuffer.setUint32(pStart, this.pEnd - pStart);
 	}
-	AddBox(сТип, пСодержимое) {
-		return this.AddFullBox(сТип, -1, -1, пСодержимое);
+	AddBox(sType, pContent) {
+		return this.AddFullBox(sType, -1, -1, pContent);
 	}
-	КопироватьИзМассива(уКуда, мчОткуда) {
-		Проверить(Number.isInteger(уКуда) && уКуда >= this.уКонец);
-		this.мбБуфер.set(мчОткуда, уКуда);
-		this.уКонец = уКуда + мчОткуда.length;
+	CopyFromArray(pTo, acFrom) {
+		Check(Number.isInteger(pTo) && pTo >= this.pEnd);
+		this.abBuffer.set(acFrom, pTo);
+		this.pEnd = pTo + acFrom.length;
 	}
-	КопироватьИзБуфера(уКуда, мбОткуда, уНачало, уКонец) {
-		Проверить(Number.isInteger(уКуда) && уКуда >= this.уКонец);
-		Проверить(мбОткуда.buffer !== this.мбБуфер.buffer);
+	CopyFromBuffer(pTo, abFrom, pStart, pEnd) {
+		Check(Number.isInteger(pTo) && pTo >= this.pEnd);
+		Check(abFrom.buffer !== this.abBuffer.buffer);
 		if (arguments.length === 2) {
-			this.мбБуфер.set(мбОткуда, уКуда);
-			this.уКонец = уКуда + мбОткуда.length;
+			this.abBuffer.set(abFrom, pTo);
+			this.pEnd = pTo + abFrom.length;
 		} else {
-			Проверить(Number.isInteger(уНачало) && Number.isInteger(уКонец) && мбОткуда.byteOffset === 0);
-			this.мбБуфер.set(new Uint8Array(мбОткуда.buffer, уНачало, уКонец - уНачало), уКуда);
-			this.уКонец = уКуда + уКонец - уНачало;
+			Check(Number.isInteger(pStart) && Number.isInteger(pEnd) && abFrom.byteOffset === 0);
+			this.abBuffer.set(new Uint8Array(abFrom.buffer, pStart, pEnd - pStart), pTo);
+			this.pEnd = pTo + pEnd - pStart;
 		}
 	}
 }
 
 class ID3 {
-	constructor(мбБуфер, уНачало, уКонец) {
-		var РАЗМЕР_ЗАГОЛОВКА_ТЕГА = 10;
-		var РАЗМЕР_ЗАГОЛОВКА_ПОЛЯ = 10;
-		Проверить(мбБуфер.BYTES_PER_ELEMENT === 1 && Number.isInteger(уНачало) && Number.isInteger(уКонец) && уНачало >= 0 && уНачало <= уКонец);
-		this._мб = мбБуфер;
-		this._уНачалоТега = -1;
-		this._кбРазмерТега = -1;
-		this._уНачалоПоля = -1;
-		this._кбРазмерПоля = -1;
-		var кбРазмер = уКонец - уНачало;
-		if (кбРазмер > РАЗМЕР_ЗАГОЛОВКА_ТЕГА + РАЗМЕР_ЗАГОЛОВКА_ПОЛЯ && this._мб[уНачало] === 73 && this._мб[уНачало + 1] === 68 && this._мб[уНачало + 2] === 51 && this._мб[уНачало + 3] === 4 && this._мб[уНачало + 5] === 0 && this._ParseSynchsafeInteger(уНачало + 6) === кбРазмер - РАЗМЕР_ЗАГОЛОВКА_ТЕГА) {
-			this._уНачалоТега = уНачало + РАЗМЕР_ЗАГОЛОВКА_ТЕГА;
-			this._кбРазмерТега = кбРазмер - РАЗМЕР_ЗАГОЛОВКА_ТЕГА;
+	constructor(abBuffer, pStart, pEnd) {
+		var TAG_HEADER_SIZE = 10;
+		var FIELD_HEADER_SIZE = 10;
+		Check(abBuffer.BYTES_PER_ELEMENT === 1 && Number.isInteger(pStart) && Number.isInteger(pEnd) && pStart >= 0 && pStart <= pEnd);
+		this._ab = abBuffer;
+		this._pTagStart = -1;
+		this._cbTagSize = -1;
+		this._pFieldStart = -1;
+		this._cbFieldSize = -1;
+		var cbSize = pEnd - pStart;
+		if (cbSize > TAG_HEADER_SIZE + FIELD_HEADER_SIZE && this._ab[pStart] === 73 && this._ab[pStart + 1] === 68 && this._ab[pStart + 2] === 51 && this._ab[pStart + 3] === 4 && this._ab[pStart + 5] === 0 && this._ParseSynchsafeInteger(pStart + 6) === cbSize - TAG_HEADER_SIZE) {
+			this._pTagStart = pStart + TAG_HEADER_SIZE;
+			this._cbTagSize = cbSize - TAG_HEADER_SIZE;
 		}
 	}
-	_ParseSynchsafeInteger(уАдрес) {
-		var чРезультат = -1;
-		var чБайт = this._мб[уАдрес];
-		if (чБайт < 128) {
-			var ч4Байта = чБайт << 24 - 3;
-			чБайт = this._мб[уАдрес + 1];
-			if (чБайт < 128) {
-				ч4Байта |= чБайт << 16 - 2;
-				чБайт = this._мб[уАдрес + 2];
-				if (чБайт < 128) {
-					ч4Байта |= чБайт << 8 - 1;
-					чБайт = this._мб[уАдрес + 3];
-					if (чБайт < 128) {
-						чРезультат = ч4Байта | чБайт;
+	_ParseSynchsafeInteger(pAddress) {
+		var nResult = -1;
+		var nByte = this._ab[pAddress];
+		if (nByte < 128) {
+			var n4Bytes = nByte << 24 - 3;
+			nByte = this._ab[pAddress + 1];
+			if (nByte < 128) {
+				n4Bytes |= nByte << 16 - 2;
+				nByte = this._ab[pAddress + 2];
+				if (nByte < 128) {
+					n4Bytes |= nByte << 8 - 1;
+					nByte = this._ab[pAddress + 3];
+					if (nByte < 128) {
+						nResult = n4Bytes | nByte;
 					}
 				}
 			}
 		}
-		return чРезультат;
+		return nResult;
 	}
-	_ПолучитьТекст() {
-		if (this._кбРазмерПоля < 2 || this._мб[this._уНачалоПоля] !== 3) {
+	_GetText() {
+		if (this._cbFieldSize < 2 || this._ab[this._pFieldStart] !== 3) {
 			return null;
 		}
 		if (ID3._oUtf8Decoder === null) {
@@ -364,182 +368,182 @@ class ID3 {
 			});
 		}
 		try {
-			return ID3._oUtf8Decoder.decode(new Uint8Array(this._мб.buffer, this._мб.byteOffset + this._уНачалоПоля + 1, this._кбРазмерПоля - 1));
+			return ID3._oUtf8Decoder.decode(new Uint8Array(this._ab.buffer, this._ab.byteOffset + this._pFieldStart + 1, this._cbFieldSize - 1));
 		} catch (_) {
 			return null;
 		}
 	}
 	* [Symbol.iterator]() {
-		var РАЗМЕР_ЗАГОЛОВКА_ПОЛЯ = 10;
-		var уТег = this._уНачалоТега;
-		var кбТег = this._кбРазмерТега;
-		while (кбТег > РАЗМЕР_ЗАГОЛОВКА_ПОЛЯ) {
-			var чКод1 = this._мб[уТег];
-			var чКод2 = this._мб[уТег + 1];
-			var чКод3 = this._мб[уТег + 2];
-			var чКод4 = this._мб[уТег + 3];
-			if ((чКод1 < 48 || чКод1 > 57) && (чКод1 < 65 || чКод1 > 90) || (чКод2 < 48 || чКод2 > 57) && (чКод2 < 65 || чКод2 > 90) || (чКод3 < 48 || чКод3 > 57) && (чКод3 < 65 || чКод3 > 90) || (чКод4 < 48 || чКод4 > 57) && (чКод4 < 65 || чКод4 > 90)) {
+		var FIELD_HEADER_SIZE = 10;
+		var pTag = this._pTagStart;
+		var cbTag = this._cbTagSize;
+		while (cbTag > FIELD_HEADER_SIZE) {
+			var nCode1 = this._ab[pTag];
+			var nCode2 = this._ab[pTag + 1];
+			var nCode3 = this._ab[pTag + 2];
+			var nCode4 = this._ab[pTag + 3];
+			if ((nCode1 < 48 || nCode1 > 57) && (nCode1 < 65 || nCode1 > 90) || (nCode2 < 48 || nCode2 > 57) && (nCode2 < 65 || nCode2 > 90) || (nCode3 < 48 || nCode3 > 57) && (nCode3 < 65 || nCode3 > 90) || (nCode4 < 48 || nCode4 > 57) && (nCode4 < 65 || nCode4 > 90)) {
 				break;
 			}
-			if (this._мб[уТег + 9] !== 0) {
+			if (this._ab[pTag + 9] !== 0) {
 				break;
 			}
-			var кбПоле = this._ParseSynchsafeInteger(уТег + 4);
-			if (кбПоле < 1 || кбПоле > кбТег - РАЗМЕР_ЗАГОЛОВКА_ПОЛЯ) {
+			var cbField = this._ParseSynchsafeInteger(pTag + 4);
+			if (cbField < 1 || cbField > cbTag - FIELD_HEADER_SIZE) {
 				break;
 			}
-			this._уНачалоПоля = уТег + РАЗМЕР_ЗАГОЛОВКА_ПОЛЯ;
-			this._кбРазмерПоля = кбПоле;
-			уТег += РАЗМЕР_ЗАГОЛОВКА_ПОЛЯ + кбПоле;
-			кбТег -= РАЗМЕР_ЗАГОЛОВКА_ПОЛЯ + кбПоле;
-			yield String.fromCharCode(чКод1, чКод2, чКод3, чКод4);
+			this._pFieldStart = pTag + FIELD_HEADER_SIZE;
+			this._cbFieldSize = cbField;
+			pTag += FIELD_HEADER_SIZE + cbField;
+			cbTag -= FIELD_HEADER_SIZE + cbField;
+			yield String.fromCharCode(nCode1, nCode2, nCode3, nCode4);
 		}
-		this._уНачалоПоля = -1;
-		this._кбРазмерПоля = -1;
+		this._pFieldStart = -1;
+		this._cbFieldSize = -1;
 	}
-	ПолучитьПервуюСтроку() {
-		var сТекст = this._ПолучитьТекст();
-		if (сТекст === null) {
+	GetFirstString() {
+		var sText = this._GetText();
+		if (sText === null) {
 			return null;
 		}
-		var чКонецСтроки = сТекст.indexOf('\0');
-		if (чКонецСтроки === -1) {
+		var nStringEnd = sText.indexOf('\0');
+		if (nStringEnd === -1) {
 			return null;
 		}
-		return сТекст.slice(0, чКонецСтроки);
+		return sText.slice(0, nStringEnd);
 	}
-	РазобратьTXXX() {
-		var сТекст = this._ПолучитьТекст();
-		if (сТекст === null) {
+	ParseTXXX() {
+		var sText = this._GetText();
+		if (sText === null) {
 			return null;
 		}
-		var чКонецСтроки = сТекст.indexOf('\0');
-		if (чКонецСтроки === -1) {
+		var nStringEnd = sText.indexOf('\0');
+		if (nStringEnd === -1) {
 			return null;
 		}
-		var сОписание = сТекст.slice(0, чКонецСтроки);
-		var сЗначение = сТекст.slice(чКонецСтроки + 1);
-		if (сЗначение.indexOf('\0') !== -1) {
+		var sDescription = sText.slice(0, nStringEnd);
+		var sValue = sText.slice(nStringEnd + 1);
+		if (sValue.indexOf('\0') !== -1) {
 			return null;
 		}
 		return {
-			сОписание,
-			сЗначение
+			sDescription,
+			sValue
 		};
 	}
 }
 
 ID3._oUtf8Decoder = null;
 
-class Дорожка {
-	constructor(кбСтруктураСемпла) {
-		Проверить(Number.isInteger(кбСтруктураСемпла) && кбСтруктураСемпла >= 0);
-		this.уНачалоПамятиПотока = 0;
-		this.уКонецПамятиПотока = 0;
-		this.уНачалоПотока = 0;
-		this.уКонецПотока = 0;
-		this.уКонецПамятиСемплов = 0;
-		this.уНачалоСемплов = 0;
-		this.уКонецСемплов = 0;
-		this.кбСтруктураСемпла = кбСтруктураСемпла;
-		this.чВДНачала = -1;
+class Track {
+	constructor(cbSampleStruct) {
+		Check(Number.isInteger(cbSampleStruct) && cbSampleStruct >= 0);
+		this.pStreamMemoryStart = 0;
+		this.pStreamMemoryEnd = 0;
+		this.pStreamStart = 0;
+		this.pStreamEnd = 0;
+		this.pSamplesMemoryEnd = 0;
+		this.pSamplesStart = 0;
+		this.pSamplesEnd = 0;
+		this.cbSampleStruct = cbSampleStruct;
+		this.nDtsStart = -1;
 		this.nContinuityCounter = -1;
 		this.pPesPacketEnd = -1;
 	}
-	Пусто() {
-		return this.уКонецПотока === this.уНачалоПотока;
+	IsEmpty() {
+		return this.pStreamEnd === this.pStreamStart;
 	}
-	ПолучитьРазмерПотока() {
-		Проверить(Number.isInteger(this.уНачалоПотока) && Number.isInteger(this.уКонецПотока) && this.уНачалоПотока >= 0 && this.уНачалоПотока <= this.уКонецПотока);
-		Проверить(this.уНачалоПотока >= this.уНачалоПамятиПотока && this.уКонецПотока <= this.уКонецПамятиПотока);
-		return this.уКонецПотока - this.уНачалоПотока;
+	GetStreamSize() {
+		Check(Number.isInteger(this.pStreamStart) && Number.isInteger(this.pStreamEnd) && this.pStreamStart >= 0 && this.pStreamStart <= this.pStreamEnd);
+		Check(this.pStreamStart >= this.pStreamMemoryStart && this.pStreamEnd <= this.pStreamMemoryEnd);
+		return this.pStreamEnd - this.pStreamStart;
 	}
-	ПолучитьРазмерСемплов() {
-		Проверить(Number.isInteger(this.уНачалоСемплов) && Number.isInteger(this.уКонецСемплов) && this.уНачалоСемплов >= 0 && this.уНачалоСемплов <= this.уКонецСемплов);
-		Проверить(this.уКонецСемплов <= this.уКонецПамятиСемплов);
-		Проверить((this.уКонецСемплов - this.уНачалоСемплов) % this.кбСтруктураСемпла == 0);
-		return this.уКонецСемплов - this.уНачалоСемплов;
+	GetSamplesSize() {
+		Check(Number.isInteger(this.pSamplesStart) && Number.isInteger(this.pSamplesEnd) && this.pSamplesStart >= 0 && this.pSamplesStart <= this.pSamplesEnd);
+		Check(this.pSamplesEnd <= this.pSamplesMemoryEnd);
+		Check((this.pSamplesEnd - this.pSamplesStart) % this.cbSampleStruct == 0);
+		return this.pSamplesEnd - this.pSamplesStart;
 	}
-	ПолучитьКоличествоСемплов() {
-		return this.ПолучитьРазмерСемплов() / this.кбСтруктураСемпла;
+	GetNumberOfSamples() {
+		return this.GetSamplesSize() / this.cbSampleStruct;
 	}
-	ПолучитьНомерСемпла(уСемпл) {
-		Проверить(Number.isInteger(this.уНачалоСемплов) && Number.isInteger(this.уКонецСемплов) && this.уНачалоСемплов >= 0 && this.уНачалоСемплов <= this.уКонецСемплов);
-		Проверить(this.уКонецСемплов <= this.уКонецПамятиСемплов);
-		Проверить(Number.isInteger(уСемпл));
-		if (this.Пусто() || уСемпл < this.уНачалоСемплов) {
+	GetSampleNumber(pSample) {
+		Check(Number.isInteger(this.pSamplesStart) && Number.isInteger(this.pSamplesEnd) && this.pSamplesStart >= 0 && this.pSamplesStart <= this.pSamplesEnd);
+		Check(this.pSamplesEnd <= this.pSamplesMemoryEnd);
+		Check(Number.isInteger(pSample));
+		if (this.IsEmpty() || pSample < this.pSamplesStart) {
 			return NaN;
 		}
-		Проверить(уСемпл <= this.уКонецСемплов - this.кбСтруктураСемпла);
-		Проверить((уСемпл - this.уНачалоСемплов) % this.кбСтруктураСемпла == 0);
-		return (уСемпл - this.уНачалоСемплов) / this.кбСтруктураСемпла;
+		Check(pSample <= this.pSamplesEnd - this.cbSampleStruct);
+		Check((pSample - this.pSamplesStart) % this.cbSampleStruct == 0);
+		return (pSample - this.pSamplesStart) / this.cbSampleStruct;
 	}
 }
 
-var м_Журнал = (() => {
-	var _мсВажность = [];
-	var _мсЗаписи = [];
-	function Добавить(сВажность, сЗапись) {
-		_мсВажность.push(сВажность);
-		_мсЗаписи.push(`[Worker] ${сЗапись}`);
+var m_Log = (() => {
+	var _asImportance = [];
+	var _asRecords = [];
+	function Add(sImportance, sRecord) {
+		_asImportance.push(sImportance);
+		_asRecords.push(`[Worker] ${sRecord}`);
 	}
-	function Вот(сЗапись) {
-		Добавить('Вот', сЗапись);
+	function Log(sRecord) {
+		Add('Log', sRecord);
 	}
-	function Окак(сЗапись) {
-		Добавить('Окак', сЗапись);
+	function LogInfo(sRecord) {
+		Add('LogInfo', sRecord);
 	}
-	function Ой(сЗапись) {
-		Добавить('Ой', сЗапись);
+	function LogError(sRecord) {
+		Add('LogError', sRecord);
 	}
-	function Отправить() {
-		if (_мсВажность.length !== 0) {
-			postMessage([ 2, _мсВажность, _мсЗаписи ]);
-			_мсВажность.length = 0;
-			_мсЗаписи.length = 0;
+	function Send() {
+		if (_asImportance.length !== 0) {
+			postMessage([ 2, _asImportance, _asRecords ]);
+			_asImportance.length = 0;
+			_asRecords.length = 0;
 		}
 	}
 	return {
-		Вот,
-		Окак,
-		Ой,
-		Отправить
+		Log,
+		LogInfo,
+		LogError,
+		Send
 	};
 })();
 
 {
-	var РАЗМЕР_ТРАНСПОРТНОГО_ПАКЕТА = 188;
+	var TRANSPORT_PACKET_SIZE = 188;
 	var TS_TIMESCALE = 9e4;
-	var ДЛИНА_АУДИОСЕМПЛА = 1024;
-	var ЧАСТОТА_ДИСКРЕТИЗАЦИИ = [ 96e3, 88200, 64e3, 48e3, 44100, 32e3, 24e3, 22050, 16e3, 12e3, 11025, 8e3, 7350 ];
-	var НОМЕР_ВИДЕО_ДОРОЖКИ = 1;
-	var НОМЕР_АУДИО_ДОРОЖКИ = 2;
-	var РАЗМЕР_СТРУКТУРЫ_АУДИОСЕМПЛА = 1 * 4;
-	var РАЗМЕР_СТРУКТУРЫ_ВИДЕОСЕМПЛА = 4 * 4;
-	var ДЛИТЕЛЬНОСТЬ_ВИДЕОСЕМПЛА = 0;
-	var РАЗМЕР_ВИДЕОСЕМПЛА = 4;
-	var ФЛАГИ_ВИДЕОСЕМПЛА = 8;
-	var ВП_ВИДЕОСЕМПЛА = 12;
-	var _мНеобработанныеСообщения = [];
-	var _оИсходныйСегмент = null;
-	var _мбКуча = null;
-	var _мцКуча = null;
-	var _dvКуча = null;
-	var _фНайтиПрефикс = null;
-	var _оАссемблер = Wasm.Доступен() ? new Wasm() : new Asmjs();
-	var _лРазрыв = true;
+	var AUDIO_SAMPLE_LENGTH = 1024;
+	var SAMPLING_FREQUENCY = [ 96e3, 88200, 64e3, 48e3, 44100, 32e3, 24e3, 22050, 16e3, 12e3, 11025, 8e3, 7350 ];
+	var VIDEO_TRACK_NUMBER = 1;
+	var AUDIO_TRACK_NUMBER = 2;
+	var AUDIO_SAMPLE_STRUCT_SIZE = 1 * 4;
+	var VIDEO_SAMPLE_STRUCT_SIZE = 4 * 4;
+	var VIDEO_SAMPLE_DURATION = 0;
+	var VIDEO_SAMPLE_SIZE = 4;
+	var VIDEO_SAMPLE_FLAGS = 8;
+	var VIDEO_SAMPLE_VP = 12;
+	var _aUnprocessedMessages = [];
+	var _oSourceSegment = null;
+	var _abHeap = null;
+	var _acHeap = null;
+	var _dvHeap = null;
+	var _fFindPrefix = null;
+	var _oAssembler = Wasm.IsAvailable() ? new Wasm() : new Asmjs();
+	var _bDiscontinuity = true;
 	var _oPat = null;
 	var _oPmt = null;
-	var _дорВидео = new Дорожка(РАЗМЕР_СТРУКТУРЫ_ВИДЕОСЕМПЛА);
-	var _дорАудио = new Дорожка(РАЗМЕР_СТРУКТУРЫ_АУДИОСЕМПЛА);
-	var _дорМетаданные = new Дорожка(0);
-	var _муНачалоМетаданных = [];
-	var _чВДПоследнегоВидеоСемпла;
-	var _чВДКонцаВидеоСегмента;
-	var _чВДКонцаАудиоСегмента;
-	var _чВДПоследнегоВидеоСемплаПредыдущегоВидеоСегмента;
-	var _чВДКонцаПредыдущегоВидеоСегмента;
-	var _чВДКонцаПредыдущегоАудиоСегмента;
+	var _trkVideo = new Track(VIDEO_SAMPLE_STRUCT_SIZE);
+	var _trkAudio = new Track(AUDIO_SAMPLE_STRUCT_SIZE);
+	var _trkMetadata = new Track(0);
+	var _apMetadataStart = [];
+	var _nDtsLastVideoSample;
+	var _nDtsVideoSegmentEnd;
+	var _nDtsAudioSegmentEnd;
+	var _nDtsLastVideoSamplePreviousVideoSegment;
+	var _nDtsPreviousVideoSegmentEnd;
+	var _nDtsPreviousAudioSegmentEnd;
 	var _anDecoderSpecificInfo = [ 0, 0 ];
 	var _abSequenceParameterSet;
 	var _abPictureParameterSet;
@@ -551,198 +555,198 @@ var м_Журнал = (() => {
 	var _nBitDepthLumaMinus8;
 	var _nBitDepthChromaMinus8;
 	var _nMaxNumberReferenceFrames;
-	var _чШиринаКартинки;
-	var _чВысотаКартинки;
-	var _чЧастотаКадров;
-	var _чДиапазон;
-	var _лЧересстрочное;
+	var _nImageWidth;
+	var _nImageHeight;
+	var _nFrameRate;
+	var _nRange;
+	var _bInterlaced;
 	var _nAudioObjectType;
-	var _чЧастотаДискретизации;
-	var _чКоличествоКаналов;
-	var _чПреобразованЗа = NaN;
-	var _лЗабраковано;
-	var _лПотериВидео;
-	var _лПотериЗвука;
-	var _чМинДлительностьВидеоСемпла;
-	var _чМаксДлительностьВидеоСемпла;
-	var _чСредняяДлительностьВидеоСемпла;
-	var _чБитрейтЗвука;
-	var _чПозицияКодирования;
-	var _чПозицияТрансляции;
-	var _чВремяКодирования;
-	function ОчиститьСтатистику() {
-		_лЗабраковано = false;
-		_лПотериВидео = false;
-		_лПотериЗвука = false;
-		_чМинДлительностьВидеоСемпла = +Infinity;
-		_чМаксДлительностьВидеоСемпла = -Infinity;
-		_чСредняяДлительностьВидеоСемпла = NaN;
-		_чБитрейтЗвука = NaN;
-		_чПозицияКодирования = NaN;
-		_чПозицияТрансляции = NaN;
-		_чВремяКодирования = NaN;
+	var _nSamplingFrequency;
+	var _nChannelCount;
+	var _nConvertedIn = NaN;
+	var _bRejected;
+	var _bVideoLoss;
+	var _bAudioLoss;
+	var _nMinVideoSampleDuration;
+	var _nMaxVideoSampleDuration;
+	var _nAvgVideoSampleDuration;
+	var _nAudioBitrate;
+	var _nEncodingPosition;
+	var _nBroadcastPosition;
+	var _nEncodingTime;
+	function ClearStatistics() {
+		_bRejected = false;
+		_bVideoLoss = false;
+		_bAudioLoss = false;
+		_nMinVideoSampleDuration = +Infinity;
+		_nMaxVideoSampleDuration = -Infinity;
+		_nAvgVideoSampleDuration = NaN;
+		_nAudioBitrate = NaN;
+		_nEncodingPosition = NaN;
+		_nBroadcastPosition = NaN;
+		_nEncodingTime = NaN;
 	}
-	function Браковать(пУсловие) {
-		if (!пУсловие) {
-			throw new Error('БРАКОВАТЬ');
+	function Reject(pCondition) {
+		if (!pCondition) {
+			throw new Error('REJECT');
 		}
 	}
-	function Мс(чВремяТП, сЕдиницыИзмерения = 'мс') {
-		return `${(чВремяТП / (TS_TIMESCALE / 1e3)).toFixed(2)}${сЕдиницыИзмерения}`;
+	function Ms(nTimeTP, sUnits = 'ms') {
+		return `${(nTimeTP / (TS_TIMESCALE / 1e3)).toFixed(2)}${sUnits}`;
 	}
-	function ОтправитьРезультат(мбуфПередать) {
-		postMessage([ 1, _оИсходныйСегмент ], мбуфПередать);
+	function SendResult(abufTransfer) {
+		postMessage([ 1, _oSourceSegment ], abufTransfer);
 	}
-	function ЗавершитьРаботуИПоказатьСообщение(сКодСообщения) {
-		postMessage([ 4, сКодСообщения ]);
+	function TerminateAndShowMessage(sMessageCode) {
+		postMessage([ 4, sMessageCode ]);
 		throw void 0;
 	}
-	function ЗавершитьРаботуИОтправитьОтчет(пИсключение) {
-		var сПричинаЗавершенияРаботы = пИсключение instanceof Error ? `Поймано исключение в рабочем потоке: ${пИсключение.stack}` : `Поймано исключение в рабочем потоке: [typeof ${typeof пИсключение}] ${new Error(пИсключение).stack}`;
-		if (typeof _оИсходныйСегмент == 'object' && _оИсходныйСегмент !== null && typeof _оИсходныйСегмент.пДанные == 'object' && _оИсходныйСегмент.пДанные !== null && _оИсходныйСегмент.пДанные.byteLength) {
-			postMessage([ 3, сПричинаЗавершенияРаботы, _оИсходныйСегмент.пДанные ], [ _оИсходныйСегмент.пДанные ]);
+	function TerminateAndSendReport(pException) {
+		var sReasonForTermination = pException instanceof Error ? `Exception caught in worker thread: ${pException.stack}` : `Exception caught in worker thread: [typeof ${typeof pException}] ${new Error(pException).stack}`;
+		if (typeof _oSourceSegment == 'object' && _oSourceSegment !== null && typeof _oSourceSegment.pData == 'object' && _oSourceSegment.pData !== null && _oSourceSegment.pData.byteLength) {
+			postMessage([ 3, sReasonForTermination, _oSourceSegment.pData ], [ _oSourceSegment.pData ]);
 		} else {
-			postMessage([ 3, сПричинаЗавершенияРаботы, null ]);
+			postMessage([ 3, sReasonForTermination, null ]);
 		}
-		_оИсходныйСегмент = null;
+		_oSourceSegment = null;
 	}
-	function ВыброситьВПомойку(мбБарахло) {
-		if (этоМобильноеУстройство() || получитьВерсиюДвижкаБраузера() >= 64) {
+	function ThrowInTheTrash(abTrash) {
+		if (isMobileDevice() || getBrowserEngineVersion() >= 64) {
 			return;
 		}
-		if (мбБарахло && мбБарахло.buffer.byteLength) {
-			Проверить(_мбКуча === null || _мбКуча.buffer !== мбБарахло.buffer);
-			postMessage([ 5, мбБарахло.buffer ], [ мбБарахло.buffer ]);
+		if (abTrash && abTrash.buffer.byteLength) {
+			Check(_abHeap === null || _abHeap.buffer !== abTrash.buffer);
+			postMessage([ 5, abTrash.buffer ], [ abTrash.buffer ]);
 		}
 	}
-	var м_Память = (() => {
-		var МАКС_ДЛИТЕЛЬНОСТЬ_СЕГМЕНТА = 30;
-		var МАКС_ЧАСТОТА_КАДРОВ = 150;
-		var МАКС_КОЛИЧЕСТВО_NAL_UNITS_В_КАДРЕ = 10;
-		var ЗАНАЧКА = 1.4;
-		var РАЗМЕР_КРАТЕН_БАЙТАМ = 1 << 6;
-		var РАЗМЕР_ДАННЫХ_АССЕМБЛЕРА = Выровнить(4);
-		var РАЗМЕР_ПАМЯТИ_ВИДЕОСЕМПЛОВ = Выровнить(РАЗМЕР_СТРУКТУРЫ_ВИДЕОСЕМПЛА * МАКС_ЧАСТОТА_КАДРОВ * МАКС_ДЛИТЕЛЬНОСТЬ_СЕГМЕНТА);
-		var РАЗМЕР_ПАМЯТИ_АУДИОСЕМПЛОВ = Выровнить(РАЗМЕР_СТРУКТУРЫ_АУДИОСЕМПЛА * ЧАСТОТА_ДИСКРЕТИЗАЦИИ[0] / ДЛИНА_АУДИОСЕМПЛА * МАКС_ДЛИТЕЛЬНОСТЬ_СЕГМЕНТА);
-		var РАЗМЕР_ПАМЯТИ_МЕДИАПОТОКА = Выровнить(1e4);
-		var РАЗМЕР_РЕЗЕРВА_ВИДЕОПОТОКА = Выровнить(МАКС_КОЛИЧЕСТВО_NAL_UNITS_В_КАДРЕ * МАКС_ЧАСТОТА_КАДРОВ * МАКС_ДЛИТЕЛЬНОСТЬ_СЕГМЕНТА);
-		function Выровнить(чАдресИлиРазмер) {
-			return Math.ceil(чАдресИлиРазмер) + (РАЗМЕР_КРАТЕН_БАЙТАМ - 1) & ~(РАЗМЕР_КРАТЕН_БАЙТАМ - 1);
+	var m_Memory = (() => {
+		var MAX_SEGMENT_DURATION = 30;
+		var MAX_FRAME_RATE = 150;
+		var MAX_NAL_UNITS_PER_FRAME = 10;
+		var RESERVE = 1.4;
+		var ALIGN_TO_BYTES = 1 << 6;
+		var ASSEMBLER_DATA_SIZE = Align(4);
+		var VIDEO_SAMPLES_MEMORY_SIZE = Align(VIDEO_SAMPLE_STRUCT_SIZE * MAX_FRAME_RATE * MAX_SEGMENT_DURATION);
+		var AUDIO_SAMPLES_MEMORY_SIZE = Align(AUDIO_SAMPLE_STRUCT_SIZE * SAMPLING_FREQUENCY[0] / AUDIO_SAMPLE_LENGTH * MAX_SEGMENT_DURATION);
+		var MEDIA_STREAM_MEMORY_SIZE = Align(1e4);
+		var VIDEO_STREAM_RESERVE_SIZE = Align(MAX_NAL_UNITS_PER_FRAME * MAX_FRAME_RATE * MAX_SEGMENT_DURATION);
+		function Align(pAddressOrSize) {
+			return Math.ceil(pAddressOrSize) + (ALIGN_TO_BYTES - 1) & ~(ALIGN_TO_BYTES - 1);
 		}
-		function Выделить(мбТранспортныйПоток) {
-			var уВыделить = РАЗМЕР_ДАННЫХ_АССЕМБЛЕРА;
-			_дорВидео.уНачалоСемплов = _дорВидео.уКонецСемплов = уВыделить;
-			_дорВидео.уКонецПамятиСемплов = уВыделить += РАЗМЕР_ПАМЯТИ_ВИДЕОСЕМПЛОВ;
-			_дорАудио.уНачалоСемплов = _дорАудио.уКонецСемплов = уВыделить;
-			_дорАудио.уКонецПамятиСемплов = уВыделить += РАЗМЕР_ПАМЯТИ_АУДИОСЕМПЛОВ;
-			_дорМетаданные.уНачалоПамятиПотока = _дорМетаданные.уНачалоПотока = _дорМетаданные.уКонецПотока = уВыделить;
-			_дорМетаданные.уКонецПамятиПотока = уВыделить += РАЗМЕР_ПАМЯТИ_МЕДИАПОТОКА;
-			_дорВидео.уНачалоПамятиПотока = уВыделить;
-			_дорВидео.уНачалоПотока = _дорВидео.уКонецПотока = уВыделить += РАЗМЕР_РЕЗЕРВА_ВИДЕОПОТОКА;
-			var кбПостоянныйРазмер = уВыделить;
-			_дорВидео.уКонецПамятиПотока = уВыделить += Выровнить(мбТранспортныйПоток.length);
-			_дорАудио.уНачалоПамятиПотока = _дорАудио.уНачалоПотока = _дорАудио.уКонецПотока = уВыделить;
-			_дорАудио.уКонецПамятиПотока = уВыделить += Выровнить(мбТранспортныйПоток.length);
-			var кбПеременныйРазмер = уВыделить - кбПостоянныйРазмер;
-			if (_мбКуча === null || _мбКуча.length < уВыделить) {
-				var кбРазмерКучи = кбПостоянныйРазмер + кбПеременныйРазмер * ЗАНАЧКА;
-				if (_мбКуча === null) {
-					м_Журнал.Вот(`Создаю кучу ${кбРазмерКучи} байт`);
+		function Allocate(abTransportStream) {
+			var pAllocate = ASSEMBLER_DATA_SIZE;
+			_trkVideo.pSamplesStart = _trkVideo.pSamplesEnd = pAllocate;
+			_trkVideo.pSamplesMemoryEnd = pAllocate += VIDEO_SAMPLES_MEMORY_SIZE;
+			_trkAudio.pSamplesStart = _trkAudio.pSamplesEnd = pAllocate;
+			_trkAudio.pSamplesMemoryEnd = pAllocate += AUDIO_SAMPLES_MEMORY_SIZE;
+			_trkMetadata.pStreamMemoryStart = _trkMetadata.pStreamStart = _trkMetadata.pStreamEnd = pAllocate;
+			_trkMetadata.pStreamMemoryEnd = pAllocate += MEDIA_STREAM_MEMORY_SIZE;
+			_trkVideo.pStreamMemoryStart = pAllocate;
+			_trkVideo.pStreamStart = _trkVideo.pStreamEnd = pAllocate += VIDEO_STREAM_RESERVE_SIZE;
+			var cbConstantSize = pAllocate;
+			_trkVideo.pStreamMemoryEnd = pAllocate += Align(abTransportStream.length);
+			_trkAudio.pStreamMemoryStart = _trkAudio.pStreamStart = _trkAudio.pStreamEnd = pAllocate;
+			_trkAudio.pStreamMemoryEnd = pAllocate += Align(abTransportStream.length);
+			var cbVariableSize = pAllocate - cbConstantSize;
+			if (_abHeap === null || _abHeap.length < pAllocate) {
+				var cbHeapSize = cbConstantSize + cbVariableSize * RESERVE;
+				if (_abHeap === null) {
+					m_Log.Log(`Creating heap ${cbHeapSize} bytes`);
 				} else {
-					м_Журнал.Ой(`Увеличиваю кучу с ${_мбКуча.length} до ${кбРазмерКучи} байт`);
+					m_Log.LogError(`Increasing heap from ${_abHeap.length} to ${cbHeapSize} bytes`);
 				}
-				var [буфКуча, оЭкспорт] = _оАссемблер.ВыделитьПамять(кбРазмерКучи);
-				_мбКуча = new Uint8Array(буфКуча);
-				_мцКуча = new Int32Array(буфКуча);
-				_dvКуча = СоздатьDataView(_мбКуча);
-				_фНайтиПрефикс = оЭкспорт.SearchStartCodePrefix;
+				var [bufHeap, oExport] = _oAssembler.AllocateMemory(cbHeapSize);
+				_abHeap = new Uint8Array(bufHeap);
+				_acHeap = new Int32Array(bufHeap);
+				_dvHeap = CreateDataView(_abHeap);
+				_fFindPrefix = oExport.SearchStartCodePrefix;
 			}
 		}
-		function Освободить() {
-			_оАссемблер.ОсвободитьПамять();
-			_мбКуча = null;
-			_мцКуча = null;
-			_dvКуча = null;
-			_фНайтиПрефикс = null;
+		function Free() {
+			_oAssembler.FreeMemory();
+			_abHeap = null;
+			_acHeap = null;
+			_dvHeap = null;
+			_fFindPrefix = null;
 		}
 		return {
-			Выделить,
-			Освободить
+			Allocate,
+			Free
 		};
 	})();
-	function РазобратьТранспортныйПоток(мбТранспортныйПоток) {
-		Браковать(мбТранспортныйПоток.length !== 0 && мбТранспортныйПоток.length % РАЗМЕР_ТРАНСПОРТНОГО_ПАКЕТА == 0);
-		_дорВидео.чВДНачала = _дорАудио.чВДНачала = -1;
-		_дорМетаданные.чВДНачала = 0;
-		_дорВидео.pPesPacketEnd = _дорАудио.pPesPacketEnd = _дорМетаданные.pPesPacketEnd = -1;
-		_муНачалоМетаданных.length = 0;
-		_чВДПоследнегоВидеоСемпла = -1;
-		if (_лРазрыв) {
-			_дорВидео.nContinuityCounter = _дорАудио.nContinuityCounter = _дорМетаданные.nContinuityCounter = -1;
+	function ParseTransportStream(abTransportStream) {
+		Reject(abTransportStream.length !== 0 && abTransportStream.length % TRANSPORT_PACKET_SIZE == 0);
+		_trkVideo.nDtsStart = _trkAudio.nDtsStart = -1;
+		_trkMetadata.nDtsStart = 0;
+		_trkVideo.pPesPacketEnd = _trkAudio.pPesPacketEnd = _trkMetadata.pPesPacketEnd = -1;
+		_apMetadataStart.length = 0;
+		_nDtsLastVideoSample = -1;
+		if (_bDiscontinuity) {
+			_trkVideo.nContinuityCounter = _trkAudio.nContinuityCounter = _trkMetadata.nContinuityCounter = -1;
 			_oPat = _oPmt = null;
 		}
 		var nPmtPid = -1, nVideoPid = -1, nAudioPid = -1, nMetadataPid = -1;
-		var cPat = 0, cPmt = 0, кИзмененийВД = 0;
-		var уТранспортныйПакет = _дорВидео.уНачалоПотока | 0;
-		_мбКуча.set(мбТранспортныйПоток, уТранспортныйПакет);
-		for (var уКонецТранспортногоПотока = уТранспортныйПакет + мбТранспортныйПоток.length; уТранспортныйПакет !== уКонецТранспортногоПотока; уТранспортныйПакет += РАЗМЕР_ТРАНСПОРТНОГО_ПАКЕТА) {
-			var чЗаголовокТранспортногоПакета = _dvКуча.getUint32(уТранспортныйПакет) | 0;
-			Браковать((чЗаголовокТранспортногоПакета & 4286578880) == 1191182336);
-			var nPid = (чЗаголовокТранспортногоПакета & 2096896) >> 8;
-			var pPayload = уТранспортныйПакет + 4;
-			if ((чЗаголовокТранспортногоПакета & 32) != 0) {
-				var cbAdaptationField = _мбКуча[pPayload];
-				Проверить(cbAdaptationField <= РАЗМЕР_ТРАНСПОРТНОГО_ПАКЕТА - 5);
-				Проверить(cbAdaptationField === 0 || (_мбКуча[pPayload + 1] & 128) == 0);
+		var cPat = 0, cPmt = 0, nDtsChanges = 0;
+		var pTransportPacket = _trkVideo.pStreamStart | 0;
+		_abHeap.set(abTransportStream, pTransportPacket);
+		for (var pTransportStreamEnd = pTransportPacket + abTransportStream.length; pTransportPacket !== pTransportStreamEnd; pTransportPacket += TRANSPORT_PACKET_SIZE) {
+			var nTransportPacketHeader = _dvHeap.getUint32(pTransportPacket) | 0;
+			Reject((nTransportPacketHeader & 4286578880) == 1191182336);
+			var nPid = (nTransportPacketHeader & 2096896) >> 8;
+			var pPayload = pTransportPacket + 4;
+			if ((nTransportPacketHeader & 32) != 0) {
+				var cbAdaptationField = _abHeap[pPayload];
+				Check(cbAdaptationField <= TRANSPORT_PACKET_SIZE - 5);
+				Check(cbAdaptationField === 0 || (_abHeap[pPayload + 1] & 128) == 0);
 				pPayload += 1 + cbAdaptationField;
 			}
-			var дорОбработать;
+			var trkToProcess;
 			switch (nPid) {
 			  case nVideoPid:
-				if ((чЗаголовокТранспортногоПакета & 4194304) != 0) {
-					Проверить((_dvКуча.getUint32(pPayload) & 4294967280) == 480);
+				if ((nTransportPacketHeader & 4194304) != 0) {
+					Check((_dvHeap.getUint32(pPayload) & 4294967280) == 480);
 				}
-				дорОбработать = _дорВидео;
+				trkToProcess = _trkVideo;
 				break;
 
 			  case nAudioPid:
-				if ((чЗаголовокТранспортногоПакета & 4194304) != 0) {
-					Проверить((_dvКуча.getUint32(pPayload) & 4294967264) == 448);
+				if ((nTransportPacketHeader & 4194304) != 0) {
+					Check((_dvHeap.getUint32(pPayload) & 4294967264) == 448);
 				}
-				дорОбработать = _дорАудио;
+				trkToProcess = _trkAudio;
 				break;
 
 			  case nMetadataPid:
-				if ((чЗаголовокТранспортногоПакета & 4194304) != 0) {
-					Проверить(_dvКуча.getUint32(pPayload) === 445);
-					Проверить((_мбКуча[pPayload + 6] & 4) != 0);
-					Проверить((_мбКуча[pPayload + 7] & 192) == 128);
-					_муНачалоМетаданных.push(_дорМетаданные.уКонецПотока);
+				if ((nTransportPacketHeader & 4194304) != 0) {
+					Check(_dvHeap.getUint32(pPayload) === 445);
+					Check((_abHeap[pPayload + 6] & 4) != 0);
+					Check((_abHeap[pPayload + 7] & 192) == 128);
+					_apMetadataStart.push(_trkMetadata.pStreamEnd);
 				}
-				дорОбработать = _дорМетаданные;
+				trkToProcess = _trkMetadata;
 				break;
 
 			  case 0:
-				Проверить((чЗаголовокТранспортногоПакета & 4194320) == 4194320);
-				var oPat = new ProgramAssociationTable(pPayload, уТранспортныйПакет + РАЗМЕР_ТРАНСПОРТНОГО_ПАКЕТА);
+				Check((nTransportPacketHeader & 4194320) == 4194320);
+				var oPat = new ProgramAssociationTable(pPayload, pTransportPacket + TRANSPORT_PACKET_SIZE);
 				if (_oPat === null) {
 					_oPat = oPat;
-					м_Журнал.Вот(`PatVersion=${oPat.nPatVersion} ProgramNumber=${oPat.nProgramNumber} PmtPid=${oPat.nPmtPid}`);
+					m_Log.Log(`PatVersion=${oPat.nPatVersion} ProgramNumber=${oPat.nProgramNumber} PmtPid=${oPat.nPmtPid}`);
 				} else {
-					Проверить(_oPat.nPatVersion === oPat.nPatVersion && _oPat.nProgramNumber === oPat.nProgramNumber && _oPat.nPmtPid === oPat.nPmtPid);
+					Check(_oPat.nPatVersion === oPat.nPatVersion && _oPat.nProgramNumber === oPat.nProgramNumber && _oPat.nPmtPid === oPat.nPmtPid);
 				}
 				nPmtPid = oPat.nPmtPid;
 				++cPat;
 				continue;
 
 			  case nPmtPid:
-				Проверить((чЗаголовокТранспортногоПакета & 4194320) == 4194320);
-				var oPmt = new ProgramMapTable(pPayload, уТранспортныйПакет + РАЗМЕР_ТРАНСПОРТНОГО_ПАКЕТА, _oPat.nProgramNumber);
+				Check((nTransportPacketHeader & 4194320) == 4194320);
+				var oPmt = new ProgramMapTable(pPayload, pTransportPacket + TRANSPORT_PACKET_SIZE, _oPat.nProgramNumber);
 				if (_oPmt === null) {
 					_oPmt = oPmt;
-					м_Журнал.Вот(`PmtVersion=${oPmt.nPmtVersion} VideoPid=${oPmt.nVideoPid} AudioPid=${oPmt.nAudioPid} MetadataPid=${oPmt.nMetadataPid}`);
+					m_Log.Log(`PmtVersion=${oPmt.nPmtVersion} VideoPid=${oPmt.nVideoPid} AudioPid=${oPmt.nAudioPid} MetadataPid=${oPmt.nMetadataPid}`);
 				} else {
-					Проверить(_oPmt.nPmtVersion === oPmt.nPmtVersion && _oPmt.nVideoPid === oPmt.nVideoPid && _oPmt.nAudioPid === oPmt.nAudioPid && _oPmt.nMetadataPid === oPmt.nMetadataPid);
+					Check(_oPmt.nPmtVersion === oPmt.nPmtVersion && _oPmt.nVideoPid === oPmt.nVideoPid && _oPmt.nAudioPid === oPmt.nAudioPid && _oPmt.nMetadataPid === oPmt.nMetadataPid);
 				}
 				({nVideoPid, nAudioPid, nMetadataPid} = oPmt);
 				++cPmt;
@@ -751,182 +755,182 @@ var м_Журнал = (() => {
 			  default:
 				continue;
 			}
-			if (дорОбработать.nContinuityCounter !== (чЗаголовокТранспортногоПакета & 15) && дорОбработать.nContinuityCounter !== -1) {
-				м_Журнал.Ой(`continuity_counter равен ${чЗаголовокТранспортногоПакета & 15} вместо ${дорОбработать.nContinuityCounter} PID=${nPid} СмещениеПакета=${мбТранспортныйПоток.length - уКонецТранспортногоПотока + уТранспортныйПакет}`);
-				Браковать(дорОбработать.уКонецПотока === дорОбработать.уНачалоПотока);
+			if (trkToProcess.nContinuityCounter !== (nTransportPacketHeader & 15) && trkToProcess.nContinuityCounter !== -1) {
+				m_Log.LogError(`continuity_counter is ${nTransportPacketHeader & 15} instead of ${trkToProcess.nContinuityCounter} PID=${nPid} PacketOffset=${abTransportStream.length - pTransportStreamEnd + pTransportPacket}`);
+				Reject(trkToProcess.pStreamEnd === trkToProcess.pStreamStart);
 			}
-			дорОбработать.nContinuityCounter = чЗаголовокТранспортногоПакета + 1 & 15;
-			switch (чЗаголовокТранспортногоПакета & 4194320) {
+			trkToProcess.nContinuityCounter = nTransportPacketHeader + 1 & 15;
+			switch (nTransportPacketHeader & 4194320) {
 			  case 16:
-				Проверить(дорОбработать.уКонецПотока !== дорОбработать.уНачалоПотока);
+				Check(trkToProcess.pStreamEnd !== trkToProcess.pStreamStart);
 				break;
 
 			  case 4194320:
-				var cbPesPacket = _dvКуча.getUint16(pPayload + 4);
-				var cbPesHeader = _мбКуча[pPayload + 8];
-				Проверить(дорОбработать.pPesPacketEnd === дорОбработать.уКонецПотока || дорОбработать.pPesPacketEnd === -1);
+				var cbPesPacket = _dvHeap.getUint16(pPayload + 4);
+				var cbPesHeader = _abHeap[pPayload + 8];
+				Check(trkToProcess.pPesPacketEnd === trkToProcess.pStreamEnd || trkToProcess.pPesPacketEnd === -1);
 				if (cbPesPacket !== 0) {
-					дорОбработать.pPesPacketEnd = дорОбработать.уКонецПотока + cbPesPacket - 3 - cbPesHeader;
+					trkToProcess.pPesPacketEnd = trkToProcess.pStreamEnd + cbPesPacket - 3 - cbPesHeader;
 				} else {
-					Проверить(nPid === nVideoPid);
-					дорОбработать.pPesPacketEnd = -1;
+					Check(nPid === nVideoPid);
+					trkToProcess.pPesPacketEnd = -1;
 				}
-				if (nPid === nVideoPid || дорОбработать.чВДНачала === -1) {
+				if (nPid === nVideoPid || trkToProcess.nDtsStart === -1) {
 					var nPts, nDts;
-					switch (_dvКуча.getUint16(pPayload + 6) & 61632) {
+					switch (_dvHeap.getUint16(pPayload + 6) & 61632) {
 					  case 32896:
-						Проверить(cbPesHeader >= 5);
+						Check(cbPesHeader >= 5);
 						nPts = DecodeTimestamp(pPayload + 9, 33);
 						nDts = nPts;
 						break;
 
 					  case 32960:
-						Проверить(cbPesHeader >= 10);
+						Check(cbPesHeader >= 10);
 						nPts = DecodeTimestamp(pPayload + 9, 49);
 						nDts = DecodeTimestamp(pPayload + 14, 17);
 						break;
 
 					  default:
-						Проверить(false);
+						Check(false);
 					}
-					if (дорОбработать.чВДНачала === -1) {
-						дорОбработать.чВДНачала = nDts;
+					if (trkToProcess.nDtsStart === -1) {
+						trkToProcess.nDtsStart = nDts;
 					}
 					if (nPid === nVideoPid) {
-						if (nDts === _чВДПоследнегоВидеоСемпла && cbPesPacket !== 0) {
-							Проверить((_мбКуча[pPayload + 6] & 4) == 0);
+						if (nDts === _nDtsLastVideoSample && cbPesPacket !== 0) {
+							Check((_abHeap[pPayload + 6] & 4) == 0);
 						} else {
-							Проверить(_дорВидео.уКонецСемплов <= _дорВидео.уКонецПамятиСемплов - РАЗМЕР_СТРУКТУРЫ_ВИДЕОСЕМПЛА);
-							if (_чВДПоследнегоВидеоСемпла !== -1) {
-								var чДлительностьВидеоСемпла = nDts - _чВДПоследнегоВидеоСемпла;
-								if (чДлительностьВидеоСемпла <= 0) {
-									if (чДлительностьВидеоСемпла > -10) {
-										чДлительностьВидеоСемпла = 1;
-										nDts = _чВДПоследнегоВидеоСемпла + чДлительностьВидеоСемпла;
-										++кИзмененийВД;
+							Check(_trkVideo.pSamplesEnd <= _trkVideo.pSamplesMemoryEnd - VIDEO_SAMPLE_STRUCT_SIZE);
+							if (_nDtsLastVideoSample !== -1) {
+								var nVideoSampleDuration = nDts - _nDtsLastVideoSample;
+								if (nVideoSampleDuration <= 0) {
+									if (nVideoSampleDuration > -10) {
+										nVideoSampleDuration = 1;
+										nDts = _nDtsLastVideoSample + nVideoSampleDuration;
+										++nDtsChanges;
 									} else {
-										Браковать(false);
+										Reject(false);
 									}
 								}
-								Проверить(чДлительностьВидеоСемпла < TS_TIMESCALE * 60);
-								_чМинДлительностьВидеоСемпла = Math.min(_чМинДлительностьВидеоСемпла, чДлительностьВидеоСемпла);
-								_чМаксДлительностьВидеоСемпла = Math.max(_чМаксДлительностьВидеоСемпла, чДлительностьВидеоСемпла);
-								_dvКуча.setUint32(_дорВидео.уКонецСемплов + ДЛИТЕЛЬНОСТЬ_ВИДЕОСЕМПЛА - РАЗМЕР_СТРУКТУРЫ_ВИДЕОСЕМПЛА, чДлительностьВидеоСемпла);
-								_dvКуча.setUint32(_дорВидео.уКонецСемплов + РАЗМЕР_ВИДЕОСЕМПЛА - РАЗМЕР_СТРУКТУРЫ_ВИДЕОСЕМПЛА, _дорВидео.уКонецПотока);
+								Check(nVideoSampleDuration < TS_TIMESCALE * 60);
+								_nMinVideoSampleDuration = Math.min(_nMinVideoSampleDuration, nVideoSampleDuration);
+								_nMaxVideoSampleDuration = Math.max(_nMaxVideoSampleDuration, nVideoSampleDuration);
+								_dvHeap.setUint32(_trkVideo.pSamplesEnd + VIDEO_SAMPLE_DURATION - VIDEO_SAMPLE_STRUCT_SIZE, nVideoSampleDuration);
+								_dvHeap.setUint32(_trkVideo.pSamplesEnd + VIDEO_SAMPLE_SIZE - VIDEO_SAMPLE_STRUCT_SIZE, _trkVideo.pStreamEnd);
 							}
-							_dvКуча.setInt32(_дорВидео.уКонецСемплов + ВП_ВИДЕОСЕМПЛА, nPts - nDts);
-							_дорВидео.уКонецСемплов += РАЗМЕР_СТРУКТУРЫ_ВИДЕОСЕМПЛА;
-							_чВДПоследнегоВидеоСемпла = nDts;
+							_dvHeap.setInt32(_trkVideo.pSamplesEnd + VIDEO_SAMPLE_VP, nPts - nDts);
+							_trkVideo.pSamplesEnd += VIDEO_SAMPLE_STRUCT_SIZE;
+							_nDtsLastVideoSample = nDts;
 						}
 					} else {
-						Проверить(nPts === nDts);
+						Check(nPts === nDts);
 					}
 				}
 				pPayload += 9 + cbPesHeader;
 				break;
 
 			  default:
-				Проверить(false);
+				Check(false);
 			}
-			var cbPayload = уТранспортныйПакет + РАЗМЕР_ТРАНСПОРТНОГО_ПАКЕТА - pPayload;
-			Проверить(cbPayload > 0 && cbPayload + дорОбработать.уКонецПотока <= дорОбработать.уКонецПамятиПотока);
-			_мбКуча.copyWithin(дорОбработать.уКонецПотока, pPayload, pPayload + cbPayload);
-			дорОбработать.уКонецПотока += cbPayload;
+			var cbPayload = pTransportPacket + TRANSPORT_PACKET_SIZE - pPayload;
+			Check(cbPayload > 0 && cbPayload + trkToProcess.pStreamEnd <= trkToProcess.pStreamMemoryEnd);
+			_abHeap.copyWithin(trkToProcess.pStreamEnd, pPayload, pPayload + cbPayload);
+			trkToProcess.pStreamEnd += cbPayload;
 		}
-		Проверить(_дорВидео.pPesPacketEnd === _дорВидео.уКонецПотока || _дорВидео.pPesPacketEnd === -1);
-		Проверить(_дорАудио.pPesPacketEnd === _дорАудио.уКонецПотока || _дорАудио.pPesPacketEnd === -1);
-		Проверить(_дорМетаданные.pPesPacketEnd === _дорМетаданные.уКонецПотока || _дорМетаданные.pPesPacketEnd === -1);
+		Check(_trkVideo.pPesPacketEnd === _trkVideo.pStreamEnd || _trkVideo.pPesPacketEnd === -1);
+		Check(_trkAudio.pPesPacketEnd === _trkAudio.pStreamEnd || _trkAudio.pPesPacketEnd === -1);
+		Check(_trkMetadata.pPesPacketEnd === _trkMetadata.pStreamEnd || _trkMetadata.pPesPacketEnd === -1);
 		if (cPat !== 1 || cPmt !== 1) {
-			м_Журнал.Ой(`Количество таблиц в сегменте: PAT=${cPat} PMT=${cPmt}`);
+			m_Log.LogError(`Number of tables in segment: PAT=${cPat} PMT=${cPmt}`);
 		}
-		if (кИзмененийВД !== 0) {
-			м_Журнал.Ой(`Количество видеосемплов с увеличенным ВД: ${кИзмененийВД}`);
+		if (nDtsChanges !== 0) {
+			m_Log.LogError(`Number of video samples with increased DTS: ${nDtsChanges}`);
 		}
-		Проверить(nVideoPid !== -1 || nAudioPid !== -1);
-		_лПотериВидео = nVideoPid !== -1 && _дорВидео.Пусто();
-		_лПотериЗвука = nAudioPid !== -1 && _дорАудио.Пусто();
-		if (_лПотериВидео || _лПотериЗвука) {
-			м_Журнал.Ой(`Сегмент не годится для воспроизведения: нет видео ${_лПотериВидео}, нет звука ${_лПотериЗвука}`);
+		Check(nVideoPid !== -1 || nAudioPid !== -1);
+		_bVideoLoss = nVideoPid !== -1 && _trkVideo.IsEmpty();
+		_bAudioLoss = nAudioPid !== -1 && _trkAudio.IsEmpty();
+		if (_bVideoLoss || _bAudioLoss) {
+			m_Log.LogError(`Segment is not suitable for playback: no video ${_bVideoLoss}, no audio ${_bAudioLoss}`);
 			return false;
 		}
-		var сВажность = _муНачалоМетаданных.length > 1 ? 'Ой' : 'Вот';
-		var сЗапись = `Метаданных=${_муНачалоМетаданных.length}`;
-		if (!_дорВидео.Пусто()) {
-			_dvКуча.setUint32(_дорВидео.уКонецСемплов + РАЗМЕР_ВИДЕОСЕМПЛА - РАЗМЕР_СТРУКТУРЫ_ВИДЕОСЕМПЛА, _дорВидео.уКонецПотока);
-			var кВидеосемплов = _дорВидео.ПолучитьКоличествоСемплов();
-			_чСредняяДлительностьВидеоСемпла = (_чВДПоследнегоВидеоСемпла - _дорВидео.чВДНачала) / (кВидеосемплов - 1);
-			if (кВидеосемплов < 25) {
-				сВажность = 'Ой';
+		var sImportance = _apMetadataStart.length > 1 ? 'LogError' : 'Log';
+		var sRecord = `Metadata=${_apMetadataStart.length}`;
+		if (!_trkVideo.IsEmpty()) {
+			_dvHeap.setUint32(_trkVideo.pSamplesEnd + VIDEO_SAMPLE_SIZE - VIDEO_SAMPLE_STRUCT_SIZE, _trkVideo.pStreamEnd);
+			var nVideoSamples = _trkVideo.GetNumberOfSamples();
+			_nAvgVideoSampleDuration = (_nDtsLastVideoSample - _trkVideo.nDtsStart) / (nVideoSamples - 1);
+			if (nVideoSamples < 25) {
+				sImportance = 'LogError';
 			}
-			сЗапись += ` ВДПервВидСемпла=${(_дорВидео.чВДНачала / TS_TIMESCALE).toFixed(5)}` + ` ВДПослВидСемпла=${(_чВДПоследнегоВидеоСемпла / TS_TIMESCALE).toFixed(5)}` + ` ДлитВидСегмента>${Мс(_чВДПоследнегоВидеоСемпла - _дорВидео.чВДНачала)} ВидСемплов=${кВидеосемплов}` + ` ДлитВидСемплов=${Мс(_чМинДлительностьВидеоСемпла, '')}<${Мс(_чСредняяДлительностьВидеоСемпла, '')}<${Мс(_чМаксДлительностьВидеоСемпла)}` + `(${(TS_TIMESCALE / _чМинДлительностьВидеоСемпла).toFixed(2)}` + `<${(TS_TIMESCALE / _чСредняяДлительностьВидеоСемпла).toFixed(2)}` + `<${(TS_TIMESCALE / _чМаксДлительностьВидеоСемпла).toFixed(2)}к/с)`;
+			sRecord += ` DtsFirstVidSample=${(_trkVideo.nDtsStart / TS_TIMESCALE).toFixed(5)}` + ` DtsLastVidSample=${(_nDtsLastVideoSample / TS_TIMESCALE).toFixed(5)}` + ` DurVidSegment>${Ms(_nDtsLastVideoSample - _trkVideo.nDtsStart)} VidSamples=${nVideoSamples}` + ` DurVidSamples=${Ms(_nMinVideoSampleDuration, '')}<${Ms(_nAvgVideoSampleDuration, '')}<${Ms(_nMaxVideoSampleDuration)}` + `(${(TS_TIMESCALE / _nMinVideoSampleDuration).toFixed(2)}` + `<${(TS_TIMESCALE / _nAvgVideoSampleDuration).toFixed(2)}` + `<${(TS_TIMESCALE / _nMaxVideoSampleDuration).toFixed(2)}fps)`;
 		}
-		if (!_дорАудио.Пусто()) {
-			сЗапись += ` ВДПервАудСемпла=${(_дорАудио.чВДНачала / TS_TIMESCALE).toFixed(5)}`;
+		if (!_trkAudio.IsEmpty()) {
+			sRecord += ` DtsFirstAudSample=${(_trkAudio.nDtsStart / TS_TIMESCALE).toFixed(5)}`;
 		}
-		if (!_дорВидео.Пусто() && !_дорАудио.Пусто()) {
-			var чСмещениеЗвука = _дорАудио.чВДНачала - _дорВидео.чВДНачала;
-			if (чСмещениеЗвука < -TS_TIMESCALE * .1 || чСмещениеЗвука > TS_TIMESCALE * .2) {
-				сВажность = 'Ой';
+		if (!_trkVideo.IsEmpty() && !_trkAudio.IsEmpty()) {
+			var nAudioOffset = _trkAudio.nDtsStart - _trkVideo.nDtsStart;
+			if (nAudioOffset < -TS_TIMESCALE * .1 || nAudioOffset > TS_TIMESCALE * .2) {
+				sImportance = 'LogError';
 			}
-			сЗапись += ` СмещНачалаАудСегмента=${Мс(_дорАудио.чВДНачала - _дорВидео.чВДНачала)}`;
+			sRecord += ` OffsetStartAudSegment=${Ms(_trkAudio.nDtsStart - _trkVideo.nDtsStart)}`;
 		}
-		м_Журнал[сВажность](сЗапись);
-		_чПозицияКодирования = (_дорАудио.чВДНачала !== -1 ? _дорАудио.чВДНачала : _дорВидео.чВДНачала) / TS_TIMESCALE;
+		m_Log[sImportance](sRecord);
+		_nEncodingPosition = (_trkAudio.nDtsStart !== -1 ? _trkAudio.nDtsStart : _trkVideo.nDtsStart) / TS_TIMESCALE;
 		return true;
 	}
-	function DecodeTimestamp(уАдрес, nMarkerBits) {
-		var ч1 = _мбКуча[уАдрес] | 0;
-		var ч2 = _dvКуча.getUint32(уАдрес + 1) | 0;
-		Проверить((ч1 & 241) == (nMarkerBits | 0) && (ч2 & 65537) == 65537);
-		return +((ч1 & 14) * (1 << 29) + (ч2 >> 2 & 1073709056 | ч2 >> 1 & 32767));
+	function DecodeTimestamp(pAddress, nMarkerBits) {
+		var n1 = _abHeap[pAddress] | 0;
+		var n2 = _dvHeap.getUint32(pAddress + 1) | 0;
+		Check((n1 & 241) == (nMarkerBits | 0) && (n2 & 65537) == 65537);
+		return +((n1 & 14) * (1 << 29) + (n2 >> 2 & 1073709056 | n2 >> 1 & 32767));
 	}
-	function ProgramAssociationTable(уНачало, уКонец) {
-		Проверить(уНачало < уКонец);
-		уНачало += 1 + _мбКуча[уНачало];
-		Проверить(уКонец - уНачало >= 16);
-		Проверить(_мбКуча[уНачало] === 0);
-		Проверить((_dvКуча.getUint16(уНачало + 1) & 53247) == 32781);
-		Проверить((_мбКуча[уНачало + 5] & 1) == 1);
-		var nPatVersion = _мбКуча[уНачало + 5] & 62;
-		Проверить(_мбКуча[уНачало + 6] === 0);
-		Проверить(_мбКуча[уНачало + 7] === 0);
-		var nProgramNumber = _dvКуча.getUint16(уНачало + 8);
-		Проверить(nProgramNumber !== 0);
-		var nPmtPid = _dvКуча.getUint16(уНачало + 10) & 8191;
-		Проверить(nPmtPid >= 16 && nPmtPid <= 8190);
+	function ProgramAssociationTable(pStart, pEnd) {
+		Check(pStart < pEnd);
+		pStart += 1 + _abHeap[pStart];
+		Check(pEnd - pStart >= 16);
+		Check(_abHeap[pStart] === 0);
+		Check((_dvHeap.getUint16(pStart + 1) & 53247) == 32781);
+		Check((_abHeap[pStart + 5] & 1) == 1);
+		var nPatVersion = _abHeap[pStart + 5] & 62;
+		Check(_abHeap[pStart + 6] === 0);
+		Check(_abHeap[pStart + 7] === 0);
+		var nProgramNumber = _dvHeap.getUint16(pStart + 8);
+		Check(nProgramNumber !== 0);
+		var nPmtPid = _dvHeap.getUint16(pStart + 10) & 8191;
+		Check(nPmtPid >= 16 && nPmtPid <= 8190);
 		this.nPatVersion = nPatVersion;
 		this.nProgramNumber = nProgramNumber;
 		this.nPmtPid = nPmtPid;
 	}
-	function ProgramMapTable(уНачало, уКонец, nProgramNumber) {
-		Проверить(уНачало < уКонец);
-		уНачало += 1 + _мбКуча[уНачало];
-		Проверить(уКонец - уНачало >= 12);
-		Проверить(_мбКуча[уНачало] === 2);
-		var уКонецСекции = _dvКуча.getUint16(уНачало + 1);
-		Проверить((уКонецСекции & 49152) == 32768);
-		уКонецСекции = уНачало + 3 + (уКонецСекции & 4095) - 4;
-		Проверить(уКонецСекции >= уНачало + 12 && уКонецСекции + 4 <= уКонец);
-		Проверить(_dvКуча.getUint16(уНачало + 3) === nProgramNumber);
-		Проверить((_мбКуча[уНачало + 5] & 1) == 1);
-		var nPmtVersion = _мбКуча[уНачало + 5] & 62;
-		Проверить(_мбКуча[уНачало + 6] === 0);
-		Проверить(_мбКуча[уНачало + 7] === 0);
-		уНачало += 12 + (_dvКуча.getUint16(уНачало + 10) & 4095);
+	function ProgramMapTable(pStart, pEnd, nProgramNumber) {
+		Check(pStart < pEnd);
+		pStart += 1 + _abHeap[pStart];
+		Check(pEnd - pStart >= 12);
+		Check(_abHeap[pStart] === 2);
+		var pSectionEnd = _dvHeap.getUint16(pStart + 1);
+		Check((pSectionEnd & 49152) == 32768);
+		pSectionEnd = pStart + 3 + (pSectionEnd & 4095) - 4;
+		Check(pSectionEnd >= pStart + 12 && pSectionEnd + 4 <= pEnd);
+		Check(_dvHeap.getUint16(pStart + 3) === nProgramNumber);
+		Check((_abHeap[pStart + 5] & 1) == 1);
+		var nPmtVersion = _abHeap[pStart + 5] & 62;
+		Check(_abHeap[pStart + 6] === 0);
+		Check(_abHeap[pStart + 7] === 0);
+		pStart += 12 + (_dvHeap.getUint16(pStart + 10) & 4095);
 		var nVideoPid = -1, nAudioPid = -1, nMetadataPid = -1;
-		while (уНачало !== уКонецСекции) {
-			var pDescriptor = уНачало + 5;
-			Проверить(pDescriptor <= уКонецСекции);
-			var nElementaryPid = _dvКуча.getUint16(уНачало + 1) & 8191;
-			Проверить(nElementaryPid >= 16 && nElementaryPid <= 8190);
-			var nEsInfoLength = _dvКуча.getUint16(уНачало + 3) & 4095;
-			Проверить(pDescriptor + nEsInfoLength <= уКонецСекции);
-			switch (_мбКуча[уНачало]) {
+		while (pStart !== pSectionEnd) {
+			var pDescriptor = pStart + 5;
+			Check(pDescriptor <= pSectionEnd);
+			var nElementaryPid = _dvHeap.getUint16(pStart + 1) & 8191;
+			Check(nElementaryPid >= 16 && nElementaryPid <= 8190);
+			var nEsInfoLength = _dvHeap.getUint16(pStart + 3) & 4095;
+			Check(pDescriptor + nEsInfoLength <= pSectionEnd);
+			switch (_abHeap[pStart]) {
 			  case 27:
 				if (nVideoPid === -1) {
 					nVideoPid = nElementaryPid;
 				} else {
-					м_Журнал.Ой(`Найден дополнительный видеопоток PID=${nElementaryPid}`);
+					m_Log.LogError(`Found additional video stream PID=${nElementaryPid}`);
 				}
 				break;
 
@@ -934,41 +938,41 @@ var м_Журнал = (() => {
 				if (nAudioPid === -1) {
 					nAudioPid = nElementaryPid;
 				} else {
-					м_Журнал.Ой(`Найден дополнительный аудиопоток PID=${nElementaryPid}`);
+					m_Log.LogError(`Found additional audio stream PID=${nElementaryPid}`);
 				}
 				break;
 
 			  case 21:
-				if (nEsInfoLength === 15 && _мбКуча[pDescriptor] === 38 && _мбКуча[pDescriptor + 1] === 13 && _мбКуча[pDescriptor + 2] === 255 && _мбКуча[pDescriptor + 3] === 255 && _мбКуча[pDescriptor + 4] === 73 && _мбКуча[pDescriptor + 5] === 68 && _мбКуча[pDescriptor + 6] === 51 && _мбКуча[pDescriptor + 7] === 32 && _мбКуча[pDescriptor + 8] === 255 && _мбКуча[pDescriptor + 9] === 73 && _мбКуча[pDescriptor + 10] === 68 && _мбКуча[pDescriptor + 11] === 51 && _мбКуча[pDescriptor + 12] === 32) {
+				if (nEsInfoLength === 15 && _abHeap[pDescriptor] === 38 && _abHeap[pDescriptor + 1] === 13 && _abHeap[pDescriptor + 2] === 255 && _abHeap[pDescriptor + 3] === 255 && _abHeap[pDescriptor + 4] === 73 && _abHeap[pDescriptor + 5] === 68 && _abHeap[pDescriptor + 6] === 51 && _abHeap[pDescriptor + 7] === 32 && _abHeap[pDescriptor + 8] === 255 && _abHeap[pDescriptor + 9] === 73 && _abHeap[pDescriptor + 10] === 68 && _abHeap[pDescriptor + 11] === 51 && _abHeap[pDescriptor + 12] === 32) {
 					if (nMetadataPid === -1) {
 						nMetadataPid = nElementaryPid;
 					} else {
-						м_Журнал.Ой(`Найден дополнительный метапоток PID=${nElementaryPid} metadata_service_id=${_мбКуча[pDescriptor + 13]}`);
+						m_Log.LogError(`Found additional metadata stream PID=${nElementaryPid} metadata_service_id=${_abHeap[pDescriptor + 13]}`);
 					}
 				}
 			}
-			уНачало = pDescriptor + nEsInfoLength;
+			pStart = pDescriptor + nEsInfoLength;
 		}
 		this.nPmtVersion = nPmtVersion;
 		this.nVideoPid = nVideoPid;
 		this.nAudioPid = nAudioPid;
 		this.nMetadataPid = nMetadataPid;
 	}
-	function РазобратьМетаданные() {
-		for (var ы = 0; ы < _муНачалоМетаданных.length; ы++) {
-			var oID3 = new ID3(_мбКуча, _муНачалоМетаданных[ы], _муНачалоМетаданных[ы + 1] || _дорМетаданные.уКонецПотока);
-			for (var сИдПоля of oID3) {
-				if (сИдПоля === 'TXXX') {
-					var {сОписание, сЗначение} = oID3.РазобратьTXXX();
-					if (сОписание === 'segmentmetadata') {
-						var оМетаданные = JSON.parse(сЗначение);
-						if (Number.isFinite(оМетаданные.transc_r)) {
-							Проверить(оМетаданные.transc_r > 14200704e5 && оМетаданные.transc_r < 18468864e5);
-							_чВремяКодирования = оМетаданные.transc_r;
+	function ParseMetadata() {
+		for (var i = 0; i < _apMetadataStart.length; i++) {
+			var oID3 = new ID3(_abHeap, _apMetadataStart[i], _apMetadataStart[i + 1] || _trkMetadata.pStreamEnd);
+			for (var sFieldId of oID3) {
+				if (sFieldId === 'TXXX') {
+					var {sDescription, sValue} = oID3.ParseTXXX();
+					if (sDescription === 'segmentmetadata') {
+						var oMetadata = JSON.parse(sValue);
+						if (Number.isFinite(oMetadata.transc_r)) {
+							Check(oMetadata.transc_r > 14200704e5 && oMetadata.transc_r < 18468864e5);
+							_nEncodingTime = oMetadata.transc_r;
 						}
-						if (Number.isFinite(оМетаданные.stream_offset)) {
-							Проверить(оМетаданные.stream_offset >= 0);
-							_чПозицияТрансляции = оМетаданные.stream_offset;
+						if (Number.isFinite(oMetadata.stream_offset)) {
+							Check(oMetadata.stream_offset >= 0);
+							_nBroadcastPosition = oMetadata.stream_offset;
 						}
 						return;
 					}
@@ -976,53 +980,53 @@ var м_Журнал = (() => {
 			}
 		}
 	}
-	function РазобратьВидеоПоток() {
-		if (_лРазрыв) {
+	function ParseVideoStream() {
+		if (_bDiscontinuity) {
 			_abSequenceParameterSet = null;
 			_abPictureParameterSet = null;
 			_abSequenceParameterSetExt = null;
 		}
-		if (_дорВидео.Пусто()) {
+		if (_trkVideo.IsEmpty()) {
 			return true;
 		}
-		var ФЛАГИ_ОБЫЧНОГО_КАДРА = 65536;
-		var ФЛАГИ_КЛЮЧЕВОГО_КАДРА = 0;
-		Проверить(_дорВидео.уНачалоПотока > _дорВидео.уНачалоПамятиПотока && _дорВидео.уКонецПотока > _дорВидео.уНачалоПотока && _дорВидео.уКонецСемплов > _дорВидео.уНачалоСемплов);
-		var уРазобранныйПоток = _дорВидео.уНачалоПамятиПотока;
-		var уСемплПервогоКлючКадра = -1;
-		var cNalUnits = 0, cAccessUnits = 0, кСемпловБезVCL = 0, кКлючКадров = 0, уСемплПоследнегоКлючКадра = -1;
-		var уСемпл = _дорВидео.уНачалоСемплов;
-		var уНачалоСледующегоСемпла = -1;
-		var уНачалоРазобранногоСемпла;
-		var чФлагиСемпла;
-		var pNalUnitEnd = _фНайтиПрефикс(_дорВидео.уНачалоПотока, _дорВидео.уКонецПотока);
-		Проверить(pNalUnitEnd === _дорВидео.уНачалоПотока);
-		Проверить(_мцКуча[0] > 3);
+		var NORMAL_FRAME_FLAGS = 65536;
+		var KEY_FRAME_FLAGS = 0;
+		Check(_trkVideo.pStreamStart > _trkVideo.pStreamMemoryStart && _trkVideo.pStreamEnd > _trkVideo.pStreamStart && _trkVideo.pSamplesEnd > _trkVideo.pSamplesStart);
+		var pParsedStream = _trkVideo.pStreamMemoryStart;
+		var pFirstKeyFrameSample = -1;
+		var cNalUnits = 0, cAccessUnits = 0, nSamplesWithoutVCL = 0, nKeyFrames = 0, pLastKeyFrameSample = -1;
+		var pSample = _trkVideo.pSamplesStart;
+		var pNextSampleStart = -1;
+		var pParsedSampleStart;
+		var nSampleFlags;
+		var pNalUnitEnd = _fFindPrefix(_trkVideo.pStreamStart, _trkVideo.pStreamEnd);
+		Check(pNalUnitEnd === _trkVideo.pStreamStart);
+		Check(_acHeap[0] > 3);
 		for (;;) {
-			var кбРазмерПрефикса = pNalUnitEnd === _дорВидео.уКонецПотока ? 0 : _мцКуча[0];
-			var лНачалоСемпла = pNalUnitEnd + кбРазмерПрефикса - Math.min(4, кбРазмерПрефикса) >= уНачалоСледующегоСемпла;
-			if (лНачалоСемпла && уНачалоСледующегоСемпла !== -1) {
-				if (чФлагиСемпла === -1) {
-					чФлагиСемпла = ФЛАГИ_ОБЫЧНОГО_КАДРА;
-					++кСемпловБезVCL;
+			var cbPrefixSize = pNalUnitEnd === _trkVideo.pStreamEnd ? 0 : _acHeap[0];
+			var bSampleStart = pNalUnitEnd + cbPrefixSize - Math.min(4, cbPrefixSize) >= pNextSampleStart;
+			if (bSampleStart && pNextSampleStart !== -1) {
+				if (nSampleFlags === -1) {
+					nSampleFlags = NORMAL_FRAME_FLAGS;
+					++nSamplesWithoutVCL;
 				}
-				Проверить(уРазобранныйПоток > уНачалоРазобранногоСемпла);
-				_dvКуча.setUint32(уСемпл + РАЗМЕР_ВИДЕОСЕМПЛА, уРазобранныйПоток - уНачалоРазобранногоСемпла);
-				_dvКуча.setUint32(уСемпл + ФЛАГИ_ВИДЕОСЕМПЛА, чФлагиСемпла);
-				уСемпл += РАЗМЕР_СТРУКТУРЫ_ВИДЕОСЕМПЛА;
+				Check(pParsedStream > pParsedSampleStart);
+				_dvHeap.setUint32(pSample + VIDEO_SAMPLE_SIZE, pParsedStream - pParsedSampleStart);
+				_dvHeap.setUint32(pSample + VIDEO_SAMPLE_FLAGS, nSampleFlags);
+				pSample += VIDEO_SAMPLE_STRUCT_SIZE;
 			}
-			if (pNalUnitEnd === _дорВидео.уКонецПотока) {
-				Проверить(уСемпл === _дорВидео.уКонецСемплов);
+			if (pNalUnitEnd === _trkVideo.pStreamEnd) {
+				Check(pSample === _trkVideo.pSamplesEnd);
 				break;
 			}
-			var pNalUnitBegin = pNalUnitEnd + кбРазмерПрефикса;
-			pNalUnitEnd = _фНайтиПрефикс(pNalUnitBegin, _дорВидео.уКонецПотока);
-			Браковать(pNalUnitEnd >= pNalUnitBegin);
-			if (лНачалоСемпла) {
-				Проверить(уСемпл < _дорВидео.уКонецСемплов);
-				уНачалоСледующегоСемпла = _dvКуча.getUint32(уСемпл + РАЗМЕР_ВИДЕОСЕМПЛА);
-				уНачалоРазобранногоСемпла = уРазобранныйПоток;
-				чФлагиСемпла = -1;
+			var pNalUnitBegin = pNalUnitEnd + cbPrefixSize;
+			pNalUnitEnd = _fFindPrefix(pNalUnitBegin, _trkVideo.pStreamEnd);
+			Reject(pNalUnitEnd >= pNalUnitBegin);
+			if (bSampleStart) {
+				Check(pSample < _trkVideo.pSamplesEnd);
+				pNextSampleStart = _dvHeap.getUint32(pSample + VIDEO_SAMPLE_SIZE);
+				pParsedSampleStart = pParsedStream;
+				nSampleFlags = -1;
 				if (cAccessUnits === 1) {
 					cAccessUnits = 0;
 				}
@@ -1031,110 +1035,110 @@ var м_Журнал = (() => {
 				continue;
 			}
 			++cNalUnits;
-			var nNalRefIdc = _мбКуча[pNalUnitBegin] & 224;
-			Браковать(nNalRefIdc < 128);
-			switch (_мбКуча[pNalUnitBegin] & 31) {
+			var nNalRefIdc = _abHeap[pNalUnitBegin] & 224;
+			Reject(nNalRefIdc < 128);
+			switch (_abHeap[pNalUnitBegin] & 31) {
 			  case 1:
 			  case 2:
 			  case 3:
 			  case 4:
-				Проверить(чФлагиСемпла !== ФЛАГИ_КЛЮЧЕВОГО_КАДРА);
-				чФлагиСемпла = ФЛАГИ_ОБЫЧНОГО_КАДРА;
+				Check(nSampleFlags !== KEY_FRAME_FLAGS);
+				nSampleFlags = NORMAL_FRAME_FLAGS;
 				break;
 
 			  case 5:
-				Проверить(nNalRefIdc !== 0);
-				if (чФлагиСемпла !== ФЛАГИ_КЛЮЧЕВОГО_КАДРА) {
-					Проверить(чФлагиСемпла !== ФЛАГИ_ОБЫЧНОГО_КАДРА);
-					чФлагиСемпла = ФЛАГИ_КЛЮЧЕВОГО_КАДРА;
-					if (уСемплПервогоКлючКадра === -1) {
-						уСемплПервогоКлючКадра = уСемпл;
+				Check(nNalRefIdc !== 0);
+				if (nSampleFlags !== KEY_FRAME_FLAGS) {
+					Check(nSampleFlags !== NORMAL_FRAME_FLAGS);
+					nSampleFlags = KEY_FRAME_FLAGS;
+					if (pFirstKeyFrameSample === -1) {
+						pFirstKeyFrameSample = pSample;
 					}
-					уСемплПоследнегоКлючКадра = уСемпл;
-					++кКлючКадров;
+					pLastKeyFrameSample = pSample;
+					++nKeyFrames;
 				}
 				break;
 
 			  case 6:
-				Проверить(nNalRefIdc === 0);
+				Check(nNalRefIdc === 0);
 				break;
 
 			  case 7:
-				Проверить(nNalRefIdc !== 0);
-				if (_лРазрыв && (уСемплПервогоКлючКадра === -1 || _abSequenceParameterSet === null)) {
-					_abSequenceParameterSet = _мбКуча.slice(pNalUnitBegin, pNalUnitEnd);
+				Check(nNalRefIdc !== 0);
+				if (_bDiscontinuity && (pFirstKeyFrameSample === -1 || _abSequenceParameterSet === null)) {
+					_abSequenceParameterSet = _abHeap.slice(pNalUnitBegin, pNalUnitEnd);
 				}
 				continue;
 
 			  case 8:
-				Проверить(nNalRefIdc !== 0);
-				if (_лРазрыв && (уСемплПервогоКлючКадра === -1 || _abPictureParameterSet === null)) {
-					_abPictureParameterSet = _мбКуча.slice(pNalUnitBegin, pNalUnitEnd);
+				Check(nNalRefIdc !== 0);
+				if (_bDiscontinuity && (pFirstKeyFrameSample === -1 || _abPictureParameterSet === null)) {
+					_abPictureParameterSet = _abHeap.slice(pNalUnitBegin, pNalUnitEnd);
 				}
 				continue;
 
 			  case 9:
-				Проверить(nNalRefIdc === 0);
+				Check(nNalRefIdc === 0);
 				++cAccessUnits;
 				continue;
 
 			  case 10:
-				Проверить(nNalRefIdc === 0);
+				Check(nNalRefIdc === 0);
 				continue;
 
 			  case 11:
-				Проверить(nNalRefIdc === 0);
-				Проверить(false);
+				Check(nNalRefIdc === 0);
+				Check(false);
 				continue;
 
 			  case 12:
-				Проверить(nNalRefIdc === 0);
+				Check(nNalRefIdc === 0);
 				continue;
 
 			  case 13:
-				Проверить(nNalRefIdc !== 0);
-				Проверить(false);
-				if (_лРазрыв && (уСемплПервогоКлючКадра === -1 || _abSequenceParameterSetExt === null)) {
-					_abSequenceParameterSetExt = _мбКуча.slice(pNalUnitBegin, pNalUnitEnd);
+				Check(nNalRefIdc !== 0);
+				Check(false);
+				if (_bDiscontinuity && (pFirstKeyFrameSample === -1 || _abSequenceParameterSetExt === null)) {
+					_abSequenceParameterSetExt = _abHeap.slice(pNalUnitBegin, pNalUnitEnd);
 				}
 				continue;
 			}
 			var cbNalUnit = pNalUnitEnd - pNalUnitBegin;
-			_dvКуча.setUint32(уРазобранныйПоток, cbNalUnit);
-			уРазобранныйПоток += 4;
-			Проверить(уРазобранныйПоток < pNalUnitBegin);
-			_мбКуча.copyWithin(уРазобранныйПоток, pNalUnitBegin, pNalUnitEnd);
-			уРазобранныйПоток += cbNalUnit;
+			_dvHeap.setUint32(pParsedStream, cbNalUnit);
+			pParsedStream += 4;
+			Check(pParsedStream < pNalUnitBegin);
+			_abHeap.copyWithin(pParsedStream, pNalUnitBegin, pNalUnitEnd);
+			pParsedStream += cbNalUnit;
 		}
-		_дорВидео.уНачалоПотока = _дорВидео.уНачалоПамятиПотока;
-		_дорВидео.уКонецПотока = уРазобранныйПоток;
-		м_Журнал.Вот('NalUnits=' + cNalUnits + ' КлючКадров=' + кКлючКадров + ' ПервКлючКадр=' + _дорВидео.ПолучитьНомерСемпла(уСемплПервогоКлючКадра) + ' ПослКлючКадр=' + _дорВидео.ПолучитьНомерСемпла(уСемплПоследнегоКлючКадра));
-		if (кСемпловБезVCL !== 0) {
-			м_Журнал.Ой(`Видеосемплов без VCL NAL unit: ${кСемпловБезVCL}`);
+		_trkVideo.pStreamStart = _trkVideo.pStreamMemoryStart;
+		_trkVideo.pStreamEnd = pParsedStream;
+		m_Log.Log('NalUnits=' + cNalUnits + ' KeyFrames=' + nKeyFrames + ' FirstKeyFrame=' + _trkVideo.GetSampleNumber(pFirstKeyFrameSample) + ' LastKeyFrame=' + _trkVideo.GetSampleNumber(pLastKeyFrameSample));
+		if (nSamplesWithoutVCL !== 0) {
+			m_Log.LogError(`Video samples without VCL NAL unit: ${nSamplesWithoutVCL}`);
 		}
 		if (cAccessUnits > 1) {
-			м_Журнал.Ой('Несколько access unit в одном видеосемпле');
+			m_Log.LogError('Multiple access units in one video sample');
 		}
-		if (_лРазрыв) {
-			if (уСемплПервогоКлючКадра === -1 || _abSequenceParameterSet === null || _abPictureParameterSet === null) {
-				м_Журнал.Ой(`Сегмент не годится для воспроизведения: не найден IDR ${уСемплПервогоКлючКадра === -1}, не найден SPS ${_abSequenceParameterSet === null}, не найден PPS ${_abPictureParameterSet === null}`);
+		if (_bDiscontinuity) {
+			if (pFirstKeyFrameSample === -1 || _abSequenceParameterSet === null || _abPictureParameterSet === null) {
+				m_Log.LogError(`Segment is not suitable for playback: IDR not found ${pFirstKeyFrameSample === -1}, SPS not found ${_abSequenceParameterSet === null}, PPS not found ${_abPictureParameterSet === null}`);
 				return false;
 			}
-			var мбКопия = _abSequenceParameterSet.slice();
-			var о = RemoveEmulationPreventionBytesFromNalUnit(мбКопия, 0, мбКопия.length);
-			ParseSequenceParameterSet(мбКопия, о.уНачалоRBSP, о.уКонецRBSP);
-		} else if (ДЕЛАТЬ_ПЕРВЫЙ_КАДР_КЛЮЧЕВЫМ && уСемплПервогоКлючКадра !== _дорВидео.уНачалоСемплов) {
-			м_Журнал.Ой('Делаю первый видеосемпл ключевым');
-			_dvКуча.setUint32(_дорВидео.уНачалоСемплов + ФЛАГИ_ВИДЕОСЕМПЛА, ФЛАГИ_КЛЮЧЕВОГО_КАДРА);
+			var abCopy = _abSequenceParameterSet.slice();
+			var o = RemoveEmulationPreventionBytesFromNalUnit(abCopy, 0, abCopy.length);
+			ParseSequenceParameterSet(abCopy, o.pRbspStart, o.pRbspEnd);
+		} else if (MAKE_FIRST_FRAME_KEY && pFirstKeyFrameSample !== _trkVideo.pSamplesStart) {
+			m_Log.LogError('Making the first video sample a keyframe');
+			_dvHeap.setUint32(_trkVideo.pSamplesStart + VIDEO_SAMPLE_FLAGS, KEY_FRAME_FLAGS);
 		}
 		return true;
 	}
-	function ParseSequenceParameterSet(мбПоток, уНачало, уКонец) {
-		_nProfileIndication = мбПоток[уНачало];
-		_nConstraintSetFlag = мбПоток[уНачало + 1];
-		_nLevelIndication = мбПоток[уНачало + 2];
-		var оПотокБитов = new ПотокБитов(мбПоток, уНачало + 3, уКонец);
-		оПотокБитов.ПропуститьЭКГ();
+	function ParseSequenceParameterSet(abStream, pStart, pEnd) {
+		_nProfileIndication = abStream[pStart];
+		_nConstraintSetFlag = abStream[pStart + 1];
+		_nLevelIndication = abStream[pStart + 2];
+		var oBitStream = new BitStream(abStream, pStart + 3, pEnd);
+		oBitStream.SkipExpGolomb();
 		var nSeparateColourPlaneFlag = 0;
 		_nChromaFormatIndication = 1;
 		_nBitDepthLumaMinus8 = 0;
@@ -1156,23 +1160,23 @@ var м_Журнал = (() => {
 		  case 138:
 		  case 139:
 		  case 134:
-			_nChromaFormatIndication = оПотокБитов.ПрочестьБеззнаковыйЭКГ();
-			Проверить(_nChromaFormatIndication <= 3);
+			_nChromaFormatIndication = oBitStream.ReadUnsignedExpGolomb();
+			Check(_nChromaFormatIndication <= 3);
 			if (_nChromaFormatIndication === 3) {
-				nSeparateColourPlaneFlag = оПотокБитов.ПрочестьБиты(1);
+				nSeparateColourPlaneFlag = oBitStream.ReadBits(1);
 			}
-			_nBitDepthLumaMinus8 = оПотокБитов.ПрочестьБеззнаковыйЭКГ();
-			Проверить(_nBitDepthLumaMinus8 <= 6);
-			_nBitDepthChromaMinus8 = оПотокБитов.ПрочестьБеззнаковыйЭКГ();
-			Проверить(_nBitDepthChromaMinus8 <= 6);
-			оПотокБитов.ПропуститьБиты(1);
-			if (оПотокБитов.ПрочестьБиты(1) !== 0) {
+			_nBitDepthLumaMinus8 = oBitStream.ReadUnsignedExpGolomb();
+			Check(_nBitDepthLumaMinus8 <= 6);
+			_nBitDepthChromaMinus8 = oBitStream.ReadUnsignedExpGolomb();
+			Check(_nBitDepthChromaMinus8 <= 6);
+			oBitStream.SkipBits(1);
+			if (oBitStream.ReadBits(1) !== 0) {
 				for (var i = 0, ic = _nChromaFormatIndication !== 3 ? 8 : 12; i < ic; ++i) {
-					if (оПотокБитов.ПрочестьБиты(1) !== 0) {
+					if (oBitStream.ReadBits(1) !== 0) {
 						var nLastScale = 8, nNextScale = 8;
 						for (var j = 0, jc = i < 6 ? 16 : 64; j < jc; ++j) {
 							if (nNextScale !== 0) {
-								nNextScale = (nLastScale + оПотокБитов.ПрочестьЗнаковыйЭКГ() + 256) % 256;
+								nNextScale = (nLastScale + oBitStream.ReadSignedExpGolomb() + 256) % 256;
 							}
 							if (nNextScale !== 0) {
 								nLastScale = nNextScale;
@@ -1182,70 +1186,70 @@ var м_Журнал = (() => {
 				}
 			}
 		}
-		оПотокБитов.ПропуститьЭКГ();
-		switch (оПотокБитов.ПрочестьБеззнаковыйЭКГ()) {
+		oBitStream.SkipExpGolomb();
+		switch (oBitStream.ReadUnsignedExpGolomb()) {
 		  case 0:
-			оПотокБитов.ПропуститьЭКГ();
+			oBitStream.SkipExpGolomb();
 			break;
 
 		  case 1:
-			оПотокБитов.ПропуститьБиты(1);
-			оПотокБитов.ПропуститьЭКГ();
-			оПотокБитов.ПропуститьЭКГ();
-			for (i = 0, ic = оПотокБитов.ПрочестьБеззнаковыйЭКГ(); i < ic; ++i) {
-				оПотокБитов.ПропуститьЭКГ();
+			oBitStream.SkipBits(1);
+			oBitStream.SkipExpGolomb();
+			oBitStream.SkipExpGolomb();
+			for (i = 0, ic = oBitStream.ReadUnsignedExpGolomb(); i < ic; ++i) {
+				oBitStream.SkipExpGolomb();
 			}
 		}
-		_nMaxNumberReferenceFrames = оПотокБитов.ПрочестьБеззнаковыйЭКГ();
-		оПотокБитов.ПропуститьБиты(1);
-		var nPictureWidthInMacroblocks = оПотокБитов.ПрочестьБеззнаковыйЭКГ() + 1;
-		var nPictureHeightInMapUnits = оПотокБитов.ПрочестьБеззнаковыйЭКГ() + 1;
-		var nFrameMacroblocksOnlyFlag = оПотокБитов.ПрочестьБиты(1);
+		_nMaxNumberReferenceFrames = oBitStream.ReadUnsignedExpGolomb();
+		oBitStream.SkipBits(1);
+		var nPictureWidthInMacroblocks = oBitStream.ReadUnsignedExpGolomb() + 1;
+		var nPictureHeightInMapUnits = oBitStream.ReadUnsignedExpGolomb() + 1;
+		var nFrameMacroblocksOnlyFlag = oBitStream.ReadBits(1);
 		if (nFrameMacroblocksOnlyFlag === 0) {
-			оПотокБитов.ПропуститьБиты(1);
+			oBitStream.SkipBits(1);
 		}
-		оПотокБитов.ПропуститьБиты(1);
+		oBitStream.SkipBits(1);
 		var nFrameCropLeftOffset = 0;
 		var nFrameCropRightOffset = 0;
 		var nFrameCropTopOffset = 0;
 		var nFrameCropBottomOffset = 0;
-		if (оПотокБитов.ПрочестьБиты(1) !== 0) {
-			nFrameCropLeftOffset = оПотокБитов.ПрочестьБеззнаковыйЭКГ();
-			nFrameCropRightOffset = оПотокБитов.ПрочестьБеззнаковыйЭКГ();
-			nFrameCropTopOffset = оПотокБитов.ПрочестьБеззнаковыйЭКГ();
-			nFrameCropBottomOffset = оПотокБитов.ПрочестьБеззнаковыйЭКГ();
+		if (oBitStream.ReadBits(1) !== 0) {
+			nFrameCropLeftOffset = oBitStream.ReadUnsignedExpGolomb();
+			nFrameCropRightOffset = oBitStream.ReadUnsignedExpGolomb();
+			nFrameCropTopOffset = oBitStream.ReadUnsignedExpGolomb();
+			nFrameCropBottomOffset = oBitStream.ReadUnsignedExpGolomb();
 		}
-		_чЧастотаКадров = 0;
-		_чДиапазон = -1;
-		if (оПотокБитов.ПрочестьБиты(1) !== 0) {
+		_nFrameRate = 0;
+		_nRange = -1;
+		if (oBitStream.ReadBits(1) !== 0) {
 			var nAspectRatioIndication;
-			if (оПотокБитов.ПрочестьБиты(1) !== 0) {
-				nAspectRatioIndication = оПотокБитов.ПрочестьБиты(8);
+			if (oBitStream.ReadBits(1) !== 0) {
+				nAspectRatioIndication = oBitStream.ReadBits(8);
 				if (nAspectRatioIndication === 255) {
-					оПотокБитов.ПрочестьБиты(16);
-					оПотокБитов.ПрочестьБиты(16);
+					oBitStream.ReadBits(16);
+					oBitStream.ReadBits(16);
 				}
 			}
-			if (оПотокБитов.ПрочестьБиты(1) !== 0) {
-				оПотокБитов.ПропуститьБиты(1);
+			if (oBitStream.ReadBits(1) !== 0) {
+				oBitStream.SkipBits(1);
 			}
-			if (оПотокБитов.ПрочестьБиты(1) !== 0) {
-				оПотокБитов.ПрочестьБиты(3);
-				_чДиапазон = оПотокБитов.ПрочестьБиты(1);
-				if (оПотокБитов.ПрочестьБиты(1) !== 0) {
-					оПотокБитов.ПропуститьБиты(8 + 8 + 8);
+			if (oBitStream.ReadBits(1) !== 0) {
+				oBitStream.ReadBits(3);
+				_nRange = oBitStream.ReadBits(1);
+				if (oBitStream.ReadBits(1) !== 0) {
+					oBitStream.SkipBits(8 + 8 + 8);
 				}
 			}
-			if (оПотокБитов.ПрочестьБиты(1) !== 0) {
-				оПотокБитов.ПропуститьЭКГ();
-				оПотокБитов.ПропуститьЭКГ();
+			if (oBitStream.ReadBits(1) !== 0) {
+				oBitStream.SkipExpGolomb();
+				oBitStream.SkipExpGolomb();
 			}
 			var nNumUnitsInTick, nTimeScale, nFixedFrameRateFlag;
-			if (оПотокБитов.ПрочестьБиты(1) !== 0) {
-				nNumUnitsInTick = оПотокБитов.ПрочестьБиты(32);
-				nTimeScale = оПотокБитов.ПрочестьБиты(32);
-				nFixedFrameRateFlag = оПотокБитов.ПрочестьБиты(1);
-				_чЧастотаКадров = nTimeScale / nNumUnitsInTick / (nFixedFrameRateFlag === 0 ? -2 : 2);
+			if (oBitStream.ReadBits(1) !== 0) {
+				nNumUnitsInTick = oBitStream.ReadBits(32);
+				nTimeScale = oBitStream.ReadBits(32);
+				nFixedFrameRateFlag = oBitStream.ReadBits(1);
+				_nFrameRate = nTimeScale / nNumUnitsInTick / (nFixedFrameRateFlag === 0 ? -2 : 2);
 			}
 		}
 		var nCropUnitX = 1;
@@ -1258,511 +1262,511 @@ var м_Журнал = (() => {
 			nCropUnitY += nCropUnitY;
 			nPictureHeightInMapUnits += nPictureHeightInMapUnits;
 		}
-		_чШиринаКартинки = nPictureWidthInMacroblocks * 16 - nCropUnitX * nFrameCropRightOffset - nCropUnitX * nFrameCropLeftOffset;
-		_чВысотаКартинки = nPictureHeightInMapUnits * 16 - nCropUnitY * nFrameCropBottomOffset - nCropUnitY * nFrameCropTopOffset;
-		_лЧересстрочное = nFrameMacroblocksOnlyFlag === 0;
+		_nImageWidth = nPictureWidthInMacroblocks * 16 - nCropUnitX * nFrameCropRightOffset - nCropUnitX * nFrameCropLeftOffset;
+		_nImageHeight = nPictureHeightInMapUnits * 16 - nCropUnitY * nFrameCropBottomOffset - nCropUnitY * nFrameCropTopOffset;
+		_bInterlaced = nFrameMacroblocksOnlyFlag === 0;
 	}
-	function RemoveEmulationPreventionBytesFromNalUnit(мбПоток, уНачало, уКонец) {
-		Проверить(уНачало < уКонец);
-		var nNalUnitType = мбПоток[уНачало++] & 31;
+	function RemoveEmulationPreventionBytesFromNalUnit(abStream, pStart, pEnd) {
+		Check(pStart < pEnd);
+		var nNalUnitType = abStream[pStart++] & 31;
 		if (nNalUnitType === 14 || nNalUnitType === 20 || nNalUnitType === 21) {
-			Проверить(уНачало < уКонец);
-			уНачало += nNalUnitType === 21 && (мбПоток[уНачало] & 128) != 0 ? 2 : 3;
-			Проверить(уНачало <= уКонец);
+			Check(pStart < pEnd);
+			pStart += nNalUnitType === 21 && (abStream[pStart] & 128) != 0 ? 2 : 3;
+			Check(pStart <= pEnd);
 		}
-		var уНачалоRBSP = уНачало;
-		var уКонец2 = уКонец - 2;
-		while (уНачало < уКонец2) {
-			if (мбПоток[уНачало++] === 0 && мбПоток[уНачало++] === 0) {
-				var чТретийБайт = мбПоток[уНачало++];
-				Проверить(чТретийБайт >= 3);
-				if (чТретийБайт === 3) {
-					var уДекодированныйПоток = уНачало - 1;
-					Проверить(уНачало === уКонец || мбПоток[уНачало] <= 3);
-					while (уНачало < уКонец2) {
-						if ((мбПоток[уДекодированныйПоток++] = мбПоток[уНачало++]) === 0 && (мбПоток[уДекодированныйПоток++] = мбПоток[уНачало++]) === 0) {
-							чТретийБайт = мбПоток[уДекодированныйПоток++] = мбПоток[уНачало++];
-							Проверить(чТретийБайт >= 3);
-							if (чТретийБайт === 3) {
-								--уДекодированныйПоток;
-								Проверить(уНачало === уКонец || мбПоток[уНачало] <= 3);
+		var pRbspStart = pStart;
+		var pEnd2 = pEnd - 2;
+		while (pStart < pEnd2) {
+			if (abStream[pStart++] === 0 && abStream[pStart++] === 0) {
+				var nThirdByte = abStream[pStart++];
+				Check(nThirdByte >= 3);
+				if (nThirdByte === 3) {
+					var pDecodedStream = pStart - 1;
+					Check(pStart === pEnd || abStream[pStart] <= 3);
+					while (pStart < pEnd2) {
+						if ((abStream[pDecodedStream++] = abStream[pStart++]) === 0 && (abStream[pDecodedStream++] = abStream[pStart++]) === 0) {
+							nThirdByte = abStream[pDecodedStream++] = abStream[pStart++];
+							Check(nThirdByte >= 3);
+							if (nThirdByte === 3) {
+								--pDecodedStream;
+								Check(pStart === pEnd || abStream[pStart] <= 3);
 							}
 						}
 					}
-					while (уНачало !== уКонец) {
-						var чПоследнийБайт = мбПоток[уДекодированныйПоток++] = мбПоток[уНачало++];
+					while (pStart !== pEnd) {
+						var nLastByte = abStream[pDecodedStream++] = abStream[pStart++];
 					}
-					Проверить(чПоследнийБайт !== 0);
+					Check(nLastByte !== 0);
 					return {
-						уНачалоRBSP,
-						уКонецRBSP: уДекодированныйПоток
+						pRbspStart,
+						pRbspEnd: pDecodedStream
 					};
 				}
 			}
 		}
-		Проверить(уНачало === уКонец || мбПоток[уКонец - 1] !== 0);
+		Check(pStart === pEnd || abStream[pEnd - 1] !== 0);
 		return {
-			уНачалоRBSP,
-			уКонецRBSP: уКонец
+			pRbspStart,
+			pRbspEnd: pEnd
 		};
 	}
-	function РазобратьАудиоПоток() {
-		if (_дорАудио.Пусто()) {
+	function ParseAudioStream() {
+		if (_trkAudio.IsEmpty()) {
 			return true;
 		}
 		var ADTS_HEADER_SIZE = 7;
-		Проверить(_дорАудио.уКонецПотока > _дорАудио.уНачалоПотока && _дорАудио.уКонецСемплов === _дорАудио.уНачалоСемплов);
-		if (_лРазрыв) {
-			Проверить(_дорАудио.ПолучитьРазмерПотока() > ADTS_HEADER_SIZE);
-			ParseAdtsFixedHeader(_dvКуча.getUint32(_дорАудио.уНачалоПотока));
+		Check(_trkAudio.pStreamEnd > _trkAudio.pStreamStart && _trkAudio.pSamplesEnd === _trkAudio.pSamplesStart);
+		if (_bDiscontinuity) {
+			Check(_trkAudio.GetStreamSize() > ADTS_HEADER_SIZE);
+			ParseAdtsFixedHeader(_dvHeap.getUint32(_trkAudio.pStreamStart));
 		}
-		var pAdtsFrame = _дорАудио.уНачалоПотока;
-		var уРазобранныйПоток = _дорАудио.уНачалоПотока;
-		var уСемпл = _дорАудио.уНачалоСемплов;
-		var уКонецПотока = _дорАудио.уКонецПотока - ADTS_HEADER_SIZE;
-		var уКонецПамятиСемплов = _дорАудио.уКонецПамятиСемплов - РАЗМЕР_СТРУКТУРЫ_АУДИОСЕМПЛА;
-		while (pAdtsFrame < уКонецПотока) {
-			Проверить(уСемпл <= уКонецПамятиСемплов);
-			Проверить(_мбКуча[pAdtsFrame] === 255 && _мбКуча[pAdtsFrame + 1] === 241);
-			Проверить((_мбКуча[pAdtsFrame + 6] & 3) == 0);
-			var cbAdtsFrame = _dvКуча.getUint32(pAdtsFrame + 3) >> 13 & 8191;
+		var pAdtsFrame = _trkAudio.pStreamStart;
+		var pParsedStream = _trkAudio.pStreamStart;
+		var pSample = _trkAudio.pSamplesStart;
+		var pStreamEnd = _trkAudio.pStreamEnd - ADTS_HEADER_SIZE;
+		var pSamplesMemoryEnd = _trkAudio.pSamplesMemoryEnd - AUDIO_SAMPLE_STRUCT_SIZE;
+		while (pAdtsFrame < pStreamEnd) {
+			Check(pSample <= pSamplesMemoryEnd);
+			Check(_abHeap[pAdtsFrame] === 255 && _abHeap[pAdtsFrame + 1] === 241);
+			Check((_abHeap[pAdtsFrame + 6] & 3) == 0);
+			var cbAdtsFrame = _dvHeap.getUint32(pAdtsFrame + 3) >> 13 & 8191;
 			var pNextAdtsFrame = pAdtsFrame + cbAdtsFrame;
-			Проверить(cbAdtsFrame > ADTS_HEADER_SIZE && pNextAdtsFrame <= _дорАудио.уКонецПотока);
-			_мбКуча.copyWithin(уРазобранныйПоток, pAdtsFrame + ADTS_HEADER_SIZE, pNextAdtsFrame);
+			Check(cbAdtsFrame > ADTS_HEADER_SIZE && pNextAdtsFrame <= _trkAudio.pStreamEnd);
+			_abHeap.copyWithin(pParsedStream, pAdtsFrame + ADTS_HEADER_SIZE, pNextAdtsFrame);
 			cbAdtsFrame -= ADTS_HEADER_SIZE;
-			уРазобранныйПоток += cbAdtsFrame;
-			_dvКуча.setUint32(уСемпл, cbAdtsFrame);
-			уСемпл += РАЗМЕР_СТРУКТУРЫ_АУДИОСЕМПЛА;
+			pParsedStream += cbAdtsFrame;
+			_dvHeap.setUint32(pSample, cbAdtsFrame);
+			pSample += AUDIO_SAMPLE_STRUCT_SIZE;
 			pAdtsFrame = pNextAdtsFrame;
 		}
-		Проверить(pAdtsFrame === _дорАудио.уКонецПотока);
-		_дорАудио.уКонецПотока = уРазобранныйПоток;
-		_дорАудио.уКонецСемплов = уСемпл;
-		var чДлительностьАудиоСемпла = ДЛИНА_АУДИОСЕМПЛА / _чЧастотаДискретизации;
-		var чДлительностьАудиоСегмента = _дорАудио.ПолучитьКоличествоСемплов() * чДлительностьАудиоСемпла;
-		_чВДКонцаАудиоСегмента = _дорАудио.чВДНачала + Math.round(чДлительностьАудиоСегмента * TS_TIMESCALE);
-		_чБитрейтЗвука = _дорАудио.ПолучитьРазмерПотока() * 8 / 1e3 / чДлительностьАудиоСегмента;
-		м_Журнал.Вот(`ВДКонцаАудСегмента=${(_чВДКонцаАудиоСегмента / TS_TIMESCALE).toFixed(5)}` + ` ДлитАудСегмента=${(чДлительностьАудиоСегмента * 1e3).toFixed(2)}мс` + ` ДлитАудСемпла=${(чДлительностьАудиоСемпла * 1e3).toFixed(2)}мс`);
+		Check(pAdtsFrame === _trkAudio.pStreamEnd);
+		_trkAudio.pStreamEnd = pParsedStream;
+		_trkAudio.pSamplesEnd = pSample;
+		var nAudioSampleDuration = AUDIO_SAMPLE_LENGTH / _nSamplingFrequency;
+		var nAudioSegmentDuration = _trkAudio.GetNumberOfSamples() * nAudioSampleDuration;
+		_nDtsAudioSegmentEnd = _trkAudio.nDtsStart + Math.round(nAudioSegmentDuration * TS_TIMESCALE);
+		_nAudioBitrate = _trkAudio.GetStreamSize() * 8 / 1e3 / nAudioSegmentDuration;
+		m_Log.Log(`DtsEndAudSegment=${(_nDtsAudioSegmentEnd / TS_TIMESCALE).toFixed(5)}` + ` DurAudSegment=${(nAudioSegmentDuration * 1e3).toFixed(2)}ms` + ` DurAudSample=${(nAudioSampleDuration * 1e3).toFixed(2)}ms`);
 		return true;
 	}
 	function ParseAdtsFixedHeader(nAdtsFixedHeader) {
-		Проверить((nAdtsFixedHeader & 4294901760) == (4293984256 | 0));
+		Check((nAdtsFixedHeader & 4294901760) == (4293984256 | 0));
 		_nAudioObjectType = (nAdtsFixedHeader >> 14 & 3) + 1;
-		Проверить(_nAudioObjectType === 2);
+		Check(_nAudioObjectType === 2);
 		_anDecoderSpecificInfo[0] = _nAudioObjectType << 3;
-		var чИндексЧастотыДискретизации = nAdtsFixedHeader >> 10 & 15;
-		_чЧастотаДискретизации = ЧАСТОТА_ДИСКРЕТИЗАЦИИ[чИндексЧастотыДискретизации];
-		Проверить(_чЧастотаДискретизации !== void 0);
-		_anDecoderSpecificInfo[0] |= чИндексЧастотыДискретизации >> 1;
-		_anDecoderSpecificInfo[1] = чИндексЧастотыДискретизации << 7 & 128;
-		_чКоличествоКаналов = nAdtsFixedHeader >> 6 & 7;
-		Проверить(_чКоличествоКаналов !== 0);
-		_anDecoderSpecificInfo[1] |= _чКоличествоКаналов << 3;
-		м_Журнал[_nAudioObjectType !== 2 || _чЧастотаДискретизации < 44100 || _чКоличествоКаналов > 2 ? 'Ой' : 'Вот'](`AudioObjectType=${_nAudioObjectType} ЧастотаДискретизации=${_чЧастотаДискретизации} КоличествоКаналов=${_чКоличествоКаналов}`);
+		var nSamplingFrequencyIndex = nAdtsFixedHeader >> 10 & 15;
+		_nSamplingFrequency = SAMPLING_FREQUENCY[nSamplingFrequencyIndex];
+		Check(_nSamplingFrequency !== void 0);
+		_anDecoderSpecificInfo[0] |= nSamplingFrequencyIndex >> 1;
+		_anDecoderSpecificInfo[1] = nSamplingFrequencyIndex << 7 & 128;
+		_nChannelCount = nAdtsFixedHeader >> 6 & 7;
+		Check(_nChannelCount !== 0);
+		_anDecoderSpecificInfo[1] |= _nChannelCount << 3;
+		m_Log[_nAudioObjectType !== 2 || _nSamplingFrequency < 44100 || _nChannelCount > 2 ? 'LogError' : 'Log'](`AudioObjectType=${_nAudioObjectType} SamplingFrequency=${_nSamplingFrequency} ChannelCount=${_nChannelCount}`);
 	}
-	function ПолучитьНазваниеКодеков() {
-		var с = 'video/mp4;codecs="';
-		if (!_дорВидео.Пусто()) {
-			с += `avc1.${`0${_nProfileIndication.toString(16)}`.slice(-2).toUpperCase()}${`0${_nConstraintSetFlag.toString(16)}`.slice(-2).toUpperCase()}${`0${_nLevelIndication.toString(16)}`.slice(-2).toUpperCase()}`;
+	function GetCodecName() {
+		var s = 'video/mp4;codecs="';
+		if (!_trkVideo.IsEmpty()) {
+			s += `avc1.${`0${_nProfileIndication.toString(16)}`.slice(-2).toUpperCase()}${`0${_nConstraintSetFlag.toString(16)}`.slice(-2).toUpperCase()}${`0${_nLevelIndication.toString(16)}`.slice(-2).toUpperCase()}`;
 		}
-		if (!_дорВидео.Пусто() && !_дорАудио.Пусто()) {
-			с += ',';
+		if (!_trkVideo.IsEmpty() && !_trkAudio.IsEmpty()) {
+			s += ',';
 		}
-		if (!_дорАудио.Пусто()) {
-			с += `mp4a.40.${_nAudioObjectType}`;
+		if (!_trkAudio.IsEmpty()) {
+			s += `mp4a.40.${_nAudioObjectType}`;
 		}
-		return с + '"';
+		return s + '"';
 	}
-	function СоздатьСегментИнициализации() {
-		var кбРазмер = 1100 + (_abSequenceParameterSet === null ? 0 : _abSequenceParameterSet.length) + (_abPictureParameterSet === null ? 0 : _abPictureParameterSet.length) + (_abSequenceParameterSetExt === null ? 0 : _abSequenceParameterSetExt.length) + (_дорАудио.Пусто() ? 0 : _anDecoderSpecificInfo.length);
-		var мбСегмент = new Uint8Array(кбРазмер);
-		var dvСегмент = СоздатьDataView(мбСегмент);
-		var оСегмент = new IsoBaseMedia(мбСегмент, dvСегмент, 0);
-		оСегмент.AddBox('ftyp', [ 105, 115, 111, 54, 0, 0, 0, 0, 97, 118, 99, 49 ]);
-		оСегмент.AddBox('moov', () => {
-			оСегмент.AddFullBox('mvhd', 1, 0, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 255, 255, 255, 255, 255, 255, 255, 255, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255 ]);
-			оСегмент.AddBox('mvex', () => {
-				if (!_дорВидео.Пусто()) {
-					оСегмент.AddFullBox('trex', 0, 0, 20);
-					оСегмент.dvБуфер.setUint32(оСегмент.уКонец - 20, НОМЕР_ВИДЕО_ДОРОЖКИ);
-					оСегмент.dvБуфер.setUint32(оСегмент.уКонец - 16, 1);
+	function CreateInitializationSegment() {
+		var cbSize = 1100 + (_abSequenceParameterSet === null ? 0 : _abSequenceParameterSet.length) + (_abPictureParameterSet === null ? 0 : _abPictureParameterSet.length) + (_abSequenceParameterSetExt === null ? 0 : _abSequenceParameterSetExt.length) + (_trkAudio.IsEmpty() ? 0 : _anDecoderSpecificInfo.length);
+		var abSegment = new Uint8Array(cbSize);
+		var dvSegment = CreateDataView(abSegment);
+		var oSegment = new IsoBaseMedia(abSegment, dvSegment, 0);
+		oSegment.AddBox('ftyp', [ 105, 115, 111, 54, 0, 0, 0, 0, 97, 118, 99, 49 ]);
+		oSegment.AddBox('moov', () => {
+			oSegment.AddFullBox('mvhd', 1, 0, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 255, 255, 255, 255, 255, 255, 255, 255, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255 ]);
+			oSegment.AddBox('mvex', () => {
+				if (!_trkVideo.IsEmpty()) {
+					oSegment.AddFullBox('trex', 0, 0, 20);
+					oSegment.dvBuffer.setUint32(oSegment.pEnd - 20, VIDEO_TRACK_NUMBER);
+					oSegment.dvBuffer.setUint32(oSegment.pEnd - 16, 1);
 				}
-				if (!_дорАудио.Пусто()) {
-					оСегмент.AddFullBox('trex', 0, 0, 20);
-					оСегмент.dvБуфер.setUint32(оСегмент.уКонец - 20, НОМЕР_АУДИО_ДОРОЖКИ);
-					оСегмент.dvБуфер.setUint32(оСегмент.уКонец - 16, 1);
-					оСегмент.dvБуфер.setUint32(оСегмент.уКонец - 12, ДЛИНА_АУДИОСЕМПЛА);
+				if (!_trkAudio.IsEmpty()) {
+					oSegment.AddFullBox('trex', 0, 0, 20);
+					oSegment.dvBuffer.setUint32(oSegment.pEnd - 20, AUDIO_TRACK_NUMBER);
+					oSegment.dvBuffer.setUint32(oSegment.pEnd - 16, 1);
+					oSegment.dvBuffer.setUint32(oSegment.pEnd - 12, AUDIO_SAMPLE_LENGTH);
 				}
 			});
-			if (!_дорВидео.Пусто()) {
-				ДобавитьДорожкуВСегментИнициализации(true, оСегмент);
+			if (!_trkVideo.IsEmpty()) {
+				AddTrackToInitializationSegment(true, oSegment);
 			}
-			if (!_дорАудио.Пусто()) {
-				ДобавитьДорожкуВСегментИнициализации(false, оСегмент);
+			if (!_trkAudio.IsEmpty()) {
+				AddTrackToInitializationSegment(false, oSegment);
 			}
 		});
-		return оСегмент.Завершить();
+		return oSegment.Finish();
 	}
-	function ДобавитьДорожкуВСегментИнициализации(лВидео, оСегмент) {
-		оСегмент.AddBox('trak', () => {
-			оСегмент.AddFullBox('tkhd', 0, 3, 80);
-			оСегмент.мбБуфер[оСегмент.уКонец - 64] = 255;
-			оСегмент.мбБуфер[оСегмент.уКонец - 63] = 255;
-			оСегмент.мбБуфер[оСегмент.уКонец - 62] = 255;
-			оСегмент.мбБуфер[оСегмент.уКонец - 61] = 255;
-			оСегмент.мбБуфер[оСегмент.уКонец - 43] = 1;
-			оСегмент.мбБуфер[оСегмент.уКонец - 27] = 1;
-			оСегмент.мбБуфер[оСегмент.уКонец - 12] = 64;
-			if (лВидео) {
-				оСегмент.dvБуфер.setUint32(оСегмент.уКонец - 72, НОМЕР_ВИДЕО_ДОРОЖКИ);
-				оСегмент.dvБуфер.setUint16(оСегмент.уКонец - 8, _чШиринаКартинки);
-				оСегмент.dvБуфер.setUint16(оСегмент.уКонец - 4, _чВысотаКартинки);
+	function AddTrackToInitializationSegment(bVideo, oSegment) {
+		oSegment.AddBox('trak', () => {
+			oSegment.AddFullBox('tkhd', 0, 3, 80);
+			oSegment.abBuffer[oSegment.pEnd - 64] = 255;
+			oSegment.abBuffer[oSegment.pEnd - 63] = 255;
+			oSegment.abBuffer[oSegment.pEnd - 62] = 255;
+			oSegment.abBuffer[oSegment.pEnd - 61] = 255;
+			oSegment.abBuffer[oSegment.pEnd - 43] = 1;
+			oSegment.abBuffer[oSegment.pEnd - 27] = 1;
+			oSegment.abBuffer[oSegment.pEnd - 12] = 64;
+			if (bVideo) {
+				oSegment.dvBuffer.setUint32(oSegment.pEnd - 72, VIDEO_TRACK_NUMBER);
+				oSegment.dvBuffer.setUint16(oSegment.pEnd - 8, _nImageWidth);
+				oSegment.dvBuffer.setUint16(oSegment.pEnd - 4, _nImageHeight);
 			} else {
-				оСегмент.dvБуфер.setUint32(оСегмент.уКонец - 72, НОМЕР_АУДИО_ДОРОЖКИ);
-				оСегмент.dvБуфер.setUint16(оСегмент.уКонец - 48, 256);
+				oSegment.dvBuffer.setUint32(oSegment.pEnd - 72, AUDIO_TRACK_NUMBER);
+				oSegment.dvBuffer.setUint16(oSegment.pEnd - 48, 256);
 			}
-			оСегмент.AddBox('mdia', () => {
-				оСегмент.AddFullBox('mdhd', 0, 0, 20);
-				оСегмент.dvБуфер.setUint32(оСегмент.уКонец - 12, лВидео ? TS_TIMESCALE : _чЧастотаДискретизации);
-				оСегмент.мбБуфер[оСегмент.уКонец - 8] = 255;
-				оСегмент.мбБуфер[оСегмент.уКонец - 7] = 255;
-				оСегмент.мбБуфер[оСегмент.уКонец - 6] = 255;
-				оСегмент.мбБуфер[оСегмент.уКонец - 5] = 255;
-				оСегмент.мбБуфер[оСегмент.уКонец - 4] = 85;
-				оСегмент.мбБуфер[оСегмент.уКонец - 3] = 196;
-				оСегмент.AddFullBox('hdlr', 0, 0, 21);
-				if (лВидео) {
-					оСегмент.мбБуфер[оСегмент.уКонец - 17] = 118;
-					оСегмент.мбБуфер[оСегмент.уКонец - 16] = 105;
-					оСегмент.мбБуфер[оСегмент.уКонец - 15] = 100;
-					оСегмент.мбБуфер[оСегмент.уКонец - 14] = 101;
+			oSegment.AddBox('mdia', () => {
+				oSegment.AddFullBox('mdhd', 0, 0, 20);
+				oSegment.dvBuffer.setUint32(oSegment.pEnd - 12, bVideo ? TS_TIMESCALE : _nSamplingFrequency);
+				oSegment.abBuffer[oSegment.pEnd - 8] = 255;
+				oSegment.abBuffer[oSegment.pEnd - 7] = 255;
+				oSegment.abBuffer[oSegment.pEnd - 6] = 255;
+				oSegment.abBuffer[oSegment.pEnd - 5] = 255;
+				oSegment.abBuffer[oSegment.pEnd - 4] = 85;
+				oSegment.abBuffer[oSegment.pEnd - 3] = 196;
+				oSegment.AddFullBox('hdlr', 0, 0, 21);
+				if (bVideo) {
+					oSegment.abBuffer[oSegment.pEnd - 17] = 118;
+					oSegment.abBuffer[oSegment.pEnd - 16] = 105;
+					oSegment.abBuffer[oSegment.pEnd - 15] = 100;
+					oSegment.abBuffer[oSegment.pEnd - 14] = 101;
 				} else {
-					оСегмент.мбБуфер[оСегмент.уКонец - 17] = 115;
-					оСегмент.мбБуфер[оСегмент.уКонец - 16] = 111;
-					оСегмент.мбБуфер[оСегмент.уКонец - 15] = 117;
-					оСегмент.мбБуфер[оСегмент.уКонец - 14] = 110;
+					oSegment.abBuffer[oSegment.pEnd - 17] = 115;
+					oSegment.abBuffer[oSegment.pEnd - 16] = 111;
+					oSegment.abBuffer[oSegment.pEnd - 15] = 117;
+					oSegment.abBuffer[oSegment.pEnd - 14] = 110;
 				}
-				оСегмент.AddBox('minf', () => {
-					if (лВидео) {
-						оСегмент.AddFullBox('vmhd', 0, 1, 8);
+				oSegment.AddBox('minf', () => {
+					if (bVideo) {
+						oSegment.AddFullBox('vmhd', 0, 1, 8);
 					} else {
-						оСегмент.AddFullBox('smhd', 0, 0, 4);
+						oSegment.AddFullBox('smhd', 0, 0, 4);
 					}
-					оСегмент.AddBox('dinf', () => {
-						оСегмент.AddFullBox('dref', 0, 0, () => {
-							оСегмент.dvБуфер.setUint32(оСегмент.уКонец, 1);
-							оСегмент.уКонец += 4;
-							оСегмент.AddFullBox('url ', 0, 1, 0);
+					oSegment.AddBox('dinf', () => {
+						oSegment.AddFullBox('dref', 0, 0, () => {
+							oSegment.dvBuffer.setUint32(oSegment.pEnd, 1);
+							oSegment.pEnd += 4;
+							oSegment.AddFullBox('url ', 0, 1, 0);
 						});
 					});
-					оСегмент.AddBox('stbl', () => {
-						оСегмент.AddFullBox('stsd', 0, 0, () => {
-							оСегмент.dvБуфер.setUint32(оСегмент.уКонец, 1);
-							оСегмент.уКонец += 4;
-							if (лВидео) {
-								оСегмент.AddBox('avc1', () => {
-									оСегмент.dvБуфер.setUint16(оСегмент.уКонец + 6, 1);
-									оСегмент.dvБуфер.setUint16(оСегмент.уКонец + 24, _чШиринаКартинки);
-									оСегмент.dvБуфер.setUint16(оСегмент.уКонец + 26, _чВысотаКартинки);
-									оСегмент.dvБуфер.setUint32(оСегмент.уКонец + 28, 4718592);
-									оСегмент.dvБуфер.setUint32(оСегмент.уКонец + 32, 4718592);
-									оСегмент.dvБуфер.setUint16(оСегмент.уКонец + 40, 1);
-									оСегмент.dvБуфер.setUint16(оСегмент.уКонец + 74, 24);
-									оСегмент.dvБуфер.setUint16(оСегмент.уКонец + 76, 65535);
-									оСегмент.уКонец += 78;
-									оСегмент.AddBox('avcC', () => {
-										оСегмент.мбБуфер[оСегмент.уКонец] = 1;
-										оСегмент.мбБуфер[оСегмент.уКонец + 1] = _nProfileIndication;
-										оСегмент.мбБуфер[оСегмент.уКонец + 2] = _nConstraintSetFlag;
-										оСегмент.мбБуфер[оСегмент.уКонец + 3] = _nLevelIndication;
-										оСегмент.мбБуфер[оСегмент.уКонец + 4] = 255;
-										оСегмент.мбБуфер[оСегмент.уКонец + 5] = 225;
-										оСегмент.dvБуфер.setUint16(оСегмент.уКонец + 6, _abSequenceParameterSet.length);
-										оСегмент.КопироватьИзБуфера(оСегмент.уКонец + 8, _abSequenceParameterSet);
-										оСегмент.мбБуфер[оСегмент.уКонец] = 1;
-										оСегмент.dvБуфер.setUint16(оСегмент.уКонец + 1, _abPictureParameterSet.length);
-										оСегмент.КопироватьИзБуфера(оСегмент.уКонец + 3, _abPictureParameterSet);
+					oSegment.AddBox('stbl', () => {
+						oSegment.AddFullBox('stsd', 0, 0, () => {
+							oSegment.dvBuffer.setUint32(oSegment.pEnd, 1);
+							oSegment.pEnd += 4;
+							if (bVideo) {
+								oSegment.AddBox('avc1', () => {
+									oSegment.dvBuffer.setUint16(oSegment.pEnd + 6, 1);
+									oSegment.dvBuffer.setUint16(oSegment.pEnd + 24, _nImageWidth);
+									oSegment.dvBuffer.setUint16(oSegment.pEnd + 26, _nImageHeight);
+									oSegment.dvBuffer.setUint32(oSegment.pEnd + 28, 4718592);
+									oSegment.dvBuffer.setUint32(oSegment.pEnd + 32, 4718592);
+									oSegment.dvBuffer.setUint16(oSegment.pEnd + 40, 1);
+									oSegment.dvBuffer.setUint16(oSegment.pEnd + 74, 24);
+									oSegment.dvBuffer.setUint16(oSegment.pEnd + 76, 65535);
+									oSegment.pEnd += 78;
+									oSegment.AddBox('avcC', () => {
+										oSegment.abBuffer[oSegment.pEnd] = 1;
+										oSegment.abBuffer[oSegment.pEnd + 1] = _nProfileIndication;
+										oSegment.abBuffer[oSegment.pEnd + 2] = _nConstraintSetFlag;
+										oSegment.abBuffer[oSegment.pEnd + 3] = _nLevelIndication;
+										oSegment.abBuffer[oSegment.pEnd + 4] = 255;
+										oSegment.abBuffer[oSegment.pEnd + 5] = 225;
+										oSegment.dvBuffer.setUint16(oSegment.pEnd + 6, _abSequenceParameterSet.length);
+										oSegment.CopyFromBuffer(oSegment.pEnd + 8, _abSequenceParameterSet);
+										oSegment.abBuffer[oSegment.pEnd] = 1;
+										oSegment.dvBuffer.setUint16(oSegment.pEnd + 1, _abPictureParameterSet.length);
+										oSegment.CopyFromBuffer(oSegment.pEnd + 3, _abPictureParameterSet);
 										switch (_nProfileIndication) {
 										  case 100:
 										  case 110:
 										  case 122:
 										  case 144:
-											оСегмент.мбБуфер[оСегмент.уКонец] = 252 | _nChromaFormatIndication;
-											оСегмент.мбБуфер[оСегмент.уКонец + 1] = 248 | _nBitDepthLumaMinus8;
-											оСегмент.мбБуфер[оСегмент.уКонец + 2] = 248 | _nBitDepthChromaMinus8;
+											oSegment.abBuffer[oSegment.pEnd] = 252 | _nChromaFormatIndication;
+											oSegment.abBuffer[oSegment.pEnd + 1] = 248 | _nBitDepthLumaMinus8;
+											oSegment.abBuffer[oSegment.pEnd + 2] = 248 | _nBitDepthChromaMinus8;
 											if (_abSequenceParameterSetExt === null) {
-												оСегмент.уКонец += 4;
+												oSegment.pEnd += 4;
 											} else {
-												оСегмент.мбБуфер[оСегмент.уКонец + 3] = 1;
-												оСегмент.dvБуфер.setUint16(оСегмент.уКонец + 4, _abSequenceParameterSetExt.length);
-												оСегмент.КопироватьИзБуфера(оСегмент.уКонец + 6, _abSequenceParameterSetExt);
+												oSegment.abBuffer[oSegment.pEnd + 3] = 1;
+												oSegment.dvBuffer.setUint16(oSegment.pEnd + 4, _abSequenceParameterSetExt.length);
+												oSegment.CopyFromBuffer(oSegment.pEnd + 6, _abSequenceParameterSetExt);
 											}
 										}
 									});
 								});
 							} else {
-								оСегмент.AddBox('mp4a', () => {
-									оСегмент.dvБуфер.setUint16(оСегмент.уКонец + 6, 1);
-									оСегмент.dvБуфер.setUint16(оСегмент.уКонец + 16, _чКоличествоКаналов === 1 ? 1 : 2);
-									оСегмент.dvБуфер.setUint16(оСегмент.уКонец + 18, 16);
-									оСегмент.dvБуфер.setUint32(оСегмент.уКонец + 24, _чЧастотаДискретизации << 16);
-									оСегмент.уКонец += 28;
-									оСегмент.AddFullBox('esds', 0, 0, () => {
-										оСегмент.мбБуфер[оСегмент.уКонец] = 3;
-										оСегмент.мбБуфер[оСегмент.уКонец + 1] = 23 + _anDecoderSpecificInfo.length;
-										оСегмент.dvБуфер.setUint16(оСегмент.уКонец + 2, 1);
-										оСегмент.мбБуфер[оСегмент.уКонец + 5] = 4;
-										оСегмент.мбБуфер[оСегмент.уКонец + 6] = 15 + _anDecoderSpecificInfo.length;
-										оСегмент.мбБуфер[оСегмент.уКонец + 7] = 64;
-										оСегмент.мбБуфер[оСегмент.уКонец + 8] = 21;
-										оСегмент.мбБуфер[оСегмент.уКонец + 20] = 5;
-										оСегмент.мбБуфер[оСегмент.уКонец + 21] = _anDecoderSpecificInfo.length;
-										оСегмент.КопироватьИзМассива(оСегмент.уКонец + 22, _anDecoderSpecificInfo);
-										оСегмент.мбБуфер[оСегмент.уКонец] = 6;
-										оСегмент.мбБуфер[оСегмент.уКонец + 1] = 1;
-										оСегмент.мбБуфер[оСегмент.уКонец + 2] = 2;
-										оСегмент.уКонец += 3;
+								oSegment.AddBox('mp4a', () => {
+									oSegment.dvBuffer.setUint16(oSegment.pEnd + 6, 1);
+									oSegment.dvBuffer.setUint16(oSegment.pEnd + 16, _nChannelCount === 1 ? 1 : 2);
+									oSegment.dvBuffer.setUint16(oSegment.pEnd + 18, 16);
+									oSegment.dvBuffer.setUint32(oSegment.pEnd + 24, _nSamplingFrequency << 16);
+									oSegment.pEnd += 28;
+									oSegment.AddFullBox('esds', 0, 0, () => {
+										oSegment.abBuffer[oSegment.pEnd] = 3;
+										oSegment.abBuffer[oSegment.pEnd + 1] = 23 + _anDecoderSpecificInfo.length;
+										oSegment.dvBuffer.setUint16(oSegment.pEnd + 2, 1);
+										oSegment.abBuffer[oSegment.pEnd + 5] = 4;
+										oSegment.abBuffer[oSegment.pEnd + 6] = 15 + _anDecoderSpecificInfo.length;
+										oSegment.abBuffer[oSegment.pEnd + 7] = 64;
+										oSegment.abBuffer[oSegment.pEnd + 8] = 21;
+										oSegment.abBuffer[oSegment.pEnd + 20] = 5;
+										oSegment.abBuffer[oSegment.pEnd + 21] = _anDecoderSpecificInfo.length;
+										oSegment.CopyFromArray(oSegment.pEnd + 22, _anDecoderSpecificInfo);
+										oSegment.abBuffer[oSegment.pEnd] = 6;
+										oSegment.abBuffer[oSegment.pEnd + 1] = 1;
+										oSegment.abBuffer[oSegment.pEnd + 2] = 2;
+										oSegment.pEnd += 3;
 									});
 								});
 							}
 						});
-						оСегмент.AddFullBox('stts', 0, 0, 4);
-						оСегмент.AddFullBox('stsc', 0, 0, 4);
-						оСегмент.AddFullBox('stco', 0, 0, 4);
-						оСегмент.AddFullBox('stsz', 0, 0, 8);
+						oSegment.AddFullBox('stts', 0, 0, 4);
+						oSegment.AddFullBox('stsc', 0, 0, 4);
+						oSegment.AddFullBox('stco', 0, 0, 4);
+						oSegment.AddFullBox('stsz', 0, 0, 8);
 					});
 				});
 			});
 		});
 	}
-	function СоздатьМедиасегмент(мбМедиасегмент) {
-		var dvМедиасегмент = СоздатьDataView(мбМедиасегмент);
-		var оСегмент = new IsoBaseMedia(мбМедиасегмент, dvМедиасегмент, 0);
-		var уСмещениеВидеоданных, уСмещениеАудиоданных;
-		оСегмент.AddBox('moof', () => {
-			оСегмент.AddFullBox('mfhd', 0, 0, 4);
-			dvМедиасегмент.setUint32(оСегмент.уКонец - 4, 0);
-			if (!_дорВидео.Пусто()) {
-				оСегмент.AddBox('traf', () => {
-					оСегмент.AddFullBox('tfhd', 0, 131072, 4);
-					dvМедиасегмент.setUint32(оСегмент.уКонец - 4, НОМЕР_ВИДЕО_ДОРОЖКИ);
-					оСегмент.AddFullBox('tfdt', 1, 0, 8);
-					мбМедиасегмент.setUint64(оСегмент.уКонец - 8, _дорВидео.чВДНачала);
-					оСегмент.AddFullBox('trun', 1, 3841, () => {
-						dvМедиасегмент.setUint32(оСегмент.уКонец, _дорВидео.ПолучитьКоличествоСемплов());
-						уСмещениеВидеоданных = оСегмент.уКонец + 4;
-						оСегмент.КопироватьИзБуфера(оСегмент.уКонец + 8, _мбКуча, _дорВидео.уНачалоСемплов, _дорВидео.уКонецСемплов);
+	function CreateMediaSegment(abMediaSegment) {
+		var dvMediaSegment = CreateDataView(abMediaSegment);
+		var oSegment = new IsoBaseMedia(abMediaSegment, dvMediaSegment, 0);
+		var pVideoDataOffset, pAudioDataOffset;
+		oSegment.AddBox('moof', () => {
+			oSegment.AddFullBox('mfhd', 0, 0, 4);
+			dvMediaSegment.setUint32(oSegment.pEnd - 4, 0);
+			if (!_trkVideo.IsEmpty()) {
+				oSegment.AddBox('traf', () => {
+					oSegment.AddFullBox('tfhd', 0, 131072, 4);
+					dvMediaSegment.setUint32(oSegment.pEnd - 4, VIDEO_TRACK_NUMBER);
+					oSegment.AddFullBox('tfdt', 1, 0, 8);
+					abMediaSegment.setUint64(oSegment.pEnd - 8, _trkVideo.nDtsStart);
+					oSegment.AddFullBox('trun', 1, 3841, () => {
+						dvMediaSegment.setUint32(oSegment.pEnd, _trkVideo.GetNumberOfSamples());
+						pVideoDataOffset = oSegment.pEnd + 4;
+						oSegment.CopyFromBuffer(oSegment.pEnd + 8, _abHeap, _trkVideo.pSamplesStart, _trkVideo.pSamplesEnd);
 					});
 				});
 			}
-			if (!_дорАудио.Пусто()) {
-				оСегмент.AddBox('traf', () => {
-					оСегмент.AddFullBox('tfhd', 0, 131072, 4);
-					dvМедиасегмент.setUint32(оСегмент.уКонец - 4, НОМЕР_АУДИО_ДОРОЖКИ);
-					оСегмент.AddFullBox('tfdt', 1, 0, 8);
-					мбМедиасегмент.setUint64(оСегмент.уКонец - 8, Math.round(_дорАудио.чВДНачала / TS_TIMESCALE * _чЧастотаДискретизации));
-					оСегмент.AddFullBox('trun', 1, 513, () => {
-						dvМедиасегмент.setUint32(оСегмент.уКонец, _дорАудио.ПолучитьКоличествоСемплов());
-						уСмещениеАудиоданных = оСегмент.уКонец + 4;
-						оСегмент.КопироватьИзБуфера(оСегмент.уКонец + 8, _мбКуча, _дорАудио.уНачалоСемплов, _дорАудио.уКонецСемплов);
+			if (!_trkAudio.IsEmpty()) {
+				oSegment.AddBox('traf', () => {
+					oSegment.AddFullBox('tfhd', 0, 131072, 4);
+					dvMediaSegment.setUint32(oSegment.pEnd - 4, AUDIO_TRACK_NUMBER);
+					oSegment.AddFullBox('tfdt', 1, 0, 8);
+					abMediaSegment.setUint64(oSegment.pEnd - 8, Math.round(_trkAudio.nDtsStart / TS_TIMESCALE * _nSamplingFrequency));
+					oSegment.AddFullBox('trun', 1, 513, () => {
+						dvMediaSegment.setUint32(oSegment.pEnd, _trkAudio.GetNumberOfSamples());
+						pAudioDataOffset = oSegment.pEnd + 4;
+						oSegment.CopyFromBuffer(oSegment.pEnd + 8, _abHeap, _trkAudio.pSamplesStart, _trkAudio.pSamplesEnd);
 					});
 				});
 			}
 		});
-		оСегмент.AddBox('mdat', () => {
-			if (!_дорВидео.Пусто()) {
-				dvМедиасегмент.setInt32(уСмещениеВидеоданных, оСегмент.уКонец - оСегмент.уНачало);
-				оСегмент.КопироватьИзБуфера(оСегмент.уКонец, _мбКуча, _дорВидео.уНачалоПотока, _дорВидео.уКонецПотока);
+		oSegment.AddBox('mdat', () => {
+			if (!_trkVideo.IsEmpty()) {
+				dvMediaSegment.setInt32(pVideoDataOffset, oSegment.pEnd - oSegment.pStart);
+				oSegment.CopyFromBuffer(oSegment.pEnd, _abHeap, _trkVideo.pStreamStart, _trkVideo.pStreamEnd);
 			}
-			if (!_дорАудио.Пусто()) {
-				dvМедиасегмент.setInt32(уСмещениеАудиоданных, оСегмент.уКонец - оСегмент.уНачало);
-				оСегмент.КопироватьИзБуфера(оСегмент.уКонец, _мбКуча, _дорАудио.уНачалоПотока, _дорАудио.уКонецПотока);
+			if (!_trkAudio.IsEmpty()) {
+				dvMediaSegment.setInt32(pAudioDataOffset, oSegment.pEnd - oSegment.pStart);
+				oSegment.CopyFromBuffer(oSegment.pEnd, _abHeap, _trkAudio.pStreamStart, _trkAudio.pStreamEnd);
 			}
 		});
-		return оСегмент.Завершить();
+		return oSegment.Finish();
 	}
-	function ОтправитьПреобразованныйСегмент(мбМедиасегмент) {
-		var мбуфПередать = void 0;
-		var оДанные = {
-			чПреобразованЗа: _чПреобразованЗа,
-			лЗабраковано: _лЗабраковано,
-			лПотериВидео: _лПотериВидео,
-			лПотериЗвука: _лПотериЗвука,
-			чМинДлительностьВидеоСемпла: _чМинДлительностьВидеоСемпла / TS_TIMESCALE * 1e3,
-			чМаксДлительностьВидеоСемпла: _чМаксДлительностьВидеоСемпла / TS_TIMESCALE * 1e3,
-			чСредняяДлительностьВидеоСемпла: _чСредняяДлительностьВидеоСемпла / TS_TIMESCALE * 1e3,
-			чБитрейтЗвука: _чБитрейтЗвука,
-			чПозицияКодирования: _чПозицияКодирования,
-			чПозицияТрансляции: _чПозицияТрансляции,
-			чВремяКодирования: _чВремяКодирования
+	function SendConvertedSegment(abMediaSegment) {
+		var abufTransfer = void 0;
+		var oData = {
+			nConvertedIn: _nConvertedIn,
+			bRejected: _bRejected,
+			bVideoLoss: _bVideoLoss,
+			bAudioLoss: _bAudioLoss,
+			nMinVideoSampleDuration: _nMinVideoSampleDuration / TS_TIMESCALE * 1e3,
+			nMaxVideoSampleDuration: _nMaxVideoSampleDuration / TS_TIMESCALE * 1e3,
+			nAvgVideoSampleDuration: _nAvgVideoSampleDuration / TS_TIMESCALE * 1e3,
+			nAudioBitrate: _nAudioBitrate,
+			nEncodingPosition: _nEncodingPosition,
+			nBroadcastPosition: _nBroadcastPosition,
+			nEncodingTime: _nEncodingTime
 		};
-		if (мбМедиасегмент) {
-			оДанные.мбМедиасегмент = СоздатьМедиасегмент(мбМедиасегмент);
-			оДанные.лЕстьВидео = !_дорВидео.Пусто();
-			оДанные.лЕстьЗвук = !_дорАудио.Пусто();
-			мбуфПередать = [ оДанные.мбМедиасегмент.buffer ];
-			if (_лРазрыв) {
-				оДанные.мбСегментИнициализации = СоздатьСегментИнициализации();
-				оДанные.сКодеки = ПолучитьНазваниеКодеков();
-				оДанные.nProfileIndication = _nProfileIndication;
-				оДанные.nConstraintSetFlag = _nConstraintSetFlag;
-				оДанные.nLevelIndication = _nLevelIndication;
-				оДанные.nMaxNumberReferenceFrames = _nMaxNumberReferenceFrames;
-				оДанные.чШиринаКартинки = _чШиринаКартинки;
-				оДанные.чВысотаКартинки = _чВысотаКартинки;
-				оДанные.чЧастотаКадров = _чЧастотаКадров;
-				оДанные.чДиапазон = _чДиапазон;
-				оДанные.лЧересстрочное = _лЧересстрочное;
-				оДанные.nAudioObjectType = _nAudioObjectType;
-				оДанные.чЧастотаДискретизации = _чЧастотаДискретизации;
-				оДанные.чКоличествоКаналов = _чКоличествоКаналов;
-				мбуфПередать.push(оДанные.мбСегментИнициализации.buffer);
+		if (abMediaSegment) {
+			oData.abMediaSegment = CreateMediaSegment(abMediaSegment);
+			oData.bHasVideo = !_trkVideo.IsEmpty();
+			oData.bHasAudio = !_trkAudio.IsEmpty();
+			abufTransfer = [ oData.abMediaSegment.buffer ];
+			if (_bDiscontinuity) {
+				oData.abInitializationSegment = CreateInitializationSegment();
+				oData.sCodecs = GetCodecName();
+				oData.nProfileIndication = _nProfileIndication;
+				oData.nConstraintSetFlag = _nConstraintSetFlag;
+				oData.nLevelIndication = _nLevelIndication;
+				oData.nMaxNumberReferenceFrames = _nMaxNumberReferenceFrames;
+				oData.nImageWidth = _nImageWidth;
+				oData.nImageHeight = _nImageHeight;
+				oData.nFrameRate = _nFrameRate;
+				oData.nRange = _nRange;
+				oData.bInterlaced = _bInterlaced;
+				oData.nAudioObjectType = _nAudioObjectType;
+				oData.nSamplingFrequency = _nSamplingFrequency;
+				oData.nChannelCount = _nChannelCount;
+				abufTransfer.push(oData.abInitializationSegment.buffer);
 			}
-			_оИсходныйСегмент.лРазрыв = _лРазрыв;
-			м_Журнал.Вот(`Отправляю сегмент Разрыв=${_лРазрыв} Размер=${(оДанные.мбМедиасегмент.length / 1024 / 1024).toFixed(2)}мб`);
+			_oSourceSegment.bDiscontinuity = _bDiscontinuity;
+			m_Log.Log(`Sending segment Discontinuity=${_bDiscontinuity} Size=${(oData.abMediaSegment.length / 1024 / 1024).toFixed(2)}MB`);
 		}
-		_оИсходныйСегмент.пДанные = оДанные;
-		м_Журнал.Отправить();
-		ОтправитьРезультат(мбуфПередать);
+		_oSourceSegment.pData = oData;
+		m_Log.Send();
+		SendResult(abufTransfer);
 	}
-	function СостыковатьСегменты() {
-		if (_лРазрыв) {
+	function JoinSegments() {
+		if (_bDiscontinuity) {
 			return;
 		}
-		var чОтклонениеВДВидео = 0, чПерекрытиеВДВидео = 1, чОтклонениеВДАудио = 0;
-		if (!_дорВидео.Пусто()) {
-			чОтклонениеВДВидео = _дорВидео.чВДНачала - _чВДКонцаПредыдущегоВидеоСегмента;
-			чПерекрытиеВДВидео = _дорВидео.чВДНачала - _чВДПоследнегоВидеоСемплаПредыдущегоВидеоСегмента;
+		var nDtsVideoDeviation = 0, nDtsVideoOverlap = 1, nDtsAudioDeviation = 0;
+		if (!_trkVideo.IsEmpty()) {
+			nDtsVideoDeviation = _trkVideo.nDtsStart - _nDtsPreviousVideoSegmentEnd;
+			nDtsVideoOverlap = _trkVideo.nDtsStart - _nDtsLastVideoSamplePreviousVideoSegment;
 		}
-		if (!_дорАудио.Пусто()) {
-			чОтклонениеВДАудио = _дорАудио.чВДНачала - _чВДКонцаПредыдущегоАудиоСегмента;
+		if (!_trkAudio.IsEmpty()) {
+			nDtsAudioDeviation = _trkAudio.nDtsStart - _nDtsPreviousAudioSegmentEnd;
 		}
-		if (чПерекрытиеВДВидео <= 0 || чОтклонениеВДАудио < -TS_TIMESCALE * .1) {
-			м_Журнал.Ой(`Добавлен разрыв: ОтклонениеВДВидео=${Мс(чОтклонениеВДВидео)} ПерекрытиеВДВидео=${Мс(чПерекрытиеВДВидео)} ОтклонениеВДАудио=${чОтклонениеВДАудио}`);
-			_лРазрыв = true;
+		if (nDtsVideoOverlap <= 0 || nDtsAudioDeviation < -TS_TIMESCALE * .1) {
+			m_Log.LogError(`Added discontinuity: DtsVideoDeviation=${Ms(nDtsVideoDeviation)} DtsVideoOverlap=${Ms(nDtsVideoOverlap)} DtsAudioDeviation=${nDtsAudioDeviation}`);
+			_bDiscontinuity = true;
 			return;
 		}
-		if (Math.abs(чОтклонениеВДВидео) > TS_TIMESCALE * .002 || Math.abs(чОтклонениеВДАудио) > 2) {
-			м_Журнал.Ой(`ОтклонениеВДВидео=${Мс(чОтклонениеВДВидео)} ПерекрытиеВДВидео=${Мс(чПерекрытиеВДВидео)} ОтклонениеВДАудио=${чОтклонениеВДАудио}`);
+		if (Math.abs(nDtsVideoDeviation) > TS_TIMESCALE * .002 || Math.abs(nDtsAudioDeviation) > 2) {
+			m_Log.LogError(`DtsVideoDeviation=${Ms(nDtsVideoDeviation)} DtsVideoOverlap=${Ms(nDtsVideoOverlap)} DtsAudioDeviation=${nDtsAudioDeviation}`);
 		}
-		if (чОтклонениеВДВидео > TS_TIMESCALE * .01) {
-			_лПотериВидео = true;
+		if (nDtsVideoDeviation > TS_TIMESCALE * .01) {
+			_bVideoLoss = true;
 		}
-		if (чОтклонениеВДАудио > TS_TIMESCALE * .1) {
-			_лПотериЗвука = true;
+		if (nDtsAudioDeviation > TS_TIMESCALE * .1) {
+			_bAudioLoss = true;
 		}
 	}
-	function РассчитатьДлительностьПоследнегоВидеосемпла() {
-		var кВидеосемплов = _дорВидео.ПолучитьКоличествоСемплов();
-		if (кВидеосемплов === 0) {
+	function CalculateLastVideoSampleDuration() {
+		var nVideoSamples = _trkVideo.GetNumberOfSamples();
+		if (nVideoSamples === 0) {
 			return;
 		}
-		var чДлительность;
-		if (кВидеосемплов === 1) {
-			чДлительность = _дорАудио.Пусто() ? Math.round(TS_TIMESCALE / 30) : _чВДКонцаАудиоСегмента - _дорАудио.чВДНачала;
+		var nDuration;
+		if (nVideoSamples === 1) {
+			nDuration = _trkAudio.IsEmpty() ? Math.round(TS_TIMESCALE / 30) : _nDtsAudioSegmentEnd - _trkAudio.nDtsStart;
 		} else {
-			чДлительность = _dvКуча.getUint32(_дорВидео.уКонецСемплов - РАЗМЕР_СТРУКТУРЫ_ВИДЕОСЕМПЛА * 2 + ДЛИТЕЛЬНОСТЬ_ВИДЕОСЕМПЛА);
-			var уСемпл = _дорВидео.уКонецСемплов - РАЗМЕР_СТРУКТУРЫ_ВИДЕОСЕМПЛА;
-			var чВД = 0;
-			var чВППоследнегоВидеоСемпла = _dvКуча.getInt32(уСемпл + ВП_ВИДЕОСЕМПЛА);
-			for (var ы = Math.min(16, кВидеосемплов); --ы != 0; ) {
-				уСемпл -= РАЗМЕР_СТРУКТУРЫ_ВИДЕОСЕМПЛА;
-				чВД -= _dvКуча.getUint32(уСемпл + ДЛИТЕЛЬНОСТЬ_ВИДЕОСЕМПЛА);
-				var чВП = чВД + _dvКуча.getInt32(уСемпл + ВП_ВИДЕОСЕМПЛА);
-				if (чВП > чВППоследнегоВидеоСемпла) {
-					чДлительность = Math.min(чДлительность, чВП - чВППоследнегоВидеоСемпла);
+			nDuration = _dvHeap.getUint32(_trkVideo.pSamplesEnd - VIDEO_SAMPLE_STRUCT_SIZE * 2 + VIDEO_SAMPLE_DURATION);
+			var pSample = _trkVideo.pSamplesEnd - VIDEO_SAMPLE_STRUCT_SIZE;
+			var nDts = 0;
+			var nVpLastVideoSample = _dvHeap.getInt32(pSample + VIDEO_SAMPLE_VP);
+			for (var i = Math.min(16, nVideoSamples); --i != 0; ) {
+				pSample -= VIDEO_SAMPLE_STRUCT_SIZE;
+				nDts -= _dvHeap.getUint32(pSample + VIDEO_SAMPLE_DURATION);
+				var nVp = nDts + _dvHeap.getInt32(pSample + VIDEO_SAMPLE_VP);
+				if (nVp > nVpLastVideoSample) {
+					nDuration = Math.min(nDuration, nVp - nVpLastVideoSample);
 				}
 			}
 		}
-		м_Журнал[кВидеосемплов === 1 ? 'Ой' : 'Вот'](`Длительность последнего видеосемпла ${Мс(чДлительность)}`);
-		_dvКуча.setUint32(_дорВидео.уКонецСемплов - РАЗМЕР_СТРУКТУРЫ_ВИДЕОСЕМПЛА + ДЛИТЕЛЬНОСТЬ_ВИДЕОСЕМПЛА, чДлительность);
-		_чВДКонцаВидеоСегмента = _чВДПоследнегоВидеоСемпла + чДлительность;
+		m_Log[nVideoSamples === 1 ? 'LogError' : 'Log'](`Duration of the last video sample ${Ms(nDuration)}`);
+		_dvHeap.setUint32(_trkVideo.pSamplesEnd - VIDEO_SAMPLE_STRUCT_SIZE + VIDEO_SAMPLE_DURATION, nDuration);
+		_nDtsVideoSegmentEnd = _nDtsLastVideoSample + nDuration;
 	}
-	function ПреобразоватьСегмент() {
-		var чНачало = performance.now();
-		_лРазрыв = _лРазрыв || _оИсходныйСегмент.лРазрыв;
-		м_Журнал.Вот(`ПРЕОБРАЗУЮ СЕГМЕНТ ${_оИсходныйСегмент.чНомер} Разрыв=${_лРазрыв} Длительность=${_оИсходныйСегмент.чДлительность} Размер=${(_оИсходныйСегмент.пДанные.byteLength / 1024 / 1024).toFixed(2)}мб`);
-		ОчиститьСтатистику();
-		var лСегментПреобразован = false;
-		var мбТранспортныйПоток = new Uint8Array(_оИсходныйСегмент.пДанные);
+	function ConvertSegment() {
+		var nStart = performance.now();
+		_bDiscontinuity = _bDiscontinuity || _oSourceSegment.bDiscontinuity;
+		m_Log.Log(`CONVERTING SEGMENT ${_oSourceSegment.nNumber} Discontinuity=${_bDiscontinuity} Duration=${_oSourceSegment.nDuration} Size=${(_oSourceSegment.pData.byteLength / 1024 / 1024).toFixed(2)}MB`);
+		ClearStatistics();
+		var bSegmentConverted = false;
+		var abTransportStream = new Uint8Array(_oSourceSegment.pData);
 		try {
-			м_Память.Выделить(мбТранспортныйПоток);
-			if (РазобратьТранспортныйПоток(мбТранспортныйПоток)) {
-				СостыковатьСегменты();
-				РазобратьМетаданные();
-				лСегментПреобразован = РазобратьВидеоПоток() && РазобратьАудиоПоток();
-				if (лСегментПреобразован) {
-					РассчитатьДлительностьПоследнегоВидеосемпла();
+			m_Memory.Allocate(abTransportStream);
+			if (ParseTransportStream(abTransportStream)) {
+				JoinSegments();
+				ParseMetadata();
+				bSegmentConverted = ParseVideoStream() && ParseAudioStream();
+				if (bSegmentConverted) {
+					CalculateLastVideoSampleDuration();
 				}
 			}
-		} catch (пИсключение) {
-			if (пИсключение instanceof Error && пИсключение.message === 'БРАКОВАТЬ') {
-				м_Журнал.Ой(`Сегмент забракован: ${пИсключение.stack}`);
-				ОчиститьСтатистику();
-				_лЗабраковано = true;
+		} catch (pException) {
+			if (pException instanceof Error && pException.message === 'REJECT') {
+				m_Log.LogError(`Segment rejected: ${pException.stack}`);
+				ClearStatistics();
+				_bRejected = true;
 			} else {
-				throw пИсключение;
+				throw pException;
 			}
 		}
-		_оИсходныйСегмент.пДанные = null;
-		if (лСегментПреобразован) {
-			ОтправитьПреобразованныйСегмент(мбТранспортныйПоток);
+		_oSourceSegment.pData = null;
+		if (bSegmentConverted) {
+			SendConvertedSegment(abTransportStream);
 		} else {
-			ВыброситьВПомойку(мбТранспортныйПоток);
-			ОтправитьПреобразованныйСегмент(null);
+			ThrowInTheTrash(abTransportStream);
+			SendConvertedSegment(null);
 		}
-		_лРазрыв = !лСегментПреобразован;
-		_чВДПоследнегоВидеоСемплаПредыдущегоВидеоСегмента = _чВДПоследнегоВидеоСемпла;
-		_чВДКонцаПредыдущегоВидеоСегмента = _чВДКонцаВидеоСегмента;
-		_чВДКонцаПредыдущегоАудиоСегмента = _чВДКонцаАудиоСегмента;
-		_чПреобразованЗа = performance.now() - чНачало;
+		_bDiscontinuity = !bSegmentConverted;
+		_nDtsLastVideoSamplePreviousVideoSegment = _nDtsLastVideoSample;
+		_nDtsPreviousVideoSegmentEnd = _nDtsVideoSegmentEnd;
+		_nDtsPreviousAudioSegmentEnd = _nDtsAudioSegmentEnd;
+		_nConvertedIn = performance.now() - nStart;
 	}
-	function ОбработатьСменуСостояния() {
-		м_Журнал.Вот(`ПРОПУСКАЮ СЕГМЕНТ ${_оИсходныйСегмент.чНомер} Состояние=${_оИсходныйСегмент.пДанные}`);
-		if (_оИсходныйСегмент.пДанные !== СОСТОЯНИЕ_СМЕНА_ВАРИАНТА) {
-			м_Память.Освободить();
+	function HandleStateChange() {
+		m_Log.Log(`SKIPPING SEGMENT ${_oSourceSegment.nNumber} State=${_oSourceSegment.pData}`);
+		if (_oSourceSegment.pData !== STATE_CHANGE_VARIANT) {
+			m_Memory.Free();
 		}
-		м_Журнал.Отправить();
-		ОтправитьРезультат();
-		_лРазрыв = true;
+		m_Log.Send();
+		SendResult();
+		_bDiscontinuity = true;
 	}
-	function ОбработатьСообщение(пДанные) {
-		_оИсходныйСегмент = пДанные;
-		if (typeof _оИсходныйСегмент.пДанные == 'number') {
-			ОбработатьСменуСостояния();
+	function HandleMessage(pData) {
+		_oSourceSegment = pData;
+		if (typeof _oSourceSegment.pData == 'number') {
+			HandleStateChange();
 		} else {
-			ПреобразоватьСегмент();
+			ConvertSegment();
 		}
-		_оИсходныйСегмент = null;
+		_oSourceSegment = null;
 	}
-	function ОбработатьИсключение(пИсключение) {
+	function HandleException(pException) {
 		self.onmessage = null;
-		_мНеобработанныеСообщения = null;
-		м_Память.Освободить();
-		м_Журнал.Отправить();
-		ЗавершитьРаботуИОтправитьОтчет(пИсключение);
+		_aUnprocessedMessages = null;
+		m_Memory.Free();
+		m_Log.Send();
+		TerminateAndSendReport(pException);
 	}
-	self.onmessage = (оСобытие => {
+	self.onmessage = (oEvent => {
 		try {
-			if (_мНеобработанныеСообщения !== null) {
-				_мНеобработанныеСообщения.push(оСобытие.data);
-				м_Журнал.Ой('Обработка сообщения отложена: компиляция не завершена');
-				м_Журнал.Отправить();
+			if (_aUnprocessedMessages !== null) {
+				_aUnprocessedMessages.push(oEvent.data);
+				m_Log.LogError('Message processing delayed: compilation not finished');
+				m_Log.Send();
 			} else {
-				ОбработатьСообщение(оСобытие.data);
+				HandleMessage(oEvent.data);
 			}
-		} catch (пИсключение) {
-			ОбработатьИсключение(пИсключение);
+		} catch (pException) {
+			HandleException(pException);
 		}
 	});
-	self.onmessageerror = (оСобытие => {
-		throw new Error(`Произошло событие ${оСобытие.type}`);
+	self.onmessageerror = (oEvent => {
+		throw new Error(`Event ${oEvent.type} occurred`);
 	});
-	_оАссемблер.Компилировать().then(() => {
-		м_Журнал.Вот(`Компиляция завершена: ${performance.now().toFixed()}мс Необработанных сообщений: ${_мНеобработанныеСообщения.length}`);
-		while (_мНеобработанныеСообщения.length !== 0) {
-			ОбработатьСообщение(_мНеобработанныеСообщения.shift());
+	_oAssembler.Compile().then(() => {
+		m_Log.Log(`Compilation finished: ${performance.now().toFixed()}ms Unprocessed messages: ${_aUnprocessedMessages.length}`);
+		while (_aUnprocessedMessages.length !== 0) {
+			HandleMessage(_aUnprocessedMessages.shift());
 		}
-		_мНеобработанныеСообщения = null;
-	}).catch(ОбработатьИсключение);
+		_aUnprocessedMessages = null;
+	}).catch(HandleException);
 }

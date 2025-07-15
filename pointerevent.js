@@ -1,6 +1,10 @@
 (() => {
 	'use strict';
-	const _оСвойства = {
+	/**
+	 * @fileoverview This file is a polyfill for the PointerEvent API. It creates PointerEvents from MouseEvents.
+	 * This is necessary for browsers that do not support PointerEvents natively.
+	 */
+	const _oProperties = {
 		pointerId: 0,
 		width: 1,
 		height: 1,
@@ -13,106 +17,114 @@
 		isPrimary: false
 	};
 	class PointerEvent extends MouseEvent {
-		constructor(сТипСобытия, оПараметры = {}) {
-			super(сТипСобытия, оПараметры);
-			const оОпределениеСвойства = {
+		constructor(sEventType, oParameters = {}) {
+			super(sEventType, oParameters);
+			const oPropertyDefinition = {
 				enumerable: true,
 				configurable: true
 			};
-			for (const сИмя of Object.keys(_оСвойства)) {
-				if (сИмя in оПараметры) {
-					if (typeof оПараметры[сИмя] != typeof _оСвойства[сИмя] || Number.isNaN(оПараметры[сИмя])) {
-						throw new TypeError(`В конструктор PointerEvent передан параметр ${сИмя} недопустимого типа`);
+			for (const sName of Object.keys(_oProperties)) {
+				if (sName in oParameters) {
+					if (typeof oParameters[sName] != typeof _oProperties[sName] || Number.isNaN(oParameters[sName])) {
+						throw new TypeError(`Invalid type for parameter ${sName} passed to PointerEvent constructor`);
 					}
-					оОпределениеСвойства.value = оПараметры[сИмя];
+					oPropertyDefinition.value = oParameters[sName];
 				} else {
-					оОпределениеСвойства.value = _оСвойства[сИмя];
+					oPropertyDefinition.value = _oProperties[sName];
 				}
-				Object.defineProperty(this, сИмя, оОпределениеСвойства);
+				Object.defineProperty(this, sName, oPropertyDefinition);
 			}
 		}
 	}
-	let _лЗадерживатьСообщенияМыши = false;
-	function СоздатьИПослатьСобытиеУказателяДляМыши(оСобытиеМыши, сТипСобытия, button) {
-		const оПараметры = {};
-		оПараметры.bubbles = оСобытиеМыши.bubbles;
-		оПараметры.cancelable = оСобытиеМыши.cancelable;
-		оПараметры.composed = true;
-		оПараметры.view = оСобытиеМыши.view;
-		оПараметры.ctrlKey = оСобытиеМыши.ctrlKey;
-		оПараметры.shiftKey = оСобытиеМыши.shiftKey;
-		оПараметры.altKey = оСобытиеМыши.altKey;
-		оПараметры.metaKey = оСобытиеМыши.metaKey;
-		оПараметры.modifierAltGraph = оСобытиеМыши.getModifierState('AltGraph');
-		оПараметры.modifierCapsLock = оСобытиеМыши.getModifierState('CapsLock');
-		оПараметры.modifierNumLock = оСобытиеМыши.getModifierState('NumLock');
-		оПараметры.modifierScrollLock = оСобытиеМыши.getModifierState('ScrollLock');
-		оПараметры.screenX = оСобытиеМыши.screenX;
-		оПараметры.screenY = оСобытиеМыши.screenY;
-		оПараметры.clientX = оСобытиеМыши.clientX;
-		оПараметры.clientY = оСобытиеМыши.clientY;
-		оПараметры.button = button;
-		оПараметры.buttons = оСобытиеМыши.buttons;
-		оПараметры.relatedTarget = оСобытиеМыши.relatedTarget;
-		оПараметры.pressure = оПараметры.buttons === 0 ? 0 : .5;
-		оПараметры.pointerType = 'mouse';
-		оПараметры.isPrimary = true;
-		const оСобытиеУказателя = new PointerEvent(сТипСобытия, оПараметры);
-		Object.defineProperty(оСобытиеУказателя, 'timeStamp', {
+	let _bDelayMouseMessages = false;
+	/**
+	 * Creates and dispatches a PointerEvent for a MouseEvent.
+	 * @param {MouseEvent} oMouseEvent The original MouseEvent.
+	 * @param {string} sEventType The type of the PointerEvent to create.
+	 * @param {number} button The button property for the PointerEvent.
+	 * @returns {boolean} Whether the event was canceled.
+	 * @translation СоздатьИПослатьСобытиеУказателяДляМыши
+	 */
+	function createAndDispatchPointerEventForMouse(oMouseEvent, sEventType, button) {
+		const oParameters = {};
+		oParameters.bubbles = oMouseEvent.bubbles;
+		oParameters.cancelable = oMouseEvent.cancelable;
+		oParameters.composed = true;
+		oParameters.view = oMouseEvent.view;
+		oParameters.ctrlKey = oMouseEvent.ctrlKey;
+		oParameters.shiftKey = oMouseEvent.shiftKey;
+		oParameters.altKey = oMouseEvent.altKey;
+		oParameters.metaKey = oMouseEvent.metaKey;
+		oParameters.modifierAltGraph = oMouseEvent.getModifierState('AltGraph');
+		oParameters.modifierCapsLock = oMouseEvent.getModifierState('CapsLock');
+		oParameters.modifierNumLock = oMouseEvent.getModifierState('NumLock');
+		oParameters.modifierScrollLock = oMouseEvent.getModifierState('ScrollLock');
+		oParameters.screenX = oMouseEvent.screenX;
+		oParameters.screenY = oMouseEvent.screenY;
+		oParameters.clientX = oMouseEvent.clientX;
+		oParameters.clientY = oMouseEvent.clientY;
+		oParameters.button = button;
+		oParameters.buttons = oMouseEvent.buttons;
+		oParameters.relatedTarget = oMouseEvent.relatedTarget;
+		oParameters.pressure = oParameters.buttons === 0 ? 0 : .5;
+		oParameters.pointerType = 'mouse';
+		oParameters.isPrimary = true;
+		const oPointerEvent = new PointerEvent(sEventType, oParameters);
+		Object.defineProperty(oPointerEvent, 'timeStamp', {
 			enumerable: true,
 			configurable: true,
-			value: оСобытиеМыши.timeStamp
+			value: oMouseEvent.timeStamp
 		});
-		const лОтменено = !оСобытиеМыши.target.dispatchEvent(оСобытиеУказателя);
-		if (лОтменено) {
-			оСобытиеМыши.preventDefault();
+		const bCanceled = !oMouseEvent.target.dispatchEvent(oPointerEvent);
+		if (bCanceled) {
+			oMouseEvent.preventDefault();
 		}
-		return лОтменено;
+		return bCanceled;
 	}
-	const ОбработатьMouseDown = ДобавитьОбработчикИсключений(оСобытиеМыши => {
-		if ((оСобытиеМыши.buttons & оСобытиеМыши.buttons - 1) == 0) {
-			_лЗадерживатьСообщенияМыши = СоздатьИПослатьСобытиеУказателяДляМыши(оСобытиеМыши, 'pointerdown', оСобытиеМыши.button);
+	const handleMouseDown = AddExceptionHandler(oMouseEvent => {
+		if ((oMouseEvent.buttons & oMouseEvent.buttons - 1) == 0) {
+			_bDelayMouseMessages = createAndDispatchPointerEventForMouse(oMouseEvent, 'pointerdown', oMouseEvent.button);
 		} else {
-			СоздатьИПослатьСобытиеУказателяДляМыши(оСобытиеМыши, 'pointermove', оСобытиеМыши.button);
+			createAndDispatchPointerEventForMouse(oMouseEvent, 'pointermove', oMouseEvent.button);
 		}
-		if (_лЗадерживатьСообщенияМыши) {
-			оСобытиеМыши.stopImmediatePropagation();
-		}
-	});
-	const ОбработатьMouseMove = ДобавитьОбработчикИсключений(оСобытиеМыши => {
-		СоздатьИПослатьСобытиеУказателяДляМыши(оСобытиеМыши, 'pointermove', -1);
-		if (_лЗадерживатьСообщенияМыши) {
-			оСобытиеМыши.stopImmediatePropagation();
+		if (_bDelayMouseMessages) {
+			oMouseEvent.stopImmediatePropagation();
 		}
 	});
-	const ОбработатьMouseUp = ДобавитьОбработчикИсключений(оСобытиеМыши => {
-		if (оСобытиеМыши.buttons === 0) {
-			СоздатьИПослатьСобытиеУказателяДляМыши(оСобытиеМыши, 'pointerup', оСобытиеМыши.button);
+	const handleMouseMove = AddExceptionHandler(oMouseEvent => {
+		createAndDispatchPointerEventForMouse(oMouseEvent, 'pointermove', -1);
+		if (_bDelayMouseMessages) {
+			oMouseEvent.stopImmediatePropagation();
+		}
+	});
+	const handleMouseUp = AddExceptionHandler(oMouseEvent => {
+		if (oMouseEvent.buttons === 0) {
+			createAndDispatchPointerEventForMouse(oMouseEvent, 'pointerup', oMouseEvent.button);
 		} else {
-			СоздатьИПослатьСобытиеУказателяДляМыши(оСобытиеМыши, 'pointermove', оСобытиеМыши.button);
+			createAndDispatchPointerEventForMouse(oMouseEvent, 'pointermove', oMouseEvent.button);
 		}
-		if (_лЗадерживатьСообщенияМыши) {
-			оСобытиеМыши.stopImmediatePropagation();
+		if (_bDelayMouseMessages) {
+			oMouseEvent.stopImmediatePropagation();
 		}
-		if (оСобытиеМыши.buttons === 0) {
-			_лЗадерживатьСообщенияМыши = false;
+		if (oMouseEvent.buttons === 0) {
+			_bDelayMouseMessages = false;
 		}
 	});
-	const ОбработатьMouseOver = ДобавитьОбработчикИсключений(оСобытиеМыши => {
-		СоздатьИПослатьСобытиеУказателяДляМыши(оСобытиеМыши, 'pointerover', -1);
+	const handleMouseOver = AddExceptionHandler(oMouseEvent => {
+		createAndDispatchPointerEventForMouse(oMouseEvent, 'pointerover', -1);
 	});
-	const ОбработатьMouseOut = ДобавитьОбработчикИсключений(оСобытиеМыши => {
-		СоздатьИПослатьСобытиеУказателяДляМыши(оСобытиеМыши, 'pointerout', -1);
+	const handleMouseOut = AddExceptionHandler(oMouseEvent => {
+		createAndDispatchPointerEventForMouse(oMouseEvent, 'pointerout', -1);
 	});
 	Object.defineProperty(window, 'PointerEvent', {
 		writable: true,
 		configurable: true,
 		value: PointerEvent
 	});
-	м_Журнал.Ой('[PointerEvent] Использую события мыши');
-	window.addEventListener('mousedown', ОбработатьMouseDown, true);
-	window.addEventListener('mousemove', ОбработатьMouseMove, true);
-	window.addEventListener('mouseup', ОбработатьMouseUp, true);
-	window.addEventListener('mouseover', ОбработатьMouseOver, true);
-	window.addEventListener('mouseout', ОбработатьMouseOut, true);
+	m_Log.LogError('[PointerEvent] Using mouse events');
+	window.addEventListener('mousedown', handleMouseDown, true);
+	window.addEventListener('mousemove', handleMouseMove, true);
+	window.addEventListener('mouseup', handleMouseUp, true);
+	window.addEventListener('mouseover', handleMouseOver, true);
+	window.addEventListener('mouseout', handleMouseOut, true);
 })();

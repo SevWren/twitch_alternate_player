@@ -1,156 +1,282 @@
 'use strict';
+/**
+ * @fileoverview Content script for Twitch pages.
+ * This script is responsible for determining if a channel is live and redirecting to the custom player page.
+ * It also injects a button to manually trigger the player and handles auto-redirection settings.
+ */
 
-const ХРАНИТЬ_СОСТОЯНИЕ_КАНАЛА = 2e4;
+/**
+ * @const {number}
+ * @description The duration to store the channel state in milliseconds.
+ * @translation ХРАНИТЬ_СОСТОЯНИЕ_КАНАЛА
+ */
+const STORE_CHANNEL_STATE = 2e4;
 
-let г_оРазобранныйАдрес = null;
+/**
+ * @type {?object}
+ * @description The parsed address of the current page.
+ * @translation г_оРазобранныйАдрес
+ */
+let g_oParsedAddress = null;
 
-let г_сСпособЗаданияАдреса = '';
+/**
+ * @type {string}
+ * @description The method used to set the address.
+ * @translation г_сСпособЗаданияАдреса
+ */
+let g_sAddressSetMethod = '';
 
-let г_чПоследняяПроверка = 0;
+/**
+ * @type {number}
+ * @description The timestamp of the last check.
+ * @translation г_чПоследняяПроверка
+ */
+let g_nLastCheck = 0;
 
-let г_оЗапрос = null;
+/**
+ * @type {?XMLHttpRequest}
+ * @description The current request object.
+ * @translation г_оЗапрос
+ */
+let g_oRequest = null;
 
-let г_сКодКанала = '';
+/**
+ * @type {string}
+ * @description The channel code.
+ * @translation г_сКодКанала
+ */
+let g_sChannelCode = '';
 
-let г_лИдетТрансляция = false;
+/**
+ * @type {boolean}
+ * @description Whether the channel is currently broadcasting.
+ * @translation г_лИдетТрансляция
+ */
+let g_bIsBroadcasting = false;
 
-const м_Отладка = {
-	ЗавершитьРаботуИПоказатьСообщение: завершитьРаботу,
-	ПойманоИсключение: завершитьРаботу
+/**
+ * @const {object}
+ * @description Debugging module.
+ * @translation м_Отладка
+ */
+const m_Debug = {
+	/**
+  * @function
+  * @description Terminates the script and shows a message.
+  * @translation ЗавершитьРаботуИПоказатьСообщение
+  */
+	TerminateAndShowMessage: terminateWork,
+	/**
+  * @function
+  * @description Catches an exception and terminates the script.
+  * @translation ПойманоИсключение
+  */
+	ExceptionCaught: terminateWork
 };
 
-function завершитьРаботу(пИсключениеИлиКодСообщения) {
-	if (!г_лРаботаЗавершена) {
-		console.error(пИсключениеИлиКодСообщения);
+/**
+ * @function
+ * @description Terminates the script.
+ * @param {Error|string} pExceptionOrMessageCode - The exception or message code.
+ * @translation завершитьРаботу
+ */
+function terminateWork(pExceptionOrMessageCode) {
+	if (!g_bWorkFinished) {
+		console.error(pExceptionOrMessageCode);
 		try {
-			г_лРаботаЗавершена = true;
-			м_Журнал.Окак('[content.js] Работа завершена');
+			g_bWorkFinished = true;
+			m_Log.Log('[content.js] Work finished');
 		} catch (_) {}
 	}
 	throw void 0;
 }
 
-function задатьАдресСтраницы(сАдрес, лЗаменить = false) {
-	location[лЗаменить ? 'replace' : 'assign'](сАдрес);
+/**
+ * @function
+ * @description Sets the page address.
+ * @param {string} sAddress - The address to set.
+ * @param {boolean} [bReplace=false] - Whether to replace the current history entry.
+ * @translation задатьАдресСтраницы
+ */
+function setPageAddress(sAddress, bReplace = false) {
+	location[bReplace ? 'replace' : 'assign'](sAddress);
 }
 
-function вставитьНаСтраницу() {
-	const узСкрипт = document.createElement('script');
+/**
+ * @function
+ * @description Injects a script into the page.
+ * @translation вставитьНаСтраницу
+ */
+function insertIntoPage() {
+	const elScript = document.createElement('script');
 	// MV3-compliant: Injects the script by URL instead of using textContent.
-	узСкрипт.src = chrome.runtime.getURL('content_injection.js');
-	(document.head || document.documentElement).appendChild(узСкрипт);
-	узСкрипт.remove();
+	elScript.src = chrome.runtime.getURL('content_injection.js');
+	(document.head || document.documentElement).appendChild(elScript);
+	elScript.remove();
 }
 
-function этотАдресМожноПеренаправлять(оАдрес) {
-	return !оАдрес.search.includes(АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ);
+/**
+ * @function
+ * @description Checks if the address can be redirected.
+ * @param {URL} oAddress - The address to check.
+ * @returns {boolean} Whether the address can be redirected.
+ * @translation этотАдресМожноПеренаправлять
+ */
+function canRedirectThisAddress(oAddress) {
+	return !oAddress.search.includes(DO_NOT_REDIRECT_ADDRESS);
 }
 
-function получитьНеперенаправляемыйАдрес(оАдрес) {
-	return `${оАдрес.protocol}//${оАдрес.host}${оАдрес.pathname}${оАдрес.search.length > 1 ? `${оАдрес.search}&${АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ}` : `?${АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ}`}${оАдрес.hash}`;
+/**
+ * @function
+ * @description Gets a non-redirectable address.
+ * @param {URL} oAddress - The original address.
+ * @returns {string} The non-redirectable address.
+ * @translation получитьНеперенаправляемыйАдрес
+ */
+function getNonRedirectableAddress(oAddress) {
+	return `${oAddress.protocol}//${oAddress.host}${oAddress.pathname}${oAddress.search.length > 1 ? `${oAddress.search}&${DO_NOT_REDIRECT_ADDRESS}` : `?${DO_NOT_REDIRECT_ADDRESS}`}${oAddress.hash}`;
 }
 
-function запретитьАвтоперенаправлениеЭтойСтраницы() {
-	if (этотАдресМожноПеренаправлять(location)) {
-		history.replaceState(history.state, '', получитьНеперенаправляемыйАдрес(location));
+/**
+ * @function
+ * @description Disables auto-redirection for the current page.
+ * @translation запретитьАвтоперенаправлениеЭтойСтраницы
+ */
+function disableAutoRedirectionForThisPage() {
+	if (canRedirectThisAddress(location)) {
+		history.replaceState(history.state, '', getNonRedirectableAddress(location));
 	}
 }
 
-разобратьАдрес.ЭТО_НЕ_КОД_КАНАЛА = new Set([ 'directory', 'embed', 'friends', 'inventory', 'login', 'logout', 'manager', 'messages', 'payments', 'popout', 'search', 'settings', 'signup', 'subscriptions', 'team' ]);
+/**
+ * @const {Set<string>}
+ * @description A set of pathnames that are not channel codes.
+ * @translation ЭТО_НЕ_КОД_КАНАЛА
+ */
+parseAddress.THIS_IS_NOT_A_CHANNEL_CODE = new Set([ 'directory', 'embed', 'friends', 'inventory', 'login', 'logout', 'manager', 'messages', 'payments', 'popout', 'search', 'settings', 'signup', 'subscriptions', 'team' ]);
 
-function разобратьАдрес(оАдрес) {
-	let лМобильнаяВерсия = false;
-	let сСтраница = 'НЕИЗВЕСТНАЯ';
-	let сКодКанала = '';
-	let лМожноПеренаправлять = false;
-	if (оАдрес.protocol === 'https:' && (оАдрес.host === 'www.twitch.tv' || оАдрес.host === 'm.twitch.tv')) {
-		лМобильнаяВерсия = оАдрес.host === 'm.twitch.tv';
-		const мсЧасти = оАдрес.pathname.split('/');
-		if (мсЧасти.length <= 3 && мсЧасти[1] && !мсЧасти[2]) {
-			if (!разобратьАдрес.ЭТО_НЕ_КОД_КАНАЛА.has(мсЧасти[1])) {
-				сСтраница = 'ВОЗМОЖНО_ПРЯМАЯ_ТРАНСЛЯЦИЯ';
-				сКодКанала = decodeURIComponent(мсЧасти[1]);
-				лМожноПеренаправлять = этотАдресМожноПеренаправлять(оАдрес);
+/**
+ * @function
+ * @description Parses the address of the page.
+ * @param {URL} oAddress - The address to parse.
+ * @returns {{bIsMobile: boolean, sPage: string, sChannelCode: string, bCanRedirect: boolean}} The parsed address information.
+ * @translation разобратьАдрес
+ */
+function parseAddress(oAddress) {
+	let bIsMobile = false;
+	let sPage = 'UNKNOWN';
+	let sChannelCode = '';
+	let bCanRedirect = false;
+	if (oAddress.protocol === 'https:' && (oAddress.host === 'www.twitch.tv' || oAddress.host === 'm.twitch.tv')) {
+		bIsMobile = oAddress.host === 'm.twitch.tv';
+		const asParts = oAddress.pathname.split('/');
+		if (asParts.length <= 3 && asParts[1] && !asParts[2]) {
+			if (!parseAddress.THIS_IS_NOT_A_CHANNEL_CODE.has(asParts[1])) {
+				sPage = 'POSSIBLY_LIVE_STREAM';
+				sChannelCode = decodeURIComponent(asParts[1]);
+				bCanRedirect = canRedirectThisAddress(oAddress);
 			}
-		} else if ((мсЧасти[1] === 'embed' || мсЧасти[1] === 'popout') && мсЧасти[2] && мсЧасти[3] === 'chat') {
-			сСтраница = 'ЧАТ_КАНАЛА';
-			сКодКанала = decodeURIComponent(мсЧасти[2]);
+		} else if ((asParts[1] === 'embed' || asParts[1] === 'popout') && asParts[2] && asParts[3] === 'chat') {
+			sPage = 'CHANNEL_CHAT';
+			sChannelCode = decodeURIComponent(asParts[2]);
 		}
 	}
-	м_Журнал.Окак(`[content.js] Адрес разобран: Страница=${сСтраница} КодКанала=${сКодКанала} МожноПеренаправлять=${лМожноПеренаправлять}`);
+	m_Log.Log(`[content.js] Address parsed: Page=${sPage} ChannelCode=${sChannelCode} CanRedirect=${bCanRedirect}`);
 	return {
-		лМобильнаяВерсия,
-		сСтраница,
-		сКодКанала,
-		лМожноПеренаправлять
+		bIsMobile,
+		sPage,
+		sChannelCode,
+		bCanRedirect
 	};
 }
 
-function запроситьСостояниеКанала(оРазобранныйАдрес) {
-	if (!оРазобранныйАдрес.лМожноПеренаправлять || !м_Настройки.Получить('лАвтоперенаправлениеРазрешено')) {
+/**
+ * @function
+ * @description Requests the state of the channel.
+ * @param {object} oParsedAddress - The parsed address.
+ * @translation запроситьСостояниеКанала
+ */
+function requestChannelState(oParsedAddress) {
+	if (!oParsedAddress.bCanRedirect || !m_Settings.Get('bAutoRedirectAllowed')) {
 		return;
 	}
-	if (!г_оЗапрос && г_сКодКанала === оРазобранныйАдрес.сКодКанала && performance.now() - г_чПоследняяПроверка < ХРАНИТЬ_СОСТОЯНИЕ_КАНАЛА) {
+	if (!g_oRequest && g_sChannelCode === oParsedAddress.sChannelCode && performance.now() - g_nLastCheck < STORE_CHANNEL_STATE) {
 		return;
 	}
-	if (г_оЗапрос && г_сКодКанала === оРазобранныйАдрес.сКодКанала) {
+	if (g_oRequest && g_sChannelCode === oParsedAddress.sChannelCode) {
 		return;
 	}
-	отменитьЗапрос();
-	г_сКодКанала = оРазобранныйАдрес.сКодКанала;
-	г_чПоследняяПроверка = -1;
-	отправитьЗапрос();
+	cancelRequest();
+	g_sChannelCode = oParsedAddress.sChannelCode;
+	g_nLastCheck = -1;
+	sendRequest();
 }
 
-function измененАдресСтраницы(сСпособ) {
-	г_оРазобранныйАдрес = разобратьАдрес(location);
-	г_сСпособЗаданияАдреса = сСпособ;
-	if (!г_оРазобранныйАдрес.лМожноПеренаправлять || !м_Настройки.Получить('лАвтоперенаправлениеРазрешено')) {
-		if (г_чПоследняяПроверка === -2) {
-			г_чПоследняяПроверка = -1;
+/**
+ * @function
+ * @description Handles a change in the page address.
+ * @param {string} sMethod - The method of address change.
+ * @translation измененАдресСтраницы
+ */
+function pageAddressChanged(sMethod) {
+	g_oParsedAddress = parseAddress(location);
+	g_sAddressSetMethod = sMethod;
+	if (!g_oParsedAddress.bCanRedirect || !m_Settings.Get('bAutoRedirectAllowed')) {
+		if (g_nLastCheck === -2) {
+			g_nLastCheck = -1;
 		}
 		return;
 	}
-	if (!г_оЗапрос && г_сКодКанала === г_оРазобранныйАдрес.сКодКанала && performance.now() - г_чПоследняяПроверка < ХРАНИТЬ_СОСТОЯНИЕ_КАНАЛА) {
-		if (г_лИдетТрансляция) {
-			перенаправитьНаНашПроигрыватель(г_сКодКанала);
+	if (!g_oRequest && g_sChannelCode === g_oParsedAddress.sChannelCode && performance.now() - g_nLastCheck < STORE_CHANNEL_STATE) {
+		if (g_bIsBroadcasting) {
+			redirectToOurPlayer(g_sChannelCode);
 		}
 		return;
 	}
-	if (г_оЗапрос && г_сКодКанала === г_оРазобранныйАдрес.сКодКанала) {
-		г_чПоследняяПроверка = -2;
+	if (g_oRequest && g_sChannelCode === g_oParsedAddress.sChannelCode) {
+		g_nLastCheck = -2;
 		return;
 	}
-	отменитьЗапрос();
-	г_сКодКанала = г_оРазобранныйАдрес.сКодКанала;
-	г_чПоследняяПроверка = -2;
-	отправитьЗапрос();
+	cancelRequest();
+	g_sChannelCode = g_oParsedAddress.sChannelCode;
+	g_nLastCheck = -2;
+	sendRequest();
 }
 
-function отменитьЗапрос() {
-	if (г_оЗапрос) {
-		м_Журнал.Окак('[content.js] Отменяю незавершенный запрос');
-		г_оЗапрос.abort();
+/**
+ * @function
+ * @description Cancels the current request.
+ * @translation отменитьЗапрос
+ */
+function cancelRequest() {
+	if (g_oRequest) {
+		m_Log.Log('[content.js] Canceling pending request');
+		g_oRequest.abort();
 	}
 }
 
-function отправитьЗапрос() {
-	м_Журнал.Окак(`[content.js] Посылаю запрос для канала ${г_сКодКанала}`);
-	г_оЗапрос = new XMLHttpRequest();
-	г_оЗапрос.addEventListener('loadend', обработатьОтвет);
-	г_оЗапрос.open('POST', 'https://gql.twitch.tv/gql#origin=twilight');
-	г_оЗапрос.responseType = 'json';
-	г_оЗапрос.timeout = 15e3;
-	г_оЗапрос.setRequestHeader('Accept-Language', 'en-US');
-	г_оЗапрос.setRequestHeader('Client-ID', 'kimne78kx3ncx6brgo4mv6wki5h1ko');
-	г_оЗапрос.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8');
-	if (отправитьЗапрос._мсИдУстройства === void 0) {
-		отправитьЗапрос._мсИдУстройства = document.cookie.match(/(?:^|;[ \t]?)unique_id=([^;]+)/);
+/**
+ * @function
+ * @description Sends a request to the GQL API.
+ * @translation отправитьЗапрос
+ */
+function sendRequest() {
+	m_Log.Log(`[content.js] Sending request for channel ${g_sChannelCode}`);
+	g_oRequest = new XMLHttpRequest();
+	g_oRequest.addEventListener('loadend', processResponse);
+	g_oRequest.open('POST', 'https://gql.twitch.tv/gql#origin=twilight');
+	g_oRequest.responseType = 'json';
+	g_oRequest.timeout = 15e3;
+	g_oRequest.setRequestHeader('Accept-Language', 'en-US');
+	g_oRequest.setRequestHeader('Client-ID', 'kimne78kx3ncx6brgo4mv6wki5h1ko');
+	g_oRequest.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8');
+	if (sendRequest._asDeviceId === void 0) {
+		sendRequest._asDeviceId = document.cookie.match(/(?:^|;[ \t]?)unique_id=([^;]+)/);
 	}
-	if (отправитьЗапрос._мсИдУстройства) {
-		г_оЗапрос.setRequestHeader('X-Device-ID', отправитьЗапрос._мсИдУстройства[1]);
+	if (sendRequest._asDeviceId) {
+		g_oRequest.setRequestHeader('X-Device-ID', sendRequest._asDeviceId[1]);
 	}
-	г_оЗапрос.send(создатьТелоЗапросаGql(`query($login: String!) {
+	g_oRequest.send(createGqlRequestBody(`query($login: String!) {
 			user(login: $login) {
 				stream {
 					isEncrypted
@@ -162,118 +288,189 @@ function отправитьЗапрос() {
 				}
 			}
 		}`, {
-		login: г_сКодКанала
+		login: g_sChannelCode
 	}));
 }
 
-function обработатьОтвет({target: оЗапрос}) {
-	г_оЗапрос = null;
-	if (оЗапрос.status >= 200 && оЗапрос.status < 300 && ЭтоОбъект(оЗапрос.response)) {
-		const лПеренаправить = г_чПоследняяПроверка === -2;
-		г_чПоследняяПроверка = performance.now();
-		let лТрансляцияЗавершенаИлиЗакодирована = true, лСовместныйПросмотр = false;
+/**
+ * @function
+ * @description Processes the response from the GQL API.
+ * @param {Event} oEvent - The loadend event.
+ * @translation обработатьОтвет
+ */
+function processResponse({target: oRequest}) {
+	g_oRequest = null;
+	if (oRequest.status >= 200 && oRequest.status < 300 && IsObject(oRequest.response)) {
+		const bRedirect = g_nLastCheck === -2;
+		g_nLastCheck = performance.now();
+		let bBroadcastFinishedOrEncoded = true, bCooperativeView = false;
 		try {
-			лТрансляцияЗавершенаИлиЗакодирована = оЗапрос.response.data.user.stream.isEncrypted === true;
-			лСовместныйПросмотр = оЗапрос.response.data.user.watchParty.session.state === 'IN_PROGRESS';
+			bBroadcastFinishedOrEncoded = oRequest.response.data.user.stream.isEncrypted === true;
+			bCooperativeView = oRequest.response.data.user.watchParty.session.state === 'IN_PROGRESS';
 		} catch (_) {}
-		г_лИдетТрансляция = !лТрансляцияЗавершенаИлиЗакодирована && !лСовместныйПросмотр;
-		if (г_лИдетТрансляция && лПеренаправить) {
-			перенаправитьНаНашПроигрыватель(г_сКодКанала);
+		g_bIsBroadcasting = !bBroadcastFinishedOrEncoded && !bCooperativeView;
+		if (g_bIsBroadcasting && bRedirect) {
+			redirectToOurPlayer(g_sChannelCode);
 		}
 	} else {
-		г_чПоследняяПроверка = 0;
+		g_nLastCheck = 0;
 	}
 }
 
-function запуститьНашПроигрыватель(сКодКанала) {
-	const сАдресПроигрывателя = ПолучитьАдресНашегоПроигрывателя(сКодКанала);
-	м_Журнал.Окак(`[content.js] Перехожу на страницу ${сАдресПроигрывателя}`);
-	запретитьАвтоперенаправлениеЭтойСтраницы();
-	задатьАдресСтраницы(сАдресПроигрывателя);
+/**
+ * @function
+ * @description Launches our player.
+ * @param {string} sChannelCode - The channel code.
+ * @translation запуститьНашПроигрыватель
+ */
+function launchOurPlayer(sChannelCode) {
+	const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
+	m_Log.Log(`[content.js] Navigating to page ${sPlayerAddress}`);
+	disableAutoRedirectionForThisPage();
+	setPageAddress(sPlayerAddress);
 }
 
-function перенаправитьНаНашПроигрыватель(сКодКанала) {
-	const сАдресПроигрывателя = ПолучитьАдресНашегоПроигрывателя(сКодКанала);
-	м_Журнал.Окак(`[content.js] Меняю адрес страницы с ${location.href} на ${сАдресПроигрывателя}`);
-	document.documentElement.setAttribute('data-tw5-перенаправление', сАдресПроигрывателя);
-	задатьАдресСтраницы(сАдресПроигрывателя, true);
+/**
+ * @function
+ * @description Redirects to our player.
+ * @param {string} sChannelCode - The channel code.
+ * @translation перенаправитьНаНашПроигрыватель
+ */
+function redirectToOurPlayer(sChannelCode) {
+	const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
+	m_Log.Log(`[content.js] Changing page address from ${location.href} to ${sPlayerAddress}`);
+	document.documentElement.setAttribute('data-tw5-redirection', sPlayerAddress);
+	setPageAddress(sPlayerAddress, true);
 }
 
-function обработатьPointerDownИClick(оСобытие) {
-	if (г_оРазобранныйАдрес) {
-		const узСсылка = оСобытие.target.closest('a[href]');
-		if (узСсылка && оСобытие.isPrimary !== false && оСобытие.button === ЛЕВАЯ_КНОПКА && !оСобытие.shiftKey && !оСобытие.ctrlKey && !оСобытие.altKey && !оСобытие.metaKey) {
-			м_Журнал.Окак(`[content.js] Произошло событие ${оСобытие.type} у ссылки ${узСсылка.href}`);
-			запроситьСостояниеКанала(разобратьАдрес(узСсылка));
+/**
+ * @function
+ * @description Handles pointerdown and click events.
+ * @param {Event} oEvent - The event.
+ * @translation обработатьPointerDownИClick
+ */
+function handlePointerDownAndClick(oEvent) {
+	if (g_oParsedAddress) {
+		const elLink = oEvent.target.closest('a[href]');
+		if (elLink && oEvent.isPrimary !== false && oEvent.button === LEFT_BUTTON && !oEvent.shiftKey && !oEvent.ctrlKey && !oEvent.altKey && !oEvent.metaKey) {
+			m_Log.Log(`[content.js] Event ${oEvent.type} occurred on link ${elLink.href}`);
+			requestChannelState(parseAddress(elLink));
 		}
 	}
 }
 
-function обработатьPopState(оСобытие) {
-	if (г_оРазобранныйАдрес) {
-		м_Журнал.Окак(`[content.js] Произошло событие popstate ${location.href}`);
-		if (получитьВерсиюДвижкаБраузера() < 67) {
+/**
+ * @function
+ * @description Handles the popstate event.
+ * @param {Event} oEvent - The event.
+ * @translation обработатьPopState
+ */
+function handlePopState(oEvent) {
+	if (g_oParsedAddress) {
+		m_Log.Log(`[content.js] popstate event occurred ${location.href}`);
+		if (getBrowserEngineVersion() < 67) {
 			document.title = 'Twitch';
 		}
-		измененАдресСтраницы('POPSTATE');
-		if (document.documentElement.hasAttribute('data-tw5-перенаправление')) {
-			м_Журнал.Окак('[content.js] Скрываю событие popstate');
-			оСобытие.stopImmediatePropagation();
+		pageAddressChanged('POPSTATE');
+		if (document.documentElement.hasAttribute('data-tw5-redirection')) {
+			m_Log.Log('[content.js] Hiding popstate event');
+			oEvent.stopImmediatePropagation();
 		}
 	}
 }
 
-function обработатьPushState(оСобытие) {
-	м_Журнал.Окак(`[content.js] Произошло событие tw5-pushstate ${location.href}`);
-	измененАдресСтраницы('PUSHSTATE');
+/**
+ * @function
+ * @description Handles the tw5-pushstate event.
+ * @param {Event} oEvent - The event.
+ * @translation обработатьPushState
+ */
+function handlePushState(oEvent) {
+	m_Log.Log(`[content.js] tw5-pushstate event occurred ${location.href}`);
+	pageAddressChanged('PUSHSTATE');
 }
 
-function обработатьЗапускНашегоПроигрывателя(оСобытие) {
-	оСобытие.preventDefault();
-	if (оСобытие.button === ЛЕВАЯ_КНОПКА && г_оРазобранныйАдрес.сСтраница === 'ВОЗМОЖНО_ПРЯМАЯ_ТРАНСЛЯЦИЯ') {
-		запуститьНашПроигрыватель(г_оРазобранныйАдрес.сКодКанала);
+/**
+ * @function
+ * @description Handles the launch of our player.
+ * @param {Event} oEvent - The event.
+ * @translation обработатьЗапускНашегоПроигрывателя
+ */
+function handleLaunchOurPlayer(oEvent) {
+	oEvent.preventDefault();
+	if (oEvent.button === LEFT_BUTTON && g_oParsedAddress.sPage === 'POSSIBLY_LIVE_STREAM') {
+		launchOurPlayer(g_oParsedAddress.sChannelCode);
 	} else {
-		м_Журнал.Окак(`[content.js] Не запускать проигрыватель Кнопка=${оСобытие.button} Страница=${г_оРазобранныйАдрес.сСтраница}`);
+		m_Log.Log(`[content.js] Do not launch player Button=${oEvent.button} Page=${g_oParsedAddress.sPage}`);
 	}
 }
 
-function обработатьПереключениеАвтоперенаправления(оСобытие) {
-	оСобытие.preventDefault();
-	const л = !м_Настройки.Получить('лАвтоперенаправлениеРазрешено');
-	м_Журнал.Окак(`[content.js] Автоперенаправление разрешено: ${л}`);
-	м_Настройки.Изменить('лАвтоперенаправлениеРазрешено', л);
-	обновитьНашуКнопку();
+/**
+ * @function
+ * @description Handles toggling auto-redirection.
+ * @param {Event} oEvent - The event.
+ * @translation обработатьПереключениеАвтоперенаправления
+ */
+function handleToggleAutoRedirection(oEvent) {
+	oEvent.preventDefault();
+	const b = !m_Settings.Get('bAutoRedirectAllowed');
+	m_Log.Log(`[content.js] Auto-redirection allowed: ${b}`);
+	m_Settings.Set('bAutoRedirectAllowed', b);
+	updateOurButton();
 }
 
-function обработатьЗакрытиеСправки(оСобытие) {
-	оСобытие.preventDefault();
-	м_Журнал.Окак('[content.js] Закрываю справку');
-	оСобытие.currentTarget.classList.remove('tw5-справка');
-	оСобытие.currentTarget.removeEventListener('mouseover', обработатьЗакрытиеСправки);
-	оСобытие.currentTarget.removeEventListener('touchstart', обработатьЗакрытиеСправки, {
+/**
+ * @function
+ * @description Handles closing the help tooltip.
+ * @param {Event} oEvent - The event.
+ * @translation обработатьЗакрытиеСправки
+ */
+function handleCloseHelp(oEvent) {
+	oEvent.preventDefault();
+	m_Log.Log('[content.js] Closing help');
+	oEvent.currentTarget.classList.remove('tw5-help');
+	oEvent.currentTarget.removeEventListener('mouseover', handleCloseHelp);
+	oEvent.currentTarget.removeEventListener('touchstart', handleCloseHelp, {
 		passive: false
 	});
-	м_Настройки.Изменить('лАвтоперенаправлениеЗамечено', true);
+	m_Settings.Set('bAutoRedirectNoticed', true);
 }
 
-function получитьНашуКнопку() {
-	return document.getElementById('tw5-автоперенаправление');
+/**
+ * @function
+ * @description Gets our button element.
+ * @returns {?Element} The button element.
+ * @translation получитьНашуКнопку
+ */
+function getOurButton() {
+	return document.getElementById('tw5-autoredirect');
 }
 
-function обновитьНашуКнопку() {
-	получитьНашуКнопку().classList.toggle('tw5-запрещено', !м_Настройки.Получить('лАвтоперенаправлениеРазрешено'));
+/**
+ * @function
+ * @description Updates the state of our button.
+ * @translation обновитьНашуКнопку
+ */
+function updateOurButton() {
+	getOurButton().classList.toggle('tw5-disabled', !m_Settings.Get('bAutoRedirectAllowed'));
 }
 
-function вставитьНашуКнопку() {
-	if (г_оРазобранныйАдрес.лМобильнаяВерсия) {
-		const узКудаВставлять = document.querySelector('.top-nav__menu > div:last-child > div:first-child');
-		if (!узКудаВставлять) {
+/**
+ * @function
+ * @description Inserts our button into the page.
+ * @returns {boolean} Whether the button was inserted.
+ * @translation вставитьНашуКнопку
+ */
+function insertOurButton() {
+	if (g_oParsedAddress.bIsMobile) {
+		const elWhereToInsert = document.querySelector('.top-nav__menu > div:last-child > div:first-child');
+		if (!elWhereToInsert) {
 			return false;
 		}
-		м_Журнал.Окак('[content.js] Вставляю нашу кнопку для мобильного сайта');
-		узКудаВставлять.insertAdjacentHTML('afterend', `
-		<div class="tw5-автоперенаправление tw5-js-удалить">
-			<button id="tw5-автоперенаправление">
+		m_Log.Log('[content.js] Inserting our button for mobile site');
+		elWhereToInsert.insertAdjacentHTML('afterend', `
+		<div class="tw5-autoredirect tw5-js-remove">
+			<button id="tw5-autoredirect">
 				<svg viewBox="0 0 128 128">
 					<g>
 						<path d="M64 53h-19.688l-1.313-15.225h57l1.313-14.7h-74.55l3.937 44.888h51.712l-1.8 19.162-16.6 4.463l-16.8-4.463-1.1-11.813h-14.7l1.838 23.362 30.713 8.4l30.45-8.4 4.2-45.675z"/>
@@ -281,12 +478,12 @@ function вставитьНашуКнопку() {
 				</svg>
 			</button>
 			<style>
-				.tw5-автоперенаправление
+				.tw5-autoredirect
 				{
 					flex: 0 0;
 					margin: 0 0 0 .5rem;
 				}
-				.tw5-автоперенаправление button
+				.tw5-autoredirect button
 				{
 					align-items: center;
 					background-color: transparent;
@@ -297,24 +494,24 @@ function вставитьНашуКнопку() {
 					justify-content: center;
 					width: 3.6rem;
 				}
-				.tw-root--theme-dark .tw5-автоперенаправление button
+				.tw-root--theme-dark .tw5-autoredirect button
 				{
 					color: #efeff1;
 				}
-				.tw5-автоперенаправление button:active
+				.tw5-autoredirect button:active
 				{
 					background-color: rgba(0, 0, 0, 0.05);
 				}
-				.tw-root--theme-dark .tw5-автоперенаправление button:active
+				.tw-root--theme-dark .tw5-autoredirect button:active
 				{
 					background-color: rgba(255, 255, 255, 0.15);
 				}
-				.tw5-автоперенаправление svg
+				.tw5-autoredirect svg
 				{
 					fill: currentColor;
 					width: 75%;
 				}
-				.tw5-запрещено svg
+				.tw5-disabled svg
 				{
 					opacity: .4;
 				}
@@ -322,14 +519,14 @@ function вставитьНашуКнопку() {
 		</div>
 		`);
 	} else {
-		const узКудаВставлять = document.querySelector('.top-nav__menu > div:last-child > div:first-child');
-		if (!узКудаВставлять) {
+		const elWhereToInsert = document.querySelector('.top-nav__menu > div:last-child > div:first-child');
+		if (!elWhereToInsert) {
 			return false;
 		}
-		м_Журнал.Окак('[content.js] Вставляю нашу кнопку');
-		узКудаВставлять.insertAdjacentHTML('afterend', `
-		<div class="tw5-автоперенаправление tw5-js-удалить">
-			<button id="tw5-автоперенаправление">
+		m_Log.Log('[content.js] Inserting our button');
+		elWhereToInsert.insertAdjacentHTML('afterend', `
+		<div class="tw5-autoredirect tw5-js-remove">
+			<button id="tw5-autoredirect">
 				<svg viewBox="0 0 128 128">
 					<g>
 						<path d="M64 53h-19.688l-1.313-15.225h57l1.313-14.7h-74.55l3.937 44.888h51.712l-1.8 19.162-16.6 4.463l-16.8-4.463-1.1-11.813h-14.7l1.838 23.362 30.713 8.4l30.45-8.4 4.2-45.675z"/>
@@ -337,16 +534,16 @@ function вставитьНашуКнопку() {
 				</svg>
 			</button>
 			<div class="tw5-tooltip">
-				${м_i18n.GetMessage('F0600')}
+				${m_i18n.GetMessage('F0600')}
 			</div>
 			<style>
-				.tw5-автоперенаправление
+				.tw5-autoredirect
 				{
 					flex: 0 0;
 					margin: 0 .5rem;
 					position: relative;
 				}
-				.tw5-автоперенаправление button
+				.tw5-autoredirect button
 				{
 					align-items: center;
 					background-color: var(--color-background-button-text-default);
@@ -357,22 +554,22 @@ function вставитьНашуКнопку() {
 					justify-content: center;
 					width: var(--button-size-default);
 				}
-				.tw5-автоперенаправление button:hover
+				.tw5-autoredirect button:hover
 				{
 					background-color: var(--color-background-button-text-hover);
 					color: var(--color-fill-button-icon-hover);
 				}
-				.tw5-автоперенаправление button:active
+				.tw5-autoredirect button:active
 				{
 					background-color: var(--color-background-button-text-active);
 					color: var(--color-fill-button-icon-active);
 				}
-				.tw5-автоперенаправление svg
+				.tw5-autoredirect svg
 				{
 					fill: currentColor;
 					width: 75%;
 				}
-				.tw5-запрещено svg
+				.tw5-disabled svg
 				{
 					opacity: .4;
 				}
@@ -409,11 +606,11 @@ function вставитьНашуКнопку() {
 					width: 6px;
 					z-index: var(--z-index-below);
 				}
-				.tw5-автоперенаправление:hover .tw5-tooltip
+				.tw5-autoredirect:hover .tw5-tooltip
 				{
 					display: block;
 				}
-				.tw5-справка .tw5-tooltip
+				.tw5-help .tw5-tooltip
 				{
 					background: #f00000;
 					color: #fff;
@@ -425,78 +622,106 @@ function вставитьНашуКнопку() {
 		</div>
 		`);
 	}
-	const узКнопка = получитьНашуКнопку();
-	узКнопка.addEventListener('click', обработатьЗапускНашегоПроигрывателя);
-	узКнопка.addEventListener('contextmenu', обработатьПереключениеАвтоперенаправления);
-	if (!г_оРазобранныйАдрес.лМобильнаяВерсия && !м_Настройки.Получить('лАвтоперенаправлениеЗамечено')) {
-		узКнопка.parentNode.classList.add('tw5-справка');
-		узКнопка.parentNode.addEventListener('mouseover', обработатьЗакрытиеСправки);
-		узКнопка.parentNode.addEventListener('touchstart', обработатьЗакрытиеСправки, {
+	const elButton = getOurButton();
+	elButton.addEventListener('click', handleLaunchOurPlayer);
+	elButton.addEventListener('contextmenu', handleToggleAutoRedirection);
+	if (!g_oParsedAddress.bIsMobile && !m_Settings.Get('bAutoRedirectNoticed')) {
+		elButton.parentNode.classList.add('tw5-help');
+		elButton.parentNode.addEventListener('mouseover', handleCloseHelp);
+		elButton.parentNode.addEventListener('touchstart', handleCloseHelp, {
 			passive: false
 		});
 	}
-	обновитьНашуКнопку();
+	updateOurButton();
 	return true;
 }
 
-function вставитьНашуКнопкуЕслиНужно() {
-	return Boolean(получитьНашуКнопку()) || вставитьНашуКнопку();
+/**
+ * @function
+ * @description Inserts our button if it's needed.
+ * @returns {boolean} Whether the button was inserted.
+ * @translation вставитьНашуКнопкуЕслиНужно
+ */
+function insertOurButtonIfNeeded() {
+	return Boolean(getOurButton()) || insertOurButton();
 }
 
-function вставитьНашуКнопкуВПервыйРаз() {
-	вставитьНашуКнопку();
-	if (г_оРазобранныйАдрес.лМобильнаяВерсия) {
-		new MutationObserver(моЗаписи => {
-			вставитьНашуКнопкуЕслиНужно();
+/**
+ * @function
+ * @description Inserts our button for the first time.
+ * @translation вставитьНашуКнопкуВПервыйРаз
+ */
+function insertOurButtonForTheFirstTime() {
+	insertOurButton();
+	if (g_oParsedAddress.bIsMobile) {
+		new MutationObserver(moRecords => {
+			insertOurButtonIfNeeded();
 		}).observe(document.head || document.documentElement, {
 			childList: true,
 			subtree: true
 		});
 	} else {
-		window.addEventListener('tw5-изменензаголовок', вставитьНашуКнопкуЕслиНужно);
+		window.addEventListener('tw5-titlechanged', insertOurButtonIfNeeded);
 	}
 }
 
-function ждатьЗагрузкуДомика() {
-	return new Promise(фВыполнить => {
+/**
+ * @function
+ * @description Waits for the DOM to be loaded.
+ * @returns {Promise<void>} A promise that resolves when the DOM is loaded.
+ * @translation ждатьЗагрузкуДомика
+ */
+function waitForDOMLoad() {
+	return new Promise(fResolve => {
 		if (document.readyState !== 'loading') {
-			фВыполнить();
+			fResolve();
 		} else {
-			document.addEventListener('DOMContentLoaded', function ОбработатьЗагрузкуДомика() {
-				document.removeEventListener('DOMContentLoaded', ОбработатьЗагрузкуДомика);
-				фВыполнить();
+			document.addEventListener('DOMContentLoaded', function HandleDOMLoad() {
+				document.removeEventListener('DOMContentLoaded', HandleDOMLoad);
+				fResolve();
 			});
 		}
 	});
 }
 
-function ждатьЗагрузкуСтраницы() {
-	return new Promise(фВыполнить => {
+/**
+ * @function
+ * @description Waits for the page to be fully loaded.
+ * @returns {Promise<void>} A promise that resolves when the page is loaded.
+ * @translation ждатьЗагрузкуСтраницы
+ */
+function waitForPageLoad() {
+	return new Promise(fResolve => {
 		if (document.readyState === 'complete') {
-			фВыполнить();
+			fResolve();
 		} else {
-			window.addEventListener('load', function ОбработатьЗагрузкуСтраницы() {
-				window.removeEventListener('load', ОбработатьЗагрузкуСтраницы);
-				фВыполнить();
+			window.addEventListener('load', function HandlePageLoad() {
+				window.removeEventListener('load', HandlePageLoad);
+				fResolve();
 			});
 		}
 	});
 }
 
-function вставитьСторонниеРасширения() {
+/**
+ * @function
+ * @description Inserts third-party extensions.
+ * @translation вставитьСторонниеРасширения
+ */
+function insertThirdPartyExtensions() {
 	chrome.runtime.sendMessage({
-		сЗапрос: 'ВставитьСторонниеРасширения'
-	}, оСообщение => {
+		sRequest: 'InsertThirdPartyExtensions'
+	}, oMessage => {
 		if (chrome.runtime.lastError) {
-			м_Журнал.Окак(`[content.js] Не удалось послать запрос на вставку сторонних расширений: ${chrome.runtime.lastError.message}`);
+			m_Log.Log(`[content.js] Failed to send request to insert third-party extensions: ${chrome.runtime.lastError.message}`);
 			return;
 		}
-		//! оСообщение.сСторонниеРасширения contains a limited set of known browser extensions that are currently
-		//! installed and enabled in the browser. See обработатьСообщениеЧата() in player.js. Load those
+		//! oMessage.sThirdPartyExtensions contains a limited set of known browser extensions that are currently
+		//! installed and enabled in the browser. See handleChatMessage() in player.js. Load those
 		//! extensions into <iframe>. Chrome itself cannot load installed extensions into another extension.
 		//! See https://bugs.chromium.org/p/chromium/issues/detail?id=599167
-				if (оСообщение.сСторонниеРасширения.includes('BTTV ')) {
-			ждатьЗагрузкуСтраницы().then(() => {
+				if (oMessage.sThirdPartyExtensions.includes('BTTV ')) {
+			waitForPageLoad().then(() => {
 				
 				//! BetterTTV browser extension
 				//! https://betterttv.com/
@@ -507,8 +732,8 @@ function вставитьСторонниеРасширения() {
 				document.head.appendChild(script);
 			});
 		}
-		if (оСообщение.сСторонниеРасширения.includes('FFZ ')) {
-			ждатьЗагрузкуДомика().then(() => {
+		if (oMessage.sThirdPartyExtensions.includes('FFZ ')) {
+			waitForDOMLoad().then(() => {
 				
 				//! FrankerFaceZ browser extension
 				//! https://www.frankerfacez.com/
@@ -522,63 +747,78 @@ function вставитьСторонниеРасширения() {
 	});
 }
 
-function изменитьСтильЧата() {
-	const узСтиль = document.createElement('link');
-	узСтиль.rel = 'stylesheet';
-	узСтиль.href = chrome.runtime.getURL('content.css');
-	узСтиль.className = 'tw5-js-удалить';
-	(document.head || document.documentElement).appendChild(узСтиль);
+/**
+ * @function
+ * @description Changes the chat style.
+ * @translation изменитьСтильЧата
+ */
+function changeChatStyle() {
+	const elStyle = document.createElement('link');
+	elStyle.rel = 'stylesheet';
+	elStyle.href = chrome.runtime.getURL('content.css');
+	elStyle.className = 'tw5-js-remove';
+	(document.head || document.documentElement).appendChild(elStyle);
 }
 
-function изменитьПоведениеЧата() {
-	window.addEventListener('click', оСобытие => {
-		if (оСобытие.button !== ЛЕВАЯ_КНОПКА) {
+/**
+ * @function
+ * @description Changes the chat behavior.
+ * @translation изменитьПоведениеЧата
+ */
+function changeChatBehavior() {
+	window.addEventListener('click', oEvent => {
+		if (oEvent.button !== LEFT_BUTTON) {
 			return;
 		}
-		const узСсылка = оСобытие.target.closest('a[href^="http:"],a[href^="https:"],a[href]:not([href=""]):not([href^="#"]):not([href*=":"]):not([href$="/not-a-location"])');
-		if (!узСсылка) {
+		const elLink = oEvent.target.closest('a[href^="http:"],a[href^="https:"],a[href]:not([href=""]):not([href^="#"]):not([href*=":"]):not([href$="/not-a-location"])');
+		if (!elLink) {
 			return;
 		}
-		м_Журнал.Окак(`[content.js] Открываю ссылку в новой вкладке: ${узСсылка.getAttribute('href')}`);
-		узСсылка.target = '_blank';
-		оСобытие.stopImmediatePropagation();
+		m_Log.Log(`[content.js] Opening link in a new tab: ${elLink.getAttribute('href')}`);
+		elLink.target = '_blank';
+		oEvent.stopImmediatePropagation();
 	}, true);
-	const оНаблюдатель = new MutationObserver(моЗаписи => {
-		const сэл = document.getElementsByClassName('channel-leaderboard');
-		if (сэл.length !== 0) {
-			сэл[0].parentElement.parentElement.classList.add('tw5-parent-channel-leaderboard');
-			оНаблюдатель.disconnect();
+	const oObserver = new MutationObserver(moRecords => {
+		const ael = document.getElementsByClassName('channel-leaderboard');
+		if (ael.length !== 0) {
+			ael[0].parentElement.parentElement.classList.add('tw5-parent-channel-leaderboard');
+			oObserver.disconnect();
 		}
 	});
-	оНаблюдатель.observe(document.body || document.documentElement, {
+	oObserver.observe(document.body || document.documentElement, {
 		childList: true,
 		subtree: true
 	});
-	setTimeout(() => оНаблюдатель.disconnect(), 6e4);
+	setTimeout(() => oObserver.disconnect(), 6e4);
 }
 
-function удалитьХвостыСтаройВерсии() {}
+/**
+ * @function
+ * @description Removes the remnants of the old version.
+ * @translation удалитьХвостыСтаройВерсии
+ */
+function removeOldVersionRemnants() {}
 
-ДобавитьОбработчикИсключений(() => {
-	м_Журнал.Окак(`[content.js] Запущен ${performance.now().toFixed()}мс ${location.href}`);
-	if (разобратьАдрес(location).сСтраница === 'ЧАТ_КАНАЛА') {
-		вставитьНаСтраницу();
+AddExceptionHandler(() => {
+	m_Log.Log(`[content.js] Launched ${performance.now().toFixed()}ms ${location.href}`);
+	if (parseAddress(location).sPage === 'CHANNEL_CHAT') {
+		insertIntoPage();
 		if (window.top !== window) {
-			вставитьСторонниеРасширения();
-			изменитьСтильЧата();
-			изменитьПоведениеЧата();
+			insertThirdPartyExtensions();
+			changeChatStyle();
+			changeChatBehavior();
 		}
 		return;
 	}
-	удалитьХвостыСтаройВерсии();
-	const сСобытие = window.PointerEvent ? 'pointerdown' : 'mousedown';
-	window.addEventListener(сСобытие, обработатьPointerDownИClick, true);
-	window.addEventListener('click', обработатьPointerDownИClick, true);
-	window.addEventListener('popstate', обработатьPopState);
-	м_Настройки.Восстановить().then(() => {
-		измененАдресСтраницы('LOAD');
-		window.addEventListener('tw5-pushstate', обработатьPushState);
-		вставитьНаСтраницу();
-		вставитьНашуКнопкуВПервыйРаз();
-	}).catch(м_Отладка.ПойманоИсключение);
+	removeOldVersionRemnants();
+	const sEvent = window.PointerEvent ? 'pointerdown' : 'mousedown';
+	window.addEventListener(sEvent, handlePointerDownAndClick, true);
+	window.addEventListener('click', handlePointerDownAndClick, true);
+	window.addEventListener('popstate', handlePopState);
+	m_Settings.Restore().then(() => {
+		pageAddressChanged('LOAD');
+		window.addEventListener('tw5-pushstate', handlePushState);
+		insertIntoPage();
+		insertOurButtonForTheFirstTime();
+	}).catch(m_Debug.ExceptionCaught);
 })();
