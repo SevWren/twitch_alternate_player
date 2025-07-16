@@ -2,6 +2,7 @@
 	"M0001":
 	{
 		"message": "Альтернативный проигрыватель прямых трансляций для сайта Twitch.tv.",
+		"_en_comment": "An alternative live stream player for Twitch.tv.",
 		"description": "Краткое описание расширения. Копия этой строки есть в AMO и Windows Store."
 	},
 	"M0010":
@@ -11,7 +12,8 @@
 	},
 	"J0100":
 	{
-		"message": "Трансляция завершена"
+		"message": "Трансляция завершена",
+		"_en_comment": "Stream ended"
 	},
 	"J0101":
 	{

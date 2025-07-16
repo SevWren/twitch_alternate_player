@@ -1,1 +1,106 @@
-<!doctype html><html dir=ltr><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title></title><link rel=stylesheet href=common.css><link rel=stylesheet href=report.css><form id=отладка-сообщение hidden><p><span id=отладка-текстсообщения></span> <a id=отладка-ссылкасообщения target=_top rel="noopener noreferrer"></a></form><form id=отладка-отзыв hidden><h3 data-i18n=F0700></h3><div data-i18n=F1501></div><p data-i18n=F0701><p data-i18n=F0726><p data-i18n=F0727><p data-i18n=F0723><p><label for=отладка-отзыв-сообщение data-i18n=F0702></label> <textarea id=отладка-отзыв-сообщение name=отладка-сообщение rows=6 minlength=4 maxlength=10000 spellcheck=true required autofocus></textarea><p><label><span data-i18n=F0703></span> <span data-i18n=F0728></span> <input name=отладка-почта type=email maxlength=254 spellcheck=false></label><p><span data-i18n=F0704></span> <label for=отладка-отзыв-показатьотчет class=отладка-ссылкакнопка data-i18n=F0705></label>. <input id=отладка-отзыв-показатьотчет type=checkbox hidden> <textarea name=отладка-отчет rows=15 spellcheck=false required readonly></textarea> <a href=https://coolcmd.github.io/privacy.html target=_blank rel="noopener noreferrer" data-i18n=F0706></a>.<p><button type=submit data-i18n=F0707></button> <button type=reset data-i18n=F0718></button></p><input name=отладка-типданных type=hidden value=отзыв></form><form id=отладка-ошибка hidden><h3 data-i18n=F0708></h3><p><span data-i18n=F0712></span> <label for=отладка-ошибка-показатьотчет class=отладка-ссылкакнопка data-i18n=F0705></label>. <input id=отладка-ошибка-показатьотчет type=checkbox hidden> <textarea name=отладка-отчет rows=15 spellcheck=false required readonly></textarea> <a href=https://coolcmd.github.io/privacy.html target=_blank rel="noopener noreferrer" data-i18n=F0706></a>.<p data-i18n=F0710><p><label for=отладка-ошибка-сообщение data-i18n=F0715></label> <textarea id=отладка-ошибка-сообщение name=отладка-сообщение rows=3 maxlength=10000 spellcheck=true></textarea><p><label><span data-i18n=F0703></span> <span data-i18n=F0728></span> <input name=отладка-почта type=email maxlength=254 spellcheck=false></label><p><button type=submit autofocus data-i18n=F0707></button></p><input name=отладка-типданных type=hidden value=ошибка></form><form id=отладка-идетотправка hidden><p><span data-i18n=F0717></span>  <progress id=отладка-ходотправки></progress></p><button type=submit autofocus data-i18n=F0718></button></form><form id=отладка-сбойотправки hidden><p data-i18n=F0719></p><button type=submit autofocus data-i18n=F0720></button> <button type=reset data-i18n=F0718></button></form><form id=отладка-браузерустарел hidden><p data-i18n=F0730></form><form id=отладка-версияустарела hidden><p data-i18n=F0729></form>
+<!doctype html>
+<html dir=ltr>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title></title>
+<link rel=stylesheet href=common.css>
+<link rel=stylesheet href=report.css>
+<form id=отладка-сообщение hidden>
+<!-- <form id=debug-message hidden> -->
+	<p>
+		<span id=отладка-текстсообщения></span>
+		<!-- <span id=debug-messagetext></span> -->
+		<a id=отладка-ссылкасообщения target=_top rel="noopener noreferrer"></a>
+		<!-- <a id=debug-messagelink target=_top rel="noopener noreferrer"></a> -->
+</form>
+<form id=отладка-отзыв hidden>
+<!-- <form id=debug-feedback hidden> -->
+	<h3 data-i18n=F0700></h3>
+	<div data-i18n=F1501></div>
+	<p data-i18n=F0701>
+	<p data-i18n=F0726>
+	<p data-i18n=F0727>
+	<p data-i18n=F0723>
+	<p>
+		<label for=отладка-отзыв-сообщение data-i18n=F0702></label>
+		<!-- <label for=debug-feedback-message data-i18n=F0702></label> -->
+		<textarea id=отладка-отзыв-сообщение name=отладка-сообщение rows=6 minlength=4 maxlength=10000 spellcheck=true required autofocus></textarea>
+		<!-- <textarea id=debug-feedback-message name=debug-message rows=6 minlength=4 maxlength=10000 spellcheck=true required autofocus></textarea> -->
+	<p>
+		<label>
+			<span data-i18n=F0703></span>
+			<span data-i18n=F0728></span>
+			<input name=отладка-почта type=email maxlength=254 spellcheck=false>
+			<!-- <input name=debug-email type=email maxlength=254 spellcheck=false> -->
+		</label>
+	<p>
+		<span data-i18n=F0704></span>
+		<label for=отладка-отзыв-показатьотчет class=отладка-ссылкакнопка data-i18n=F0705></label>.
+		<!-- <label for=debug-feedback-showreport class=debug-linkbutton data-i18n=F0705></label>. -->
+		<input id=отладка-отзыв-показатьотчет type=checkbox hidden>
+		<!-- <input id=debug-feedback-showreport type=checkbox hidden> -->
+		<textarea name=отладка-отчет rows=15 spellcheck=false required readonly></textarea>
+		<!-- <textarea name=debug-report rows=15 spellcheck=false required readonly></textarea> -->
+		<a href=https://coolcmd.github.io/privacy.html target=_blank rel="noopener noreferrer" data-i18n=F0706></a>.
+	<p>
+		<button type=submit data-i18n=F0707></button>
+		<button type=reset data-i18n=F0718></button>
+	</p>
+	<input name=отладка-типданных type=hidden value=отзыв>
+	<!-- <input name=debug-datatype type=hidden value=feedback> -->
+</form>
+<form id=отладка-ошибка hidden>
+<!-- <form id=debug-error hidden> -->
+	<h3 data-i18n=F0708></h3>
+	<p>
+		<span data-i18n=F0712></span>
+		<label for=отладка-ошибка-показатьотчет class=отладка-ссылкакнопка data-i18n=F0705></label>.
+		<!-- <label for=debug-error-showreport class=debug-linkbutton data-i18n=F0705></label>. -->
+		<input id=отладка-ошибка-показатьотчет type=checkbox hidden>
+		<!-- <input id=debug-error-showreport type=checkbox hidden> -->
+		<textarea name=отладка-отчет rows=15 spellcheck=false required readonly></textarea>
+		<!-- <textarea name=debug-report rows=15 spellcheck=false required readonly></textarea> -->
+		<a href=https://coolcmd.github.io/privacy.html target=_blank rel="noopener noreferrer" data-i18n=F0706></a>.
+	<p data-i18n=F0710>
+	<p>
+		<label for=отладка-ошибка-сообщение data-i18n=F0715></label>
+		<!-- <label for=debug-error-message data-i18n=F0715></label> -->
+		<textarea id=отладка-ошибка-сообщение name=отладка-сообщение rows=3 maxlength=10000 spellcheck=true></textarea>
+		<!-- <textarea id=debug-error-message name=debug-message rows=3 maxlength=10000 spellcheck=true></textarea> -->
+	<p>
+		<label>
+			<span data-i18n=F0703></span>
+			<span data-i18n=F0728></span>
+			<input name=отладка-почта type=email maxlength=254 spellcheck=false>
+			<!-- <input name=debug-email type=email maxlength=254 spellcheck=false> -->
+		</label>
+	<p>
+		<button type=submit autofocus data-i18n=F0707></button>
+	</p>
+	<input name=отладка-типданных type=hidden value=ошибка>
+	<!-- <input name=debug-datatype type=hidden value=error> -->
+</form>
+<form id=отладка-идетотправка hidden>
+<!-- <form id=debug-sending hidden> -->
+	<p>
+		<span data-i18n=F0717></span>
+		 
+		<progress id=отладка-ходотправки></progress>
+		<!-- <progress id=debug-sendprogress></progress> -->
+	</p>
+	<button type=submit autofocus data-i18n=F0718></button>
+</form>
+<form id=отладка-сбойотправки hidden>
+<!-- <form id=debug-sendfailure hidden> -->
+	<p data-i18n=F0719></p>
+	<button type=submit autofocus data-i18n=F0720></button>
+	<button type=reset data-i18n=F0718></button>
+</form>
+<form id=отладка-браузерустарел hidden>
+<!-- <form id=debug-browseroutdated hidden> -->
+	<p data-i18n=F0730>
+</form>
+<form id=отладка-версияустарела hidden>
+<!-- <form id=debug-versionoutdated hidden> -->
+	<p data-i18n=F0729>
+</form>
