@@ -7,6 +7,8 @@ Directory structure:
     ├── common.js
     ├── content.css
     ├── content.js
+    ├── content_injection.js
+    ├── gql_injection.js
     ├── gqltoken.js
     ├── LICENSE
     ├── manifest.json
@@ -17,6 +19,7 @@ Directory structure:
     ├── recycler.js
     ├── report.css
     ├── report.html
+    ├── rules.json
     ├── wasm.wasm
     ├── worker.js
     ├── _locales/
@@ -24,6 +27,9 @@ Directory structure:
     │   │   └── messages.json
     │   └── ru/
     │       └── messages.json
+    ├── _metadata/
+    │   └── generated_indexed_rulesets/
+    │       └── _ruleset1
     └── sources/
         ├── README
         └── wasm.wat
@@ -153,64 +159,76 @@ FILE: background.js
 ================================================
 'use strict';
 
-const beforeSendHeadersOptions = [ 'requestHeaders', 'blocking' ];
+// Listener for `content.js` to get a list of other installed extensions.
+// This allows the player's chat iframe to load support for BetterTTV and FrankerFaceZ.
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.сЗапрос === 'ВставитьСторонниеРасширения') {
+        // This must return true to indicate that sendResponse will be called asynchronously.
+        chrome.management.getAll().then(extensions => {
+            const response = { сСторонниеРасширения: '' };
+            for (const ext of extensions) {
+                if (ext.enabled) {
+                    switch (ext.id) {
+                        // BetterTTV IDs
+                        case 'ajopnjidmegmdimjlfnijceegpefgped': // Chrome
+                        case 'deofbbdfofnmppcjbhjibgodpcdchjii': // Opera
+                        case 'icllegkipkooaicfmdfaloehobmglglb': // Edge
+                            response.сСторонниеРасширения += 'BTTV ';
+                            break;
+                        // FrankerFaceZ IDs
+                        case 'fadndhdgpmmaapbmfcknlfgcflmmmieb': // Chrome
+                        case 'djkpepcignmpfblhbfpmlhoindhndkdj': // Opera
+                            response.сСторонниеРасширения += 'FFZ ';
+                            break;
+                    }
+                }
+            }
+            try {
+                sendResponse(response);
+            } catch (e) {
+                // This can happen if the original tab was closed. Ignore the error.
+                console.log("Could not send response for 'ВставитьСторонниеРасширения', tab may have closed.", e);
+            }
+        });
+        return true; 
+    }
+});
 
-for (const option of Object.keys(chrome.webRequest.OnBeforeSendHeadersOptions)) {
-	if (chrome.webRequest.OnBeforeSendHeadersOptions[option] === 'extraHeaders') {
-		beforeSendHeadersOptions.push('extraHeaders');
-		break;
-	}
-}
 
-chrome.webRequest.onBeforeSendHeaders.addListener(request => {
-	if (request.frameId !== 0 || request.parentFrameId !== -1) {
-		return;
-	}
-	const initiator = request.initiator || request.originUrl || request.documentUrl;
-	if (!initiator || !initiator.startsWith(chrome.runtime.getURL('').slice(0, -1))) {
-		return;
-	}
-	const remove = [ 'origin', 'referer' ];
-	const requestHeaders = request.requestHeaders.filter(({name}) => !remove.includes(name.toLowerCase()));
-	requestHeaders.push({
-		name: 'Origin',
-		value: 'https://www.twitch.tv'
-	}, {
-		name: 'Referer',
-		value: 'https://www.twitch.tv/'
-	});
-	return {
-		requestHeaders
-	};
-}, {
-	urls: chrome.runtime.getManifest().permissions.filter(permission => permission.includes(':')),
-	types: [ 'xmlhttprequest' ]
-}, beforeSendHeadersOptions);
+// Listener for `player.js` to check if the same channel is already open.
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.сЗапрос === 'ЭтотКаналУжеОткрыт') {
+        // Query all tabs for one that matches the extension's player URL and channel.
+        const playerUrl = `chrome-extension://${chrome.runtime.id}/player.html`;
+        
+        chrome.tabs.query({ url: `${playerUrl}?*` }).then(tabs => {
+            // Find a tab that is not the sender and has the same channel.
+            const duplicate = tabs.find(tab => 
+                tab.id !== sender.tab.id && 
+                new URL(tab.url).searchParams.get('channel') === message.сКанал
+            );
 
-const headersReceivedOptions = [ 'responseHeaders', 'blocking' ];
-
-for (const option of Object.keys(chrome.webRequest.OnHeadersReceivedOptions)) {
-	if (chrome.webRequest.OnHeadersReceivedOptions[option] === 'extraHeaders') {
-		headersReceivedOptions.push('extraHeaders');
-		break;
-	}
-}
-
-//! Removes HTTP response headers that prevent the document from loading into <iframe>.
-chrome.webRequest.onHeadersReceived.addListener(response => {
-	if (response.frameId <= 0 || response.parentFrameId !== 0) {
-		return;
-	}
-	return {
-		responseHeaders: response.responseHeaders.filter(({name, value}) => {
-			const headerName = name.toLowerCase();
-			return headerName !== 'x-frame-options' && (headerName !== 'content-security-policy' || !value.toLowerCase().includes('frame-ancestors'));
-		})
-	};
-}, {
-	urls: [ 'https://www.twitch.tv/popout/*/chat', 'https://www.twitch.tv/embed/*/chat', 'https://www.twitch.tv/*/chat?*', 'https://www.twitch.tv/popout/' ],
-	types: [ 'sub_frame' ]
-}, headersReceivedOptions);
+            if (duplicate) {
+                // If a duplicate is found, send `true` back.
+                try {
+                    sendResponse(true);
+                } catch (e) {
+                    console.log("Could not send response for 'ЭтотКаналУжеОткрыт', tab may have closed.", e);
+                }
+            } else {
+                // Otherwise, the original logic doesn't explicitly send `false`,
+                // but we can do that for clarity. The original code relies on an empty response.
+                try {
+                    sendResponse(false);
+                } catch(e) {
+                    console.log("Could not send response for 'ЭтотКаналУжеОткрыт', tab may have closed.", e);
+                }
+            }
+        });
+        // Indicate that the response is asynchronous.
+        return true;
+    }
+});
 
 
 ================================================
@@ -1090,9 +1108,10 @@ function задатьАдресСтраницы(сАдрес, лЗаменить
 	location[лЗаменить ? 'replace' : 'assign'](сАдрес);
 }
 
-function вставитьНаСтраницу(фВставить) {
+function вставитьНаСтраницу() {
 	const узСкрипт = document.createElement('script');
-	узСкрипт.textContent = `\n\t\t'use strict';\n\t\t(${фВставить})();\n\t`;
+	// MV3-compliant: Injects the script by URL instead of using textContent.
+	узСкрипт.src = chrome.runtime.getURL('content_injection.js');
 	(document.head || document.documentElement).appendChild(узСкрипт);
 	узСкрипт.remove();
 }
@@ -1512,42 +1531,6 @@ function вставитьНашуКнопкуВПервыйРаз() {
 	}
 }
 
-function перехватитьФункции() {
-	let _лНеПерехватывать = false;
-	window.addEventListener('tw5-неперехватывать', () => {
-		_лНеПерехватывать = true;
-	});
-	const oTitleDescriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'title');
-	Object.defineProperty(document, 'title', {
-		configurable: oTitleDescriptor.configurable,
-		enumerable: oTitleDescriptor.enumerable,
-		get() {
-			return oTitleDescriptor.get.call(this);
-		},
-		set(title) {
-			if (_лНеПерехватывать) {
-				oTitleDescriptor.set.call(this, title);
-			} else if (this.documentElement.hasAttribute('data-tw5-перенаправление')) {} else {
-				oTitleDescriptor.set.call(this, title);
-				window.dispatchEvent(new CustomEvent('tw5-изменензаголовок'));
-			}
-		}
-	});
-	const fPushState = history.pushState;
-	history.pushState = function(state, title) {
-		if (_лНеПерехватывать) {
-			fPushState.apply(this, arguments);
-		} else if (document.documentElement.hasAttribute('data-tw5-перенаправление')) {} else {
-			const сБыло = location.pathname;
-			fPushState.apply(this, arguments);
-			if (сБыло !== location.pathname) {
-				oTitleDescriptor.set.call(document, 'Twitch');
-				window.dispatchEvent(new CustomEvent('tw5-pushstate'));
-			}
-		}
-	};
-}
-
 function ждатьЗагрузкуДомика() {
 	return new Promise(фВыполнить => {
 		if (document.readyState !== 'loading') {
@@ -1613,17 +1596,6 @@ function вставитьСторонниеРасширения() {
 	});
 }
 
-function разрешитьРаботуЧата() {
-	const fGetItem = Storage.prototype.getItem;
-	Storage.prototype.getItem = function(сИмя) {
-		let сЗначение = fGetItem.apply(this, arguments);
-		if (сИмя === 'TwitchCache:Layout' && сЗначение) {
-			сЗначение = сЗначение.replace('"isRightColumnClosedByUserAction":true', '"isRightColumnClosedByUserAction":false');
-		}
-		return сЗначение;
-	};
-}
-
 function изменитьСтильЧата() {
 	const узСтиль = document.createElement('link');
 	узСтиль.rel = 'stylesheet';
@@ -1664,7 +1636,7 @@ function удалитьХвостыСтаройВерсии() {}
 ДобавитьОбработчикИсключений(() => {
 	м_Журнал.Окак(`[content.js] Запущен ${performance.now().toFixed()}мс ${location.href}`);
 	if (разобратьАдрес(location).сСтраница === 'ЧАТ_КАНАЛА') {
-		вставитьНаСтраницу(разрешитьРаботуЧата);
+		вставитьНаСтраницу();
 		if (window.top !== window) {
 			вставитьСторонниеРасширения();
 			изменитьСтильЧата();
@@ -1680,9 +1652,101 @@ function удалитьХвостыСтаройВерсии() {}
 	м_Настройки.Восстановить().then(() => {
 		измененАдресСтраницы('LOAD');
 		window.addEventListener('tw5-pushstate', обработатьPushState);
-		вставитьНаСтраницу(перехватитьФункции);
+		вставитьНаСтраницу();
 		вставитьНашуКнопкуВПервыйРаз();
 	}).catch(м_Отладка.ПойманоИсключение);
+})();
+
+
+================================================
+FILE: content_injection.js
+================================================
+// content_injection.js
+'use strict';
+
+(() => {
+    // This self-executing function contains the code previously injected by content.js
+    // This is the Manifest V3 compatible way to run code in the page's MAIN world.
+
+    // Function from content.js: перехватитьФункции()
+    let _лНеПерехватывать = false;
+    window.addEventListener('tw5-неперехватывать', () => {
+        _лНеПерехватывать = true;
+    });
+    const oTitleDescriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'title');
+    Object.defineProperty(document, 'title', {
+        configurable: oTitleDescriptor.configurable,
+        enumerable: oTitleDescriptor.enumerable,
+        get() {
+            return oTitleDescriptor.get.call(this);
+        },
+        set(title) {
+            if (_лНеПерехватывать) {
+                oTitleDescriptor.set.call(this, title);
+            } else if (this.documentElement.hasAttribute('data-tw5-перенаправление')) {} else {
+                oTitleDescriptor.set.call(this, title);
+                window.dispatchEvent(new CustomEvent('tw5-изменензаголовок'));
+            }
+        }
+    });
+    const fPushState = history.pushState;
+    history.pushState = function (state, title) {
+        if (_лНеПерехватывать) {
+            fPushState.apply(this, arguments);
+        } else if (document.documentElement.hasAttribute('data-tw5-перенаправление')) {} else {
+            const сБыло = location.pathname;
+            fPushState.apply(this, arguments);
+            if (сБыло !== location.pathname) {
+                oTitleDescriptor.set.call(document, 'Twitch');
+                window.dispatchEvent(new CustomEvent('tw5-pushstate'));
+            }
+        }
+    };
+
+    // Function from content.js: разрешитьРаботуЧата()
+    const fGetItem = Storage.prototype.getItem;
+    Storage.prototype.getItem = function (сИмя) {
+        let сЗначение = fGetItem.apply(this, arguments);
+        if (сИмя === 'TwitchCache:Layout' && сЗначение) {
+            сЗначение = сЗначение.replace('"isRightColumnClosedByUserAction":true', '"isRightColumnClosedByUserAction":false');
+        }
+        return сЗначение;
+    };
+
+})();
+
+
+================================================
+FILE: gql_injection.js
+================================================
+// gql_injection.js
+'use strict';
+
+(() => {
+    const оригинальнаяФункция = window.fetch;
+    window.fetch = function (адрес, параметры) {
+        const обещание = оригинальнаяФункция(адрес, параметры);
+        if (адрес === 'https://gql.twitch.tv/integrity' && параметры && параметры.method && параметры.method.toUpperCase() === 'POST' && параметры.headers && параметры.headers.Authorization) {
+            обещание.then(ответ => {
+                if (ответ.ok && ответ.status === 200) {
+                    return ответ.clone().json().then(({
+                        token: сТокен,
+                        expiration: чПротухнетПосле
+                    }) => {
+                        if (typeof сТокен == 'string' && сТокен && Number.isSafeInteger(чПротухнетПосле)) {
+                            const текущееВремя = Date.now();
+                            чПротухнетПосле = Math.min(Math.max(чПротухнетПосле - 3 * 60 * 1e3, текущееВремя + 1 * 60 * 60 * 1e3), текущееВремя + 24 * 60 * 60 * 1e3);
+                            document.cookie = `tw5~gqltoken=${encodeURIComponent(JSON.stringify({
+                                сТокен,
+                                чПротухнетПосле
+                            }))}; path=/tw5~storage/; samesite=none; secure; max-age=86400`;
+                        }
+                    });
+                }
+            }).catch(причина => {});
+        }
+        return обещание;
+    };
 })();
 
 
@@ -1692,36 +1756,15 @@ FILE: gqltoken.js
 'use strict';
 
 {
-	function перехватитьФункцию() {
-		const оригинальнаяФункция = window.fetch;
-		window.fetch = function(адрес, параметры) {
-			const обещание = оригинальнаяФункция(адрес, параметры);
-			if (адрес === 'https://gql.twitch.tv/integrity' && параметры && параметры.method && параметры.method.toUpperCase() === 'POST' && параметры.headers && параметры.headers.Authorization) {
-				обещание.then(ответ => {
-					if (ответ.ok && ответ.status === 200) {
-						return ответ.clone().json().then(({token: сТокен, expiration: чПротухнетПосле}) => {
-							if (typeof сТокен == 'string' && сТокен && Number.isSafeInteger(чПротухнетПосле)) {
-								const текущееВремя = Date.now();
-								чПротухнетПосле = Math.min(Math.max(чПротухнетПосле - 3 * 60 * 1e3, текущееВремя + 1 * 60 * 60 * 1e3), текущееВремя + 24 * 60 * 60 * 1e3);
-								document.cookie = `tw5~gqltoken=${encodeURIComponent(JSON.stringify({
-									сТокен,
-									чПротухнетПосле
-								}))}; path=/tw5~storage/; samesite=none; secure; max-age=86400`;
-							}
-						});
-					}
-				}).catch(причина => {});
-			}
-			return обещание;
-		};
-	}
-	function вставитьНаСтраницу(функция) {
+	function вставитьНаСтраницу() {
 		const скрипт = document.createElement('script');
-		скрипт.textContent = `\n\t\t'use strict';\n\t\t(${функция})();\n\t`;
+		// MV3-compliant: Injects the script by URL instead of using textContent.
+		скрипт.src = chrome.runtime.getURL('gql_injection.js');
 		(document.head || document.documentElement).appendChild(скрипт);
+		// The script is removed from the DOM after it has been added, but it will continue to execute.
 		скрипт.remove();
 	}
-	вставитьНаСтраницу(перехватитьФункцию);
+	вставитьНаСтраницу();
 }
 
 
@@ -1802,7 +1845,7 @@ FILE: manifest.json
 {
 	"update_url": "https://clients2.google.com/service/update2/crx",
 	"manifest_version": 3,
-	"minimum_chrome_version": "88",
+	"minimum_chrome_version": "92",
 	"name": "Alternate Player for Twitch.tv",
 	"short_name": "Alternate Player",
 	"version": "2025.5.28",
@@ -1832,6 +1875,9 @@ FILE: manifest.json
 	],
 	"background": {
 	  "service_worker": "background.js"
+	},
+	"content_security_policy": {
+	  "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
 	},
 	"content_scripts": [
 	  {
@@ -1877,7 +1923,9 @@ FILE: manifest.json
 	  {
 		"resources": [
 		  "player.html",
-		  "content.css"
+		  "content.css",
+		  "gql_injection.js",
+		  "content_injection.js"
 		],
 		"matches": [
 		  "https://*.twitch.tv/*"
@@ -8397,6 +8445,62 @@ FILE: report.html
 
 
 ================================================
+FILE: rules.json
+================================================
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        { "header": "origin", "operation": "remove" },
+        { "header": "referer", "operation": "remove" },
+        {
+          "header": "Origin",
+          "operation": "set",
+          "value": "https://www.twitch.tv"
+        },
+        {
+          "header": "Referer",
+          "operation": "set",
+          "value": "https://www.twitch.tv/"
+        }
+      ]
+    },
+    "condition": {
+      "initiatorDomains": ["__MSG_@@extension_id__"],
+      "resourceTypes": ["xmlhttprequest"],
+      "requestDomains": [
+        "twitch.tv",
+        "twitchcdn.net",
+        "ttvnw.net",
+        "jtvnw.net",
+        "live-video.net",
+        "akamaized.net",
+        "cloudfront.net"
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        { "header": "x-frame-options", "operation": "remove" },
+        { "header": "content-security-policy", "operation": "remove" }
+      ]
+    },
+    "condition": {
+      "regexFilter": "^https://www\\.twitch\\.tv/((popout|embed)/.+/chat|.+/chat\\?.*|popout/)$",
+      "resourceTypes": ["sub_frame"]
+    }
+  }
+]
+
+
+================================================
 FILE: wasm.wasm
 ================================================
 [Non-text file]
@@ -13038,6 +13142,12 @@ FILE: _locales/ru/messages.json
 	}
 }
 
+
+
+================================================
+FILE: _metadata/generated_indexed_rulesets/_ruleset1
+================================================
+[Non-text file]
 
 
 ================================================
