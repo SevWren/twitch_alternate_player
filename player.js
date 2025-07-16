@@ -1,52 +1,76 @@
 'use strict';
 
 const ВЕРСИЯ_РАСШИРЕНИЯ = chrome.runtime.getManifest().version;
+// const EXTENSION_VERSION = chrome.runtime.getManifest().version;
 
 const ЗАГРУЖАТЬ_МЕТАДАННЫЕ_НЕ_ДОЛЬШЕ = 15e3;
+// const LOAD_METADATA_NO_LONGER_THAN = 15e3;
 
 const ЗАГРУЖАТЬ_СПИСОК_ВАРИАНТОВ_НЕ_ДОЛЬШЕ = 15e3;
+// const LOAD_VARIANT_LIST_NO_LONGER_THAN = 15e3;
 
 const ЗАГРУЖАТЬ_СПИСОК_СЕГМЕНТОВ_НЕ_ДОЛЬШЕ = 6e3;
+// const LOAD_SEGMENT_LIST_NO_LONGER_THAN = 6e3;
 
 const ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ = 1;
+// const PROCESSING_AWAITING_DOWNLOAD = 1;
 
 const ОБРАБОТКА_ЗАГРУЖАЕТСЯ = 2;
+// const PROCESSING_DOWNLOADING = 2;
 
 const ОБРАБОТКА_ЗАГРУЖЕН = 3;
+// const PROCESSING_DOWNLOADED = 3;
 
 const ОБРАБОТКА_ПРЕОБРАЗОВАН = 4;
+// const PROCESSING_CONVERTED = 4;
 
 const СОСТОЯНИЕ_ЗАПУСК = 1;
+// const STATE_START = 1;
 
 const СОСТОЯНИЕ_НАЧАЛО_ТРАНСЛЯЦИИ = 2;
+// const STATE_BROADCAST_START = 2;
 
 const СОСТОЯНИЕ_ЗАВЕРШЕНИЕ_ТРАНСЛЯЦИИ = 3;
+// const STATE_BROADCAST_END = 3;
 
 const СОСТОЯНИЕ_ЗАГРУЗКА = 4;
+// const STATE_LOADING = 4;
 
 const СОСТОЯНИЕ_НАЧАЛО_ВОСПРОИЗВЕДЕНИЯ = 5;
+// const STATE_PLAYBACK_START = 5;
 
 const СОСТОЯНИЕ_ВОСПРОИЗВЕДЕНИЕ = 6;
+// const STATE_PLAYING = 6;
 
 const СОСТОЯНИЕ_ОСТАНОВКА = 7;
+// const STATE_STOP = 7;
 
 const СОСТОЯНИЕ_ПОВТОР = 8;
+// const STATE_REPEAT = 8;
 
 const СОСТОЯНИЕ_СМЕНА_ВАРИАНТА = 9;
+// const STATE_VARIANT_CHANGE = 9;
 
 const ПОДПИСКА_ОБНОВЛЯЕТСЯ = -1;
+// const SUBSCRIPTION_UPDATING = -1;
 
 const ПОДПИСКА_НЕДОСТУПНА = 0;
+// const SUBSCRIPTION_UNAVAILABLE = 0;
 
 const ПОДПИСКА_НЕОФОРМЛЕНА = 1;
+// const SUBSCRIPTION_NOT_SUBSCRIBED = 1;
 
 const ПОДПИСКА_НЕУВЕДОМЛЯТЬ = 2;
+// const SUBSCRIPTION_DO_NOT_NOTIFY = 2;
 
 const ПОДПИСКА_УВЕДОМЛЯТЬ = 3;
+// const SUBSCRIPTION_NOTIFY = 3;
 
 const КОД_ОТВЕТА = 'Сервер вернул код ';
+// const RESPONSE_CODE = 'Server returned code ';
 
 let г_чТочноеВремя = NaN;
+// let g_nExactTime = NaN;
 
 if (!navigator.clipboard) {
 	navigator.clipboard = {};
@@ -54,55 +78,89 @@ if (!navigator.clipboard) {
 
 if (!navigator.clipboard.writeText) {
 	navigator.clipboard.writeText = function(сТекст) {
+	// navigator.clipboard.writeText = function(sText) {
 		Проверить(typeof сТекст == 'string');
+		// Check(typeof sText == 'string');
 		return new Promise(ДобавитьОбработчикИсключений((фВыполнить, фОтказаться) => {
+		// return new Promise(AddExceptionHandler((fResolve, fReject) => {
 			const узТекст = document.createElement('input');
+			// const nodeText = document.createElement('input');
 			узТекст.type = 'text';
+			// nodeText.type = 'text';
 			узТекст.readOnly = true;
+			// nodeText.readOnly = true;
 			узТекст.value = сТекст;
+			// nodeText.value = sText;
 			узТекст.style.position = 'fixed';
+			// nodeText.style.position = 'fixed';
 			узТекст.style.left = '-100500px';
+			// nodeText.style.left = '-100500px';
 			document.body.appendChild(узТекст);
+			// document.body.appendChild(nodeText);
 			узТекст.select();
+			// nodeText.select();
 			const лПолучилось = document.execCommand('copy');
+			// const bSuccess = document.execCommand('copy');
 			узТекст.remove();
+			// nodeText.remove();
 			if (лПолучилось) {
+			// if (bSuccess) {
 				фВыполнить();
+				// fResolve();
 			} else {
 				фОтказаться();
+				// fReject();
 			}
 		}));
 	};
 }
 
 function Текст(сКод, сПодстановка) {
+// function Text(sCode, sSubstitution) {
 	return м_i18n.GetMessage(сКод, сПодстановка);
+	// return m_i18n.GetMessage(sCode, sSubstitution);
 }
 
 function Округлить(чЗначение, чТочность) {
+// function Round(nValue, nPrecision) {
 	Проверить(typeof чЗначение == 'number' && Number.isInteger(чТочность) && чТочность >= 0 && чТочность <= 20);
+	// Check(typeof nValue == 'number' && Number.isInteger(nPrecision) && nPrecision >= 0 && nPrecision <= 20);
 	if (чТочность === 0) {
+	// if (nPrecision === 0) {
 		return Math.round(чЗначение);
+		// return Math.round(nValue);
 	}
 	const ч = Math.pow(10, чТочность);
+	// const n = Math.pow(10, nPrecision);
 	return Math.round(чЗначение * ч) / ч;
+	// return Math.round(nValue * n) / n;
 }
 
 function Ограничить(чЗначение, чМинимум, чМаксимум) {
+// function Clamp(nValue, nMin, nMax) {
 	Проверить(Number.isFinite(чЗначение) && Number.isFinite(чМинимум) && Number.isFinite(чМаксимум) && чМинимум <= чМаксимум);
+	// Check(Number.isFinite(nValue) && Number.isFinite(nMin) && Number.isFinite(nMax) && nMin <= nMax);
 	return Math.min(Math.max(чЗначение, чМинимум), чМаксимум);
+	// return Math.min(Math.max(nValue, nMin), nMax);
 }
 
 function цепочка(пОбъект, ...мсСвойства) {
+// function chain(pObject, ...msProperties) {
 	Проверить(мсСвойства.length !== 0);
+	// Check(msProperties.length !== 0);
 	for (const сСвойство of мсСвойства) {
+	// for (const sProperty of msProperties) {
 		if (!ЭтоОбъект(пОбъект)) {
+		// if (!IsObject(pObject)) {
 			return null;
 		}
 		Проверить(ЭтоНепустаяСтрока(сСвойство));
+		// Check(IsNonEmptyString(sProperty));
 		пОбъект = пОбъект[сСвойство];
+		// pObject = pObject[sProperty];
 	}
 	return пОбъект;
+	// return pObject;
 }
 
 function ResolveRelativeUrl(sRelativeUrl, sAbsoluteBaseUrl) {
@@ -110,8 +168,10 @@ function ResolveRelativeUrl(sRelativeUrl, sAbsoluteBaseUrl) {
 }
 
 function ИзменитьЗаголовокДокумента(сЗаголовок) {
+// function ChangeDocumentTitle(sTitle) {
 	history.replaceState(null, '');
 	document.title = сЗаголовок;
+	// document.title = sTitle;
 }
 
 function проверитьРазрешенияРасширения() {
