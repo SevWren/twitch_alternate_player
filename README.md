@@ -21,6 +21,13 @@ The project has been updated to be compatible with Chrome's Manifest V3. This in
 
 These enhancements improve the overall integration of the extension, ensure compatibility with the latest Chrome standards, and lead to a more stable and efficient user experience.
 
+## LLM Specific Instructions:
+
+*   **The LLM must ignore all contents within files originating within the directory `twitch_alternate_player\Documentation\notes`
+*   This is a dedicated personal notes directory, not no for contexual use.
+*   *   **
+
+
 ## Russian Summary
 
 # Сводка обновлений проекта (за последние 7 дней)
