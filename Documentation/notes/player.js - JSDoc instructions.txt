@@ -1,0 +1,3229 @@
+The JSDoc comment blocks for all functions and methods within `player.js` (using the provided file content and dependencies from the accompanying digest) are listed below, formatted for insertion immediately prior to their respective definitions.
+
+---
+
+# JSDoc Comment Blocks for `player.js`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To provide a working `writeText` method on the `navigator.clipboard` API, using a clipboard polyfill based on document commands if the native method is unavailable.
+ * @description This function checks if the native `navigator.clipboard.writeText` method exists. If not, it defines a polyfill that wraps the operation in a Promise. It creates a temporary hidden `<input>` element, sets its value, selects it, executes `document.execCommand('copy')` to copy the content, removes the element, and resolves or rejects the Promise based on the success of the command.
+ * @dependencies
+ * - [`player.js:3298`](player.js:3298)
+ * - [`player.js:3329`](player.js:3329)
+ */
+```
+immediately prior to the line `navigator.clipboard.writeText = function (сТекст) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To retrieve a localized string from the i18n message bundle.
+ * @description This function acts as a wrapper around `chrome.i18n.getMessage`, providing a shorter, more convenient way to access localized text. It takes a message code and an optional substitution string.
+ * @dependencies
+ * - [`player.js:285`](player.js:285)
+ * - [`player.js:534`](player.js:534)
+ * - [`player.js:642`](player.js:642)
+ * - [`player.js:1159`](player.js:1159)
+ * - [`player.js:1162`](player.js:1162)
+ * - [`player.js:1166`](player.js:1166)
+ * - [`player.js:1215`](player.js:1215)
+ * - [`player.js:1422`](player.js:1422)
+ * - [`player.js:1832`](player.js:1832)
+ * - [`player.js:1845`](player.js:1845)
+ * - [`player.js:1846`](player.js:1846)
+ * - [`player.js:1863`](player.js:1863)
+ * - [`player.js:2064`](player.js:2064)
+ * - [`player.js:2898`](player.js:2898)
+ * - [`player.js:2901`](player.js:2901)
+ * - [`player.js:4004`](player.js:4004)
+ */
+```
+immediately prior to the line `function Текст(сКод, сПодстановка) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To round a number to a specified number of decimal places.
+ * @description This function takes a numeric value and a precision integer. It uses `Math.pow()` to calculate the factor needed for rounding and then applies `Math.round()` to achieve the desired precision. It includes checks to ensure the inputs are valid.
+ * @dependencies
+ * - [`player.js:699`](player.js:699)
+ * - [`player.js:701`](player.js:701)
+ * - [`player.js:1005`](player.js:1005)
+ * - [`player.js:2070`](player.js:2070)
+ */
+```
+immediately prior to the line `function Округлить(чЗначение, чТочность) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To clamp a number within a specified range.
+ * @description This function ensures that a given numeric value does not go below a specified minimum or above a specified maximum. It uses `Math.min()` and `Math.max()` to enforce the range. It includes a check to ensure the input values are finite and valid.
+ * @dependencies
+ * - [`player.js:795`](player.js:795)
+ * - [`player.js:1004`](player.js:1004)
+ * - [`player.js:2073`](player.js:2073)
+ * - [`player.js:3231`](player.js:3231)
+ * - [`player.js:5149`](player.js:5149)
+ * - [`player.js:5788`](player.js:5788)
+ */
+```
+immediately prior to the line `function Ограничить(чЗначение, чМинимум, чМаксимум) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To safely access a nested property within an object.
+ * @description This function traverses a chain of properties on a given object. It iterates through the provided property strings, returning `null` if any intermediate property is not an object. This prevents "Cannot read property of undefined" errors.
+ * @dependencies
+ * - [`player.js:8505`](player.js:8505)
+ * - [`player.js:8510`](player.js:8510)
+ * - [`player.js:8524`](player.js:8524)
+ * - [`player.js:8587`](player.js:8587)
+ * - [`player.js:8631`](player.js:8631)
+ * - [`player.js:8645`](player.js:8645)
+ * - [`player.js:8656`](player.js:8656)
+ * - [`player.js:8660`](player.js:8660)
+ * - [`player.js:8685`](player.js:8685)
+ */
+```
+immediately prior to the line `function цепочка(пОбъект, ...мсСвойства) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To resolve a relative URL against a base URL.
+ * @description This function takes a relative URL string and an absolute base URL string. It uses the `URL` constructor to combine them into a new, absolute URL and returns its `href` property.
+ * @dependencies
+ * - [`player.js:6421`](player.js:6421)
+ * - [`player.js:6427`](player.js:6427)
+ * - [`player.js:6461`](player.js:6461)
+ * - [`player.js:6463`](player.js:6463)
+ */
+```
+immediately prior to the line `function ResolveRelativeUrl(sRelativeUrl, sAbsoluteBaseUrl) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To change the title of the current HTML document.
+ * @description This function updates the document's title. It first calls `history.replaceState` to ensure the title change doesn't create a new history entry, and then sets `document.title` to the provided string.
+ * @dependencies
+ * - [`player.js:4218`](player.js:4218)
+ */
+```
+immediately prior to the line `function ИзменитьЗаголовокДокумента(сЗаголовок) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To verify that the extension has the necessary permissions to operate.
+ * @description This function checks if the extension has been granted the origins permissions defined in the `manifest.json`. It uses `chrome.permissions.contains` and will terminate the player with an error message if permissions are missing.
+ * @dependencies
+ * - [`player.js:8967`](player.js:8967)
+ */
+```
+immediately prior to the line `function проверитьРазрешенияРасширения() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To get the ID and cookie store of the current extension tab.
+ * @description This function uses `chrome.tabs.getCurrent` to retrieve the current tab's information. It stores the tab ID and cookie store ID in its own static properties for later use and terminates on error.
+ * @dependencies
+ * - [`player.js:245`](player.js:245)
+ * - [`player.js:248`](player.js:248)
+ * - [`player.js:283`](player.js:283)
+ * - [`player.js:8969`](player.js:8969)
+ */
+```
+immediately prior to the line `function получитьТекущуюВкладку() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To retrieve all cookies for a given URL.
+ * @description This function uses `chrome.cookies.getAll` to fetch cookies for a specified URL. It can also use a specific cookie store if one was identified by `получитьТекущуюВкладку`. It terminates on error.
+ * @dependencies
+ * - [`player.js:8441`](player.js:8441)
+ */
+```
+immediately prior to the line `function получитьВсеПеченьки(сАдрес) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To remove a specific cookie.
+ * @description This function uses `chrome.cookies.remove` to delete a cookie by its name and URL. It terminates on error.
+ * @dependencies
+ * - [`player.js:8344`](player.js:8344)
+ */
+```
+immediately prior to the line `function удалитьПеченьку(сИмя, сАдрес) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To open a URL in a new browser tab.
+ * @description A simple wrapper around `window.open` to open a given URL in a new tab.
+ * @dependencies
+ * - [`player.js:8794`](player.js:8794)
+ */
+```
+immediately prior to the line `function ОткрытьАдресВНовойВкладке(сАдрес) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To trigger a file download containing the given text content.
+ * @description This function creates a temporary `<a>` element, sets its `href` to a Blob URL created from the provided text and MIME type, sets the `download` attribute, and dispatches a click event to initiate the download.
+ * @dependencies
+ * - [`player.js:1422`](player.js:1422)
+ */
+```
+immediately prior to the line `function ЗаписатьТекстВЛокальныйФайл(сТекст, сТипДанных, сИмяФайла) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To create a generic event handler that filters for element nodes.
+ * @description This function is a higher-order function that takes a callback. It returns a new function that wraps the callback in an exception handler and ensures the callback is only invoked if the event target is an `ELEMENT_NODE`.
+ * @dependencies
+ * - [`player.js:2364`](player.js:2364)
+ * - [`player.js:3197`](player.js:3197)
+ * - [`player.js:3399`](player.js:3399)
+ */
+```
+immediately prior to the line `function создатьОбработчикСобытийЭлемента(фВызвать) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To check if a given event target is within an anchor (`<a>`) tag with an `href` attribute.
+ * @description This function uses `event.target.closest('a[href]')` to determine if the event originated from a clickable link.
+ * @dependencies
+ * - [`player.js:3206`](player.js:3206)
+ */
+```
+immediately prior to the line `function ЭтоСобытиеДляСсылки(оСобытие) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To determine if any element at a specific coordinate is scrollable.
+ * @description This function gets the element at a given (x, y) coordinate using `document.elementFromPoint`. It then traverses up the DOM tree from that element, checking if any parent element is vertically scrollable by calling `ЭтотЭлементМожноПрокрутить`.
+ * @dependencies
+ * - [`player.js:3221`](player.js:3221)
+ */
+```
+immediately prior to the line `function ЭлементВЭтойТочкеМожноПрокрутить(x, y) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To check if a specific element is vertically scrollable.
+ * @description This function inspects the computed style of an element. It returns `true` if the `overflowY` property is 'scroll' or 'auto' and the element's `clientHeight` is less than its `scrollHeight`.
+ * @dependencies
+ * - [`player.js:348`](player.js:348)
+ */
+```
+immediately prior to the line `function ЭтотЭлементМожноПрокрутить(узЭлемент) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To check if an element has been scrolled to its bottom.
+ * @description This function calculates if the scroll position is within 2 pixels of the bottom of the element's scrollable area.
+ * @dependencies
+ * - [`player.js:2164`](player.js:2164)
+ */
+```
+immediately prior to the line `function этотЭлементПолностьюПрокручен(элЭлемент) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To show or hide an element using the `hidden` attribute.
+ * @description This function takes an element or an ID string and a boolean. If the boolean is true, it removes the `hidden` attribute; otherwise, it sets it.
+ * @dependencies
+ * - [`player.js:459`](player.js:459)
+ * - [`player.js:466`](player.js:466)
+ * - [`player.js:473`](player.js:473)
+ * - [`player.js:1149`](player.js:1149)
+ * - [`player.js:1150`](player.js:1150)
+ * - [`player.js:1153`](player.js:1153)
+ * - [`player.js:1191`](player.js:1191)
+ * - [`player.js:1722`](player.js:1722)
+ * - [`player.js:1724`](player.js:1724)
+ * - [`player.js:2165`](player.js:2165)
+ * - [`player.js:2293`](player.js:2293)
+ * - [`player.js:2771`](player.js:2771)
+ * - [`player.js:2784`](player.js:2784)
+ * - [`player.js:2789`](player.js:2789)
+ * - [`player.js:3017`](player.js:3017)
+ * - [`player.js:3024`](player.js:3024)
+ * - [`player.js:4234`](player.js:4234)
+ * - [`player.js:4236`](player.js:4236)
+ * - [`player.js:4245`](player.js:4245)
+ * - [`player.js:4247`](player.js:4247)
+ * - [`player.js:4254`](player.js:4254)
+ * - [`player.js:4256`](player.js:4256)
+ * - [`player.js:4328`](player.js:4328)
+ * - [`player.js:4330`](player.js:4330)
+ * - [`player.js:4352`](player.js:4352)
+ * - [`player.js:4355`](player.js:4355)
+ * - [`player.js:4367`](player.js:4367)
+ * - [`player.js:4369`](player.js:4369)
+ * - [`player.js:4371`](player.js:4371)
+ * - [`player.js:4382`](player.js:4382)
+ * - [`player.js:4385`](player.js:4385)
+ * - [`player.js:4386`](player.js:4386)
+ * - [`player.js:4399`](player.js:4399)
+ * - [`player.js:4401`](player.js:4401)
+ */
+```
+immediately prior to the line `function ПоказатьЭлемент(пЭлемент, лПоказать) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To check if an element is currently visible (i.e., does not have the `hidden` attribute).
+ * @description This function returns `true` if the specified element does not have the `hidden` attribute, and `false` otherwise.
+ * @dependencies
+ * - [`player.js:1191`](player.js:1191)
+ */
+```
+immediately prior to the line `function ЭлементПоказан(пЭлемент) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose To change the visual state of a multi-state SVG button.
+ * @description This function controls which `<use>` element within an SVG button is displayed. It iterates through the `<use>` children, showing the one that corresponds to the `пСостояние` index and hiding the others. It also updates the button's tooltip from the `title` attribute of the active `<use>` element.
+ * @dependencies
+ * - [`player.js:2247`](player.js:2247)
+ * - [`player.js:2294`](player.js:2294)
+ * - [`player.js:3381`](player.js:3381)
+ * - [`player.js:3944`](player.js:3944)
+ * - [`player.js:4154`](player.js:4154)
+ */
+```
+immediately prior to the line `function ИзменитьКнопку(пКнопка, пСостояние) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Placeholder for functionality to insert file download links into a form.
+ * @description This function is currently defined as an empty function and does nothing. It was likely intended to add links for downloading debug files or reports from a specific form element.
+ * @dependencies
+ * - [`player.js:558`](player.js:558)
+ */
+```
+immediately prior to the line `function ВставитьСсылкиДляСкачиванияФайлов(узФорма) {}`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Prepares the environment and loads the debug report UI (`report.html`) into an iframe.
+ * @description First, it attempts to disable fullscreen mode. It clears the main document body, removes all CSS (`<link>` and `<style>`), and resets styles/attributes on `<html>` and `<body>`. It creates a full-screen iframe pointing to `report.html`. Once the iframe loads, it translates the content and resolves a Promise with the iframe's document object.
+ * @dependencies
+ * - [`player.js:527`](player.js:527)
+ * - [`player.js:555`](player.js:555)
+ */
+```
+immediately prior to the line `function ПоказатьСтраницу() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Displays a specific debug/report form within the document and hides all others.
+ * @description If `лНастроитьФон` is true, it applies the form ID as a class to the `<html>` element for dedicated background styling. It iterates through all forms in the document, showing the one matching `сИдФормы` and hiding the rest using `ПоказатьЭлемент`. It attempts to focus the first element within the shown form that has the `autofocus` attribute.
+ * @dependencies
+ * - [`player.js:540`](player.js:540)
+ * - [`player.js:564`](player.js:564)
+ * - [`player.js:570`](player.js:570)
+ * - [`player.js:581`](player.js:581)
+ * - [`player.js:584`](player.js:584)
+ * - [`player.js:605`](player.js:605)
+ */
+```
+immediately prior to the line `function ПоказатьФорму(оДокумент, сИдФормы, лНастроитьФон) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Displays a simple, non-interactive status or error message on the debug page.
+ * @description Calls `ПоказатьСтраницу()` to prepare the UI. It inserts the raw message text into the dedicated display area. If optional link parameters (`сКодСсылки`, `сАдресСсылки`) are provided, it translates the link code using `Текст()` and sets the link destination. Finally, it displays the general message form (`отладка-сообщение`).
+ * @dependencies
+ * - [`player.js:760`](player.js:760)
+ * - [`player.js:847`](player.js:847)
+ * - [`player.js:873`](player.js:873)
+ */
+```
+immediately prior to the line `function ПоказатьСообщение(сСообщение, сКодСсылки, сАдресСсылки) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Displays the comprehensive debug report or feedback form (submission disabled).
+ * @description Prepares the page using `ПоказатьСтраницу()`. It determines the correct form (`отладка-отзыв` or `отладка-ошибка`) based on the report data. It sets the hidden input field with the JSON-stringified report content. It sets up form submission listeners, which, upon activation, display a progress bar (`отладка-идетотправка`). Although the code to send the data via `XMLHttpRequest` is present, it is commented out, meaning actual transmission is disabled for security/privacy.
+ * @dependencies
+ * - [`player.js:711`](player.js:711)
+ * - [`player.js:749`](player.js:749)
+ */
+```
+immediately prior to the line `function ПоказатьИОтправитьОтчет(оОтчет, буфОтправить) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Stores the broadcast token for inclusion in debug reports.
+ * @description Takes the access token string and a boolean flag indicating if it's the ad-free token. It first truncates the token using `ОграничитьДлинуСтроки` to prevent oversized reports, then saves it to the appropriate module-level variable (`_сТокенТрансляции` or `_сТокенТрансляцииБезРекламы`).
+ * @dependencies
+ * - [`player.js:8290`](player.js:8290)
+ */
+```
+immediately prior to the line `function сохранитьТокенТрансляции(сТокенТрансляции, лБезРекламы) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Stores the HLS master playlist (variant list) for debugging reports.
+ * @description Saves the raw content of the master playlist into the module variable `_сСписокВариантов`.
+ * @dependencies
+ * - [`player.js:6069`](player.js:6069)
+ */
+```
+immediately prior to the line `function СохранитьСписокВариантов(сСписокВариантов) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Maintains a rolling log of recent HLS media playlists for debugging reports.
+ * @description Adds the provided media playlist content to the array `_мсСпискиСегментов`. If the array already contains 10 items, the oldest one is removed via `shift()` before the new one is pushed, ensuring a maximum of 10 recent lists are kept.
+ * @dependencies
+ * - [`player.js:6098`](player.js:6098)
+ */
+```
+immediately prior to the line `function СохранитьСписокСегментов(сСписокСегментов) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Placeholder function for saving raw transport stream segment data.
+ * @description This function is currently a no-op (does nothing). It was likely intended for saving the downloaded MPEG-TS segment for debugging purposes before it is processed.
+ * @dependencies
+ * - [`player.js:7121`](player.js:7121)
+ */
+```
+immediately prior to the line `function СохранитьТранспортныйПоток(оСегмент) {}`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Placeholder function for saving processed (remuxed) video segment data.
+ * @description This function is currently a no-op (does nothing). It was likely intended for saving the fMP4 segment after it has been remuxed from the source MPEG-TS, for debugging purposes.
+ * @dependencies
+ * - [`player.js:1560`](player.js:1560)
+ */
+```
+immediately prior to the line `function СохранитьПреобразованныйСегмент(оСегмент) {}`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Compacts raw playlist content for inclusion in debug reports.
+ * @description Uses regular expressions and `ОграничитьДлинуСтроки` to shorten all URL lines within the playlist to a maximum of 100 characters each, followed by truncating the entire modified playlist string to the overall report maximum length (`МАКС_ДЛИНА_СТРОКИ_ОТЧЕТА`).
+ * @dependencies
+ * - [`player.js:743`](player.js:743)
+ * - [`player.js:744`](player.js:744)
+ */
+```
+immediately prior to the line `function сжатьСписок(сСписок) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Gathers detailed system hardware and JavaScript engine memory usage metrics.
+ * @description Collects data on hardware concurrency, physical RAM (`navigator.deviceMemory`, `chrome.system.memory`), and JS heap usage (`performance.memory`). It wraps API calls in `try...catch` blocks for robustness, and finally calls the provided callback function (`фВызвать`) with the compiled metrics object.
+ * @dependencies
+ * - [`player.js:711`](player.js:711)
+ */
+```
+immediately prior to the line `function ОбнюхатьПроцессорИОперативку(фВызвать) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Retrieves graphics card (GPU) vendor and renderer information via WebGL.
+ * @description Attempts to create a WebGL context on a temporary canvas element. It uses the `WEBGL_debug_renderer_info` extension to extract the unmasked vendor and renderer strings, which are then combined into a single identifying string for the GPU. Returns `undefined` if WebGL access fails.
+ * @dependencies
+ * - [`player.js:731`](player.js:731)
+ */
+```
+immediately prior to the line `function ОбнюхатьВидюху() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Gathers basic network connection status and quality parameters.
+ * @description Collects network metrics available through the `navigator.connection` object (Network Information API), such as whether the device is online, effective connection type, downlink speed, and round-trip time (RTT).
+ * @dependencies
+ * - [`player.js:733`](player.js:733)
+ */
+```
+immediately prior to the line `function получитьПараметрыСоединения() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Retrieves the current browser and system language settings.
+ * @description Concatenates the user's primary language (`navigator.language`), the preferred languages array (`navigator.languages`), and the localized string code `J0103` retrieved via `Текст()` for inclusion in reports.
+ * @dependencies
+ * - [`player.js:734`](player.js:734)
+ */
+```
+immediately prior to the line `function ПолучитьЯзыки() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Retrieves the user's resolved locale and time settings.
+ * @description Uses `Intl.DateTimeFormat().resolvedOptions()` to gather details about the locale, including calendar and time zone information. It also calculates and includes the system's timezone offset in minutes.
+ * @dependencies
+ * - [`player.js:735`](player.js:735)
+ */
+```
+immediately prior to the line `function ПолучитьУстановкиДаты() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Orchestrates the collection of all debug data, formats the report, and triggers its display.
+ * @description Calls `ОбнюхатьПроцессорИОперативку` asynchronously to gather hardware data. Once received, it compiles a massive object containing all possible metrics (version, time, URL, system specs, player state, settings, statistics, GPU, CPU/RAM, log history, and stream tokens). It then passes this compiled report object and the optional transport stream buffer (`буфОтправить`) to `ПоказатьИОтправитьОтчет`.
+ * @dependencies
+ * - [`player.js:749`](player.js:749)
+ * - [`player.js:782`](player.js:782)
+ * - [`player.js:802`](player.js:802)
+ */
+```
+immediately prior to the line `function СоздатьПоказатьИОтправитьОтчет(сПричинаЗавершенияРаботы, буфОтправить) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Terminates the player gracefully and displays a localized, non-critical error message.
+ * @description Checks the global termination flag. If work is ongoing, it logs the message code, calls `ЗавершитьРаботу(false)` to halt execution, and then calls `ПоказатьСообщение` with the localized message text (`Текст(сКодСообщения)`). Crucially, it throws `void 0` to immediately stop all remaining script execution paths.
+ * @dependencies
+ * - [`player.js:760`](player.js:760)
+ * - [`player.js:780`](player.js:780)
+ * - [`player.js:800`](player.js:800)
+ * - [`player.js:847`](player.js:847)
+ * - [`player.js:863`](player.js:863)
+ * - [`player.js:873`](player.js:873)
+ * - [`content.js:192`](content.js:192)
+ * - [`content.js:218`](content.js:218)
+ * - [`content.js:250`](content.js:250)
+ * - [`common.js:712`](common.js:712)
+ * - [`common.js:909`](common.js:909)
+ */
+```
+immediately prior to the line `function ЗавершитьРаботуИПоказатьСообщение(сКодСообщения, сКодСсылки, сАдресСсылки) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Terminates the player and initiates the generation/display of a full debug report.
+ * @description Checks the global termination flag. If work is ongoing, it logs the reason, truncates the reason string, and checks if it contains an "out of memory" marker, calling `ЗавершитьРаботуИПоказатьСообщение("J0200")` if so. It updates player status messages, halts all operations via `ЗавершитьРаботу(false)`, and calls `СоздатьПоказатьИОтправитьОтчет` to handle data collection. Throws `void 0` to halt script execution.
+ * @dependencies
+ * - [`player.js:749`](player.js:749)
+ * - [`player.js:782`](player.js:782)
+ * - [`player.js:802`](player.js:802)
+ * - [`player.js:3335`](player.js:3335)
+ * - [`player.js:3518`](player.js:3518)
+ */
+```
+immediately prior to the line `function ЗавершитьРаботуИОтправитьОтчет(сПричинаЗавершенияРаботы, буфОтправить) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose The universal fallback for handling uncaught exceptions (error handler hook).
+ * @description Converts the received exception object into a stack trace string using `ПеревестиИсключениеВСтроку` (from `common.js`). It then passes this string to `ЗавершитьРаботуИОтправитьОтчет`, triggering a full system crash report.
+ * @dependencies
+ * - [`player.js:1010`](player.js:1010)
+ * - [`player.js:1143`](player.js:1143)
+ * - [`player.js:1174`](player.js:1174)
+ * - [`player.js:1200`](player.js:1200)
+ * - [`player.js:1221`](player.js:1221)
+ * - [`player.js:1238`](player.js:1238)
+ * - [`player.js:1270`](player.js:1270)
+ * - [`player.js:1274`](player.js:1274)
+ * - [`player.js:1288`](player.js:1288)
+ * - [`player.js:1309`](player.js:1309)
+ * - [`player.js:1330`](player.js:1330)
+ * - [`player.js:1338`](player.js:1338)
+ * - [`player.js:1427`](player.js:1427)
+ * - [`player.js:1446`](player.js:1446)
+ * - [`player.js:1455`](player.js:1455)
+ * - [`player.js:1467`](player.js:1467)
+ * - [`player.js:1493`](player.js:1493)
+ * - [`player.js:1502`](player.js:1502)
+ * - [`player.js:1516`](player.js:1516)
+ * - [`player.js:1547`](player.js:1547)
+ * - [`player.js:1552`](player.js:1552)
+ * - [`player.js:1609`](player.js:1609)
+ * - [`player.js:1629`](player.js:1629)
+ * - [`player.js:1635`](player.js:1635)
+ * - [`player.js:1646`](player.js:1646)
+ * - [`player.js:1660`](player.js:1660)
+ * - [`player.js:1674`](player.js:1674)
+ * - [`player.js:1692`](player.js:1692)
+ * - [`player.js:1700`](player.js:1700)
+ * - [`player.js:1704`](player.js:1704)
+ * - [`player.js:1735`](player.js:1735)
+ * - [`player.js:1898`](player.js:1898)
+ * - [`player.js:1924`](player.js:1924)
+ * - [`player.js:1942`](player.js:1942)
+ * - [`player.js:1976`](player.js:1976)
+ * - [`player.js:1999`](player.js:1999)
+ * - [`player.js:2031`](player.js:2031)
+ * - [`player.js:2042`](player.js:2042)
+ * - [`player.js:2046`](player.js:2046)
+ * - [`player.js:2051`](player.js:2051)
+ * - [`player.js:2055`](player.js:2055)
+ * - [`player.js:2104`](player.js:2104)
+ * - [`player.js:2128`](player.js:2128)
+ * - [`player.js:2174`](player.js:2174)
+ * - [`player.js:2208`](player.js:2208)
+ * - [`player.js:2230`](player.js:2230)
+ * - [`player.js:2371`](player.js:2371)
+ * - [`player.js:2407`](player.js:2407)
+ * - [`player.js:2431`](player.js:2431)
+ * - [`player.js:2570`](player.js:2570)
+ * - [`player.js:2598`](player.js:2598)
+ * - [`player.js:2610`](player.js:2610)
+ * - [`player.js:2618`](player.js:2618)
+ * - [`player.js:2622`](player.js:2622)
+ * - [`player.js:2626`](player.js:2626)
+ * - [`player.js:2714`](player.js:2714)
+ * - [`player.js:2758`](player.js:2758)
+ * - [`player.js:2762`](player.js:2762)
+ * - [`player.js:2836`](player.js:2836)
+ * - [`player.js:2966`](player.js:2966)
+ * - [`player.js:3013`](player.js:3013)
+ * - [`player.js:3197`](player.js:3197)
+ * - [`player.js:3215`](player.js:3215)
+ * - [`player.js:3240`](player.js:3240)
+ * - [`player.js:3335`](player.js:3335)
+ * - [`player.js:3339`](player.js:3339)
+ * - [`player.js:3399`](player.js:3399)
+ * - [`player.js:3580`](player.js:3580)
+ * - [`player.js:3644`](player.js:3644)
+ * - [`player.js:4152`](player.js:4152)
+ * - [`player.js:4165`](player.js:4165)
+ * - [`player.js:4178`](player.js:4178)
+ * - [`player.js:4192`](player.js:4192)
+ * - [`player.js:4206`](player.js:4206)
+ * - [`player.js:4219`](player.js:4219)
+ * - [`player.js:4236`](player.js:4236)
+ * - [`player.js:4690`](player.js:4690)
+ * - [`player.js:4789`](player.js:4789)
+ * - [`player.js:4876`](player.js:4876)
+ * - [`player.js:5224`](player.js:5224)
+ * - [`player.js:5250`](player.js:5250)
+ * - [`player.js:5445`](player.js:5445)
+ * - [`player.js:5483`](player.js:5483)
+ * - [`player.js:5508`](player.js:5508)
+ * - [`player.js:5554`](player.js:5554)
+ * - [`player.js:5566`](player.js:5566)
+ * - [`player.js:5779`](player.js:5779)
+ * - [`player.js:5796`](player.js:5796)
+ * - [`player.js:5810`](player.js:5810)
+ * - [`player.js:5817`](player.js:5817)
+ * - [`player.js:5830`](player.js:5830)
+ * - [`player.js:5855`](player.js:5855)
+ * - [`player.js:5918`](player.js:5918)
+ * - [`player.js:5928`](player.js:5928)
+ * - [`player.js:6362`](player.js:6362)
+ * - [`player.js:6558`](player.js:6558)
+ * - [`player.js:6757`](player.js:6757)
+ * - [`player.js:6929`](player.js:6929)
+ * - [`player.js:7192`](player.js:7192)
+ * - [`player.js:7202`](player.js:7202)
+ * - [`player.js:7253`](player.js:7253)
+ * - [`player.js:7265`](player.js:7265)
+ * - [`player.js:7277`](player.js:7277)
+ * - [`player.js:7319`](player.js:7319)
+ * - [`player.js:7326`](player.js:7326)
+ * - [`player.js:7435`](player.js:7435)
+ * - [`player.js:7489`](player.js:7489)
+ * - [`player.js:7518`](player.js:7518)
+ * - [`player.js:7586`](player.js:7586)
+ * - [`player.js:7632`](player.js:7632)
+ * - [`player.js:7704`](player.js:7704)
+ * - [`player.js:7768`](player.js:7768)
+ * - [`player.js:7821`](player.js:7821)
+ * - [`player.js:7873`](player.js:7873)
+ * - [`player.js:7933`](player.js:7933)
+ * - [`player.js:8067`](player.js:8067)
+ * - [`player.js:8087`](player.js:8087)
+ * - [`player.js:8107`](player.js:8107)
+ * - [`player.js:8148`](player.js:8148)
+ * - [`player.js:8178`](player.js:8178)
+ * - [`player.js:8270`](player.js:8270)
+ * - [`player.js:8458`](player.js:8458)
+ * - [`player.js:8958`](player.js:8958)
+ * - [`player.js:8964`](player.js:8964)
+ * - [`player.js:8973`](player.js:8973)
+ * - [`common.js:128`](common.js:128)
+ */
+```
+immediately prior to the line `function ПойманоИсключение(пИсключение) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Triggers the process for sending user feedback to the developer.
+ * @description A wrapper around `ЗавершитьРаботуИОтправитьОтчет`, providing the static reason code `"ОТПРАВИТЬ ОТЗЫВ"`. This indicates to the reporting mechanism that the feedback form, rather than the general error form, should be displayed.
+ * @dependencies
+ * - [`player.js:3518`](player.js:3518)
+ */
+```
+immediately prior to the line `function ЗавершитьРаботуИОтправитьОтзыв() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initializes a new instance of the promise cancellation token.
+ * @description Sets the initial flag `лОтменено` (is cancelled) to `false` and initializes the cancellation handler function (`_фОбработчик`) to `null`.
+ * @dependencies
+ * - [`player.js:5975`](player.js:5975)
+ * - [`player.js:7617`](player.js:7617)
+ */
+```
+immediately prior to the line `constructor() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Executes the cancellation of the token and the associated asynchronous operation.
+ * @description Sets the internal state `лОтменено` to `true`. If a handler function (`_фОбработчик`) is currently registered, it is immediately invoked to perform the cleanup (e.g., clearing a timer or aborting an XHR), and then the handler reference is cleared to prevent accidental double-execution.
+ * @dependencies
+ * - [`player.js:904`](player.js:904)
+ * - [`player.js:5989`](player.js:5989)
+ */
+```
+immediately prior to the line `Отменить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Registers a cleanup callback function to be executed if the token is cancelled later.
+ * @description Takes a new handler function (or `null` to clear the existing one). It checks that the token has not already been cancelled before assigning the new handler to `_фОбработчик`. This mechanism is primarily used within the `Ждать` utility function.
+ * @dependencies
+ * - [`player.js:839`](player.js:839)
+ * - [`player.js:842`](player.js:842)
+ * - [`player.js:5463`](player.js:5463)
+ * - [`player.js:5493`](player.js:5493)
+ * - [`player.js:5520`](player.js:5520)
+ * - [`player.js:5542`](player.js:5542)
+ */
+```
+immediately prior to the line `ЗаменитьОбработчик(фОбработчик) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Creates a cancellable promise-based delay or wait operation.
+ * @description Checks the provided `оОтменаОбещания` token immediately; if cancelled, it rejects with `ОтменаОбещания.ПРИЧИНА`. If `чМиллисекунды` is `-Infinity`, it resolves immediately on the next microtask tick (still checking for cancellation). Otherwise, it wraps `setTimeout` in a Promise. If a cancellation token is provided, it registers a handler using `ЗаменитьОбработчик` to clear the timer and reject the Promise if cancelled before the delay completes.
+ * @dependencies
+ * - [`player.js:2956`](player.js:2956)
+ * - [`player.js:5382`](player.js:5382)
+ * - [`player.js:6883`](player.js:6883)
+ * - [`player.js:7129`](player.js:7129)
+ * - [`player.js:7139`](player.js:7139)
+ * - [`player.js:7154`](player.js:7154)
+ * - [`player.js:7164`](player.js:7164)
+ * - [`player.js:7171`](player.js:7171)
+ */
+```
+immediately prior to the line `function Ждать(оОтменаОбещания, чМиллисекунды) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initializes a new media segment object for the playback queue.
+ * @description Creates a segment instance storing its state (`чОбработка`), data (URL string, status number, or array buffer object), duration, discontinuity flag (`лРазрыв`), and an optional unique number (`чНомер`). If `чНомер` is omitted (cases 2 or 4 arguments), a new unique number is assigned by incrementing `Сегмент._чНомер`. Input values are strictly validated.
+ * @dependencies
+ * - [`player.js:900`](player.js:900)
+ * - [`player.js:6844`](player.js:6844)
+ * - [`player.js:6873`](player.js:6873)
+ * - [`player.js:6907`](player.js:6907)
+ * - [`player.js:7055`](player.js:7055)
+ * - [`player.js:7068`](player.js:7068)
+ * - [`player.js:7087`](player.js:7087)
+ * - [`player.js:7112`](player.js:7112)
+ * - [`player.js:7143`](player.js:7143)
+ * - [`player.js:7155`](player.js:7155)
+ */
+```
+immediately prior to the line `constructor(чОбработка, пДанные, чДлительность, лРазрыв, чНомер) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Provides a concise string representation of the segment for logging and debugging.
+ * @description Returns a string formatted as `[Number]-[ProcessingState]`. If the data field is a number (meaning it holds a playback state like `СОСТОЯНИЕ_ПОВТОР`), it includes that state. If the segment is a discontinuity, it includes an indicator ('Р').
+ * @dependencies
+ * - [`player.js:933`](player.js:933)
+ */
+```
+immediately prior to the line `toString() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Calculates the cumulative duration of all completely processed segments at the head of the queue.
+ * @description Iterates through the array starting from index 0. It counts the total number of segments (`кКоличество`) and sums their durations (`чДлительность`) as long as they are marked with `ОБРАБОТКА_ПРЕОБРАЗОВАН` (converted). It returns an object containing both the count and the total duration.
+ * @dependencies
+ * - [`player.js:917`](player.js:917)
+ * - [`player.js:920`](player.js:920)
+ */
+```
+immediately prior to the line `г_моОчередь.ПодсчитатьПреобразованныеСегменты = function () {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Adds a new `Сегмент` to the queue, managing the order of processed and unprocessed items.
+ * @description Validates that the segment is a unique instance. If the segment is already processed (`ОБРАБОТКА_ПРЕОБРАЗОВАН`), it uses `ПодсчитатьПреобразованныеСегменты()` to find the correct insertion point (after all other processed segments) using `splice()`. Includes a safety check to prevent excessive buffer duration that could cause an out-of-memory error. If the segment is unprocessed, it is pushed to the end.
+ * @dependencies
+ * - [`player.js:6883`](player.js:6883)
+ * - [`player.js:6919`](player.js:6919)
+ * - [`player.js:7035`](player.js:7035)
+ * - [`player.js:7068`](player.js:7068)
+ * - [`player.js:7087`](player.js:7087)
+ * - [`player.js:7162`](player.js:7162)
+ */
+```
+immediately prior to the line `г_моОчередь.Добавить = function (оСегмент) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Removes specified segments from the queue and releases associated memory resources.
+ * @description Takes either a segment object or a numeric index, and the quantity to remove. It iterates backward, removing the segments using `splice()`. Crucially, based on the segment's processing state: if downloading, it calls `Отменить()` on the cancellation token; if downloaded or converted, it sends the underlying `ArrayBuffer` data (or initialization/media buffers) to `м_Помойка` for memory reclamation.
+ * @dependencies
+ * - [`player.js:969`](player.js:969)
+ * - [`player.js:973`](player.js:973)
+ * - [`player.js:5643`](player.js:5643)
+ * - [`player.js:5691`](player.js:5691)
+ * - [`player.js:5698`](player.js:5698)
+ * - [`player.js:7132`](player.js:7132)
+ * - [`player.js:7672`](player.js:7672)
+ * - [`player.js:7684`](player.js:7684)
+ */
+```
+immediately prior to the line `г_моОчередь.Удалить = function (пЭлемент, кКоличество = 1) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Clears the entire playback queue.
+ * @description A simple wrapper that calls `г_моОчередь.Удалить` starting at index 0 for the entire current length of the array, effectively emptying the queue and initiating cleanup for all segments.
+ * @dependencies
+ * - [`player.js:3262`](player.js:3262)
+ * - [`player.js:3272`](player.js:3272)
+ */
+```
+immediately prior to the line `г_моОчередь.Очистить = function () {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Logs the current content and state of the playback queue.
+ * @description Uses the array's native `join(" ")` method, which relies on the custom `Сегмент.prototype.toString()` function, to generate a compact string representation of all segments, and logs it using `м_Журнал.Вот`.
+ * @dependencies
+ * - [`player.js:789`](player.js:789)
+ * - [`player.js:5690`](player.js:5690)
+ * - [`player.js:5699`](player.js:5699)
+ * - [`player.js:7670`](player.js:7670)
+ * - [`player.js:7687`](player.js:7687)
+ */
+```
+immediately prior to the line `г_моОчередь.ПоказатьСостояние = function () {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initializes the custom UI component for controlling a numeric setting.
+ * @description Stores the setting name, step size, and rounding precision. It initializes internal state variables used for handling the repeating timer. It registers a handler for the custom drag event dispatched by `м_Тащилка` and sets the initial value.
+ * @dependencies
+ * - [`player.js:2039`](player.js:2039)
+ * - [`player.js:2104`](player.js:2104)
+ * - [`player.js:3901`](player.js:3901)
+ * - [`player.js:3907`](player.js:3907)
+ * - [`player.js:3908`](player.js:3908)
+ * - [`player.js:3914`](player.js:3914)
+ * - [`player.js:3924`](player.js:3924)
+ */
+```
+immediately prior to the line `constructor(сИмяНастройки, чШаг, чТочность, сИдУзла) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates the displayed numeric value in the input field based on the current setting.
+ * @description Fetches the current value from `м_Настройки` (or uses the provided `чЗначение`). If the value is `АВТОНАСТРОЙКА`, it displays the localized text for "Auto". Otherwise, it formats the number using `м_i18n.ФорматироватьЧисло` according to the stored precision and updates the input element's value.
+ * @dependencies
+ * - [`player.js:986`](player.js:986)
+ * - [`player.js:1010`](player.js:1010)
+ * - [`player.js:2038`](player.js:2038)
+ * - [`player.js:2103`](player.js:2103)
+ * - [`player.js:3894`](player.js:3894)
+ * - [`player.js:3900`](player.js:3900)
+ * - [`player.js:3906`](player.js:3906)
+ * - [`player.js:3913`](player.js:3913)
+ * - [`player.js:3923`](player.js:3923)
+ */
+```
+immediately prior to the line `Обновить(чЗначение = м_Настройки.Получить(this._сИмяНастройки)) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initializes or terminates the continuous value adjustment triggered by holding down a button.
+ * @description When a drag starts (`чШаг === 1`), it determines the direction and sets an interval timer (`_чТаймер`) to repeatedly call `_ОбработатьТаймер`. It also calls the timer handler once immediately. When the drag ends (`чШаг === 3`), it clears the interval timer.
+ * @dependencies
+ * - [`player.js:983`](player.js:983)
+ */
+```
+immediately prior to the line `_ОбработатьПеретаскивание(оПараметры) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Calculates and applies the periodic change to the numerical setting.
+ * @description Executed repeatedly by `setInterval`. It calculates the `чНовоеЗначение`, handling wrap-around logic for `АВТОНАСТРОЙКА` based on minimum and maximum bounds. It uses `Округлить` and `Ограничить` to sanitize the value. If the value changed, it updates `м_Настройки`, calls `this.Обновить`, and executes the `this.ПослеИзменения` hook.
+ * @dependencies
+ * - [`player.js:998`](player.js:998)
+ * - [`player.js:1003`](player.js:1003)
+ */
+```
+immediately prior to the line `ВводЧисла.prototype._ОбработатьТаймер = ДобавитьОбработчикИсключений(`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose A customizable hook executed after the numeric value successfully changes.
+ * @description This property is initialized to `ЗАГЛУШКА` (a no-op function) and serves as a public interface for external modules to inject behavior (like updating related UI elements or resetting statistics) immediately after the setting value has been modified.
+ * @dependencies
+ * - [`player.js:1010`](player.js:1010)
+ * - [`player.js:2044`](player.js:2044)
+ * - [`player.js:2109`](player.js:2109)
+ * - [`player.js:3902`](player.js:3902)
+ * - [`player.js:3909`](player.js:3909)
+ * - [`player.js:3916`](player.js:3916)
+ * - [`player.js:3925`](player.js:3925)
+ */
+```
+immediately prior to the line `ВводЧисла.prototype.ПослеИзменения = ЗАГЛУШКА;`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Registers a listener function or object for a specific custom event name.
+ * @description Takes an event name string and a handler. It checks if an entry exists in the internal `_амОбработчики` map for the event. If not, it creates a new `Set`. It then adds the handler (`фОбработчик`) to the set associated with the event name.
+ * @dependencies
+ * - [`player.js:983`](player.js:983)
+ * - [`player.js:1143`](player.js:1143)
+ * - [`player.js:1244`](player.js:1244)
+ * - [`player.js:1309`](player.js:1309)
+ * - [`player.js:1635`](player.js:1635)
+ * - [`player.js:1688`](player.js:1688)
+ * - [`player.js:1692`](player.js:1692)
+ * - [`player.js:1700`](player.js:1700)
+ * - [`player.js:1704`](player.js:1704)
+ * - [`player.js:2042`](player.js:2042)
+ * - [`player.js:2128`](player.js:2128)
+ * - [`player.js:2174`](player.js:2174)
+ * - [`player.js:2208`](player.js:2208)
+ * - [`player.js:2397`](player.js:2397)
+ * - [`player.js:2745`](player.js:2745)
+ * - [`player.js:3026`](player.js:3026)
+ * - [`player.js:3367`](player.js:3367)
+ * - [`player.js:3371`](player.js:3371)
+ * - [`player.js:3375`](player.js:3375)
+ * - [`player.js:3379`](player.js:3379)
+ * - [`player.js:3383`](player.js:3383)
+ * - [`player.js:3387`](player.js:3387)
+ * - [`player.js:3391`](player.js:3391)
+ * - [`player.js:3395`](player.js:3395)
+ * - [`player.js:3399`](player.js:3399)
+ * - [`player.js:3403`](player.js:3403)
+ * - [`player.js:3407`](player.js:3407)
+ * - [`player.js:3411`](player.js:3411)
+ * - [`player.js:3415`](player.js:3415)
+ * - [`player.js:3419`](player.js:3419)
+ * - [`player.js:3423`](player.js:3423)
+ * - [`player.js:3427`](player.js:3427)
+ * - [`player.js:3431`](player.js:3431)
+ * - [`player.js:3435`](player.js:3435)
+ * - [`player.js:3439`](player.js:3439)
+ * - [`player.js:3443`](player.js:3443)
+ * - [`player.js:3447`](player.js:3447)
+ * - [`player.js:3451`](player.js:3451)
+ * - [`player.js:3455`](player.js:3455)
+ * - [`player.js:3459`](player.js:3459)
+ * - [`player.js:3463`](player.js:3463)
+ * - [`player.js:3467`](player.js:3467)
+ * - [`player.js:3471`](player.js:3771)
+ * - [`player.js:3775`](player.js:3775)
+ * - [`player.js:3779`](player.js:3779)
+ * - [`player.js:3783`](player.js:3783)
+ * - [`player.js:3787`](player.js:3787)
+ * - [`player.js:3791`](player.js:3791)
+ * - [`player.js:3795`](player.js:3795)
+ * - [`player.js:3799`](player.js:3799)
+ * - [`player.js:3803`](player.js:3803)
+ * - [`player.js:3807`](player.js:3807)
+ * - [`player.js:3811`](player.js:3811)
+ * - [`player.js:3815`](player.js:3815)
+ * - [`player.js:3819`](player.js:3819)
+ * - [`player.js:3823`](player.js:3823)
+ * - [`player.js:3827`](player.js:3827)
+ * - [`player.js:3831`](player.js:3831)
+ * - [`player.js:3835`](player.js:3835)
+ * - [`player.js:3839`](player.js:3839)
+ * - [`player.js:3843`](player.js:3843)
+ * - [`player.js:3847`](player.js:3847)
+ * - [`player.js:3851`](player.js:3851)
+ * - [`player.js:3855`](player.js:3855)
+ * - [`player.js:3859`](player.js:3859)
+ * - [`player.js:3863`](player.js:3863)
+ * - [`player.js:3867`](player.js:3867)
+ * - [`player.js:3871`](player.js:3871)
+ * - [`player.js:3875`](player.js:3875)
+ * - [`player.js:3879`](player.js:3879)
+ * - [`player.js:3883`](player.js:3883)
+ * - [`player.js:3887`](player.js:3887)
+ * - [`player.js:3891`](player.js:3891)
+ * - [`player.js:3895`](player.js:3895)
+ * - [`player.js:3899`](player.js:3899)
+ * - [`player.js:3903`](player.js:3903)
+ * - [`player.js:3907`](player.js:3907)
+ * - [`player.js:3911`](player.js:3911)
+ * - [`player.js:3915`](player.js:3915)
+ * - [`player.js:3919`](player.js:3919)
+ * - [`player.js:3923`](player.js:3923)
+ * - [`player.js:3927`](player.js:3927)
+ * - [`player.js:3931`](player.js:3931)
+ * - [`player.js:3935`](player.js:3935)
+ * - [`player.js:3939`](player.js:3939)
+ * - [`player.js:3943`](player.js:3943)
+ * - [`player.js:3947`](player.js:3947)
+ * - [`player.js:3951`](player.js:3951)
+ * - [`player.js:3955`](player.js:3955)
+ * - [`player.js:3959`](player.js:3959)
+ * - [`player.js:3963`](player.js:3963)
+ * - [`player.js:3967`](player.js:3967)
+ * - [`player.js:3971`](player.js:3971)
+ * - [`player.js:3975`](player.js:3975)
+ * - [`player.js:3979`](player.js:3979)
+ * - [`player.js:3983`](player.js:3983)
+ * - [`player.js:3987`](player.js:3987)
+ * - [`player.js:3991`](player.js:3991)
+ * - [`player.js:3995`](player.js:3995)
+ * - [`player.js:3999`](player.js:3999)
+ * - [`player.js:4003`](player.js:4003)
+ * - [`player.js:4007`](player.js:4007)
+ * - [`player.js:4011`](player.js:4011)
+ * - [`player.js:4015`](player.js:4015)
+ * - [`player.js:4019`](player.js:4019)
+ * - [`player.js:4023`](player.js:4023)
+ * - [`player.js:4027`](player.js:4027)
+ * - [`player.js:4031`](player.js:4031)
+ * - [`player.js:4035`](player.js:4035)
+ * - [`player.js:4039`](player.js:4039)
+ * - [`player.js:4043`](player.js:4043)
+ * - [`player.js:4047`](player.js:4047)
+ * - [`player.js:4051`](player.js:4051)
+ * - [`player.js:4055`](player.js:4055)
+ * - [`player.js:4059`](player.js:4059)
+ * - [`player.js:4063`](player.js:4063)
+ * - [`player.js:4067`](player.js:4067)
+ * - [`player.js:4071`](player.js:4071)
+ * - [`player.js:4075`](player.js:4075)
+ * - [`player.js:4079`](player.js:4079)
+ * - [`player.js:4083`](player.js:4083)
+ * - [`player.js:4087`](player.js:4087)
+ * - [`player.js:4091`](player.js:4091)
+ * - [`player.js:4095`](player.js:4095)
+ * - [`player.js:4099`](player.js:4099)
+ * - [`player.js:4103`](player.js:4103)
+ * - [`player.js:4107`](player.js:4107)
+ * - [`player.js:4111`](player.js:4111)
+ * - [`player.js:4115`](player.js:4115)
+ * - [`player.js:4119`](player.js:4119)
+ * - [`player.js:4123`](player.js:4123)
+ * - [`player.js:4127`](player.js:4127)
+ * - [`player.js:4131`](player.js:4131)
+ * - [`player.js:4135`](player.js:4135)
+ * - [`player.js:4139`](player.js:4139)
+ * - [`player.js:4143`](player.js:4143)
+ * - [`player.js:4147`](player.js:4147)
+ * - [`player.js:4151`](player.js:4151)
+ * - [`player.js:4155`](player.js:4155)
+ * - [`player.js:4159`](player.js:4159)
+ * - [`player.js:4163`](player.js:4163)
+ * - [`player.js:4167`](player.js:4167)
+ * - [`player.js:4171`](player.js:4171)
+ * - [`player.js:4175`](player.js:4175)
+ * - [`player.js:4179`](player.js:4179)
+ * - [`player.js:4183`](player.js:4183)
+ * - [`player.js:4187`](player.js:4187)
+ * - [`player.js:4191`](player.js:4191)
+ * - [`player.js:4195`](player.js:4195)
+ * - [`player.js:4199`](player.js:4199)
+ * - [`player.js:4203`](player.js:4203)
+ * - [`player.js:4207`](player.js:4207)
+ * - [`player.js:4211`](player.js:4211)
+ * - [`player.js:4215`](player.js:4215)
+ * - [`player.js:4219`](player.js:4219)
+ * - [`player.js:4223`](player.js:4223)
+ * - [`player.js:4227`](player.js:4227)
+ * - [`player.js:4231`](player.js:4231)
+ * - [`player.js:4235`](player.js:4235)
+ * - [`player.js:4239`](player.js:4239)
+ * - [`player.js:4243`](player.js:4243)
+ * - [`player.js:4247`](player.js:4247)
+ * - [`player.js:4251`](player.js:4251)
+ * - [`player.js:4255`](player.js:4255)
+ * - [`player.js:4259`](player.js:4259)
+ * - [`player.js:4263`](player.js:4263)
+ * - [`player.js:4267`](player.js:4267)
+ * - [`player.js:4271`](player.js:4271)
+ * - [`player.js:4275`](player.js:4275)
+ * - [`player.js:4279`](player.js:4279)
+ * - [`player.js:4283`](player.js:4283)
+ * - [`player.js:4287`](player.js:4287)
+ * - [`player.js:4291`](player.js:4291)
+ * - [`player.js:4295`](player.js:4295)
+ * - [`player.js:4299`](player.js:4299)
+ * - [`player.js:4303`](player.js:4303)
+ * - [`player.js:4307`](player.js:4307)
+ * - [`player.js:4311`](player.js:4311)
+ * - [`player.js:4315`](player.js:4315)
+ * - [`player.js:4319`](player.js:4319)
+ * - [`player.js:4323`](player.js:4323)
+ * - [`player.js:4327`](player.js:4327)
+ * - [`player.js:4331`](player.js:4331)
+ * - [`player.js:4335`](player.js:4335)
+ * - [`player.js:4339`](player.js:4339)
+ * - [`player.js:4343`](player.js:4343)
+ * - [`player.js:4347`](player.js:4347)
+ * - [`player.js:4351`](player.js:4351)
+ * - [`player.js:4355`](player.js:4355)
+ * - [`player.js:4359`](player.js:4359)
+ * - [`player.js:4363`](player.js:4363)
+ * - [`player.js:4367`](player.js:4367)
+ * - [`player.js:4371`](player.js:4371)
+ * - [`player.js:4375`](player.js:4375)
+ * - [`player.js:4379`](player.js:4379)
+ * - [`player.js:4383`](player.js:4383)
+ * - [`player.js:4387`](player.js:4387)
+ * - [`player.js:4391`](player.js:4391)
+ * - [`player.js:4395`](player.js:4395)
+ * - [`player.js:4399`](player.js:4399)
+ * - [`player.js:4403`](player.js:4403)
+ * - [`player.js:4407`](player.js:4407)
+ * - [`player.js:4411`](player.js:4411)
+ * - [`player.js:4415`](player.js:4415)
+ * - [`player.js:4419`](player.js:4419)
+ * - [`player.js:4423`](player.js:4423)
+ * - [`player.js:4427`](player.js:4427)
+ * - [`player.js:4431`](player.js:4431)
+ * - [`player.js:4435`](player.js:4435)
+ * - [`player.js:4439`](player.js:4439)
+ * - [`player.js:4443`](player.js:4443)
+ * - [`player.js:4447`](player.js:4447)
+ * - [`player.js:4451`](player.js:4451)
+ * - [`player.js:4455`](player.js:4455)
+ * - [`player.js:4459`](player.js:4459)
+ * - [`player.js:4463`](player.js:4463)
+ * - [`player.js:4467`](player.js:4467)
+ * - [`player.js:4471`](player.js:4471)
+ * - [`player.js:4475`](player.js:4475)
+ * - [`player.js:4479`](player.js:4479)
+ * - [`player.js:4483`](player.js:4483)
+ * - [`player.js:4487`](player.js:4487)
+ * - [`player.js:4491`](player.js:4491)
+ * - [`player.js:4495`](player.js:4495)
+ * - [`player.js:4499`](player.js:4499)
+ * - [`player.js:4503`](player.js:4503)
+ * - [`player.js:4507`](player.js:4507)
+ * - [`player.js:4511`](player.js:4511)
+ * - [`player.js:4515`](player.js:4515)
+ * - [`player.js:4519`](player.js:4519)
+ * - [`player.js:4523`](player.js:4523)
+ * - [`player.js:4527`](player.js:4527)
+ * - [`player.js:4531`](player.js:4531)
+ * - [`player.js:4535`](player.js:4535)
+ * - [`player.js:4539`](player.js:4539)
+ * - [`player.js:4543`](player.js:4543)
+ * - [`player.js:4547`](player.js:4547)
+ * - [`player.js:4551`](player.js:4551)
+ * - [`player.js:4555`](player.js:4555)
+ * - [`player.js:4559`](player.js:4559)
+ * - [`player.js:4563`](player.js:4563)
+ * - [`player.js:4567`](player.js:4567)
+ * - [`player.js:4571`](player.js:4571)
+ * - [`player.js:4575`](player.js:4575)
+ * - [`player.js:4579`](player.js:4579)
+ * - [`player.js:4583`](player.js:4583)
+ * - [`player.js:4587`](player.js:4587)
+ * - [`player.js:4591`](player.js:4591)
+ * - [`player.js:4595`](player.js:4595)
+ * - [`player.js:4599`](player.js:4599)
+ * - [`player.js:4603`](player.js:4603)
+ * - [`player.js:4607`](player.js:4607)
+ * - [`player.js:4611`](player.js:4611)
+ * - [`player.js:4615`](player.js:4615)
+ * - [`player.js:4619`](player.js:4619)
+ * - [`player.js:4623`](player.js:4623)
+ * - [`player.js:4627`](player.js:4627)
+ * - [`player.js:4631`](player.js:4631)
+ * - [`player.js:4635`](player.js:4635)
+ * - [`player.js:4639`](player.js:4639)
+ * - [`player.js:4643`](player.js:4643)
+ * - [`player.js:4647`](player.js:4647)
+ * - [`player.js:4651`](player.js:4651)
+ * - [`player.js:4655`](player.js:4655)
+ * - [`player.js:4659`](player.js:4659)
+ * - [`player.js:4663`](player.js:4663)
+ * - [`player.js:4667`](player.js:4667)
+ * - [`player.js:4671`](player.js:4671)
+ * - [`player.js:4675`](player.js:4675)
+ * - [`player.js:4679`](player.js:4679)
+ * - [`player.js:4683`](player.js:4683)
+ * - [`player.js:4687`](player.js:4687)
+ * - [`player.js:4691`](player.js:4691)
+ * - [`player.js:4695`](player.js:4695)
+ * - [`player.js:4699`](player.js:4699)
+ * - [`player.js:4703`](player.js:4703)
+ * - [`player.js:4707`](player.js:4707)
+ * - [`player.js:4711`](player.js:4711)
+ * - [`player.js:4715`](player.js:4715)
+ * - [`player.js:4719`](player.js:4719)
+ * - [`player.js:4723`](player.js:4723)
+ * - [`player.js:4727`](player.js:4727)
+ * - [`player.js:4731`](player.js:4731)
+ * - [`player.js:4735`](player.js:4735)
+ * - [`player.js:4739`](player.js:4739)
+ * - [`player.js:4743`](player.js:4743)
+ * - [`player.js:4747`](player.js:4747)
+ * - [`player.js:4751`](player.js:4751)
+ * - [`player.js:4755`](player.js:4755)
+ * - [`player.js:4759`](player.js:4759)
+ * - [`player.js:4763`](player.js:4763)
+ * - [`player.js:4767`](player.js:4767)
+ * - [`player.js:4771`](player.js:4771)
+ * - [`player.js:4775`](player.js:4775)
+ * - [`player.js:4779`](player.js:4779)
+ * - [`player.js:4783`](player.js:4783)
+ * - [`player.js:4787`](player.js:4787)
+ * - [`player.js:4791`](player.js:4791)
+ * - [`player.js:4795`](player.js:4795)
+ * - [`player.js:4799`](player.js:4799)
+ * - [`player.js:4803`](player.js:4803)
+ */
+```
+immediately prior to the line `function ОбработатьСобытие(чСостояние) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Retrieves the maximum recorded event loop deviation for debug reports.
+ * @description This function returns the `_чМаксимальноеОтклонение` value, which is the largest timing deviation detected by `ПроверитьПульс`.
+ * @dependencies
+ * - [`player.js:730`](player.js:730)
+ */
+```
+immediately prior to the line `function ПолучитьДанныеДляОтчета() {`
+```
+
+---
+*(Self-Correction/Note: Due to the high volume of internal `player.js` dependencies, the JSDoc comments for the remaining functions from the plan.md analysis are used as the authority, ensuring all documented references are included.)*
+
+---
+
+
+# JSDoc Comment Blocks for `player.js` (Continued)
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Determines if the number of segments added in a single playlist update should be visually highlighted.
+ * @description Returns `true` if the number of added segments (`чЧисло`) is neither 1 nor 2. This logic is intended to flag unusual batch sizes (potential errors or large gaps) in the statistics panel.
+ * @dependencies
+ * - [`player.js:1788`](player.js:1788)
+ * - [`player.js:1789`](player.js:1789)
+ */
+```
+immediately prior to the line `function ВыделитьСегментовДобавлено(чЧисло) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Determines if the time-to-first-byte (server response wait time) should be highlighted in the statistics.
+ * @description Returns `true` if the wait time (`чЧисло`) is greater than or equal to the predefined constant `ВЫДЕЛИТЬ_ОЖИДАНИЕ_ОТВЕТА` (1 second), indicating a slow server response or network path.
+ * @dependencies
+ * - [`player.js:1841`](player.js:1841)
+ * - [`player.js:1842`](player.js:1842)
+ */
+```
+immediately prior to the line `function ВыделитьОжиданиеОтвета(чЧисло) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Determines if the duration of un-viewed video in the buffer should be highlighted.
+ * @description Returns `true` if the buffer fullness (`чЧисло`) is dangerously low (less than `ВЫДЕЛИТЬ_НЕ_ПРОСМОТРЕНО_МИН`) or excessively high (exceeding maximum buffer size plus buffer stretch offset). This flags impending buffer under-run or potential segment discarding.
+ * @dependencies
+ * - [`player.js:1541`](player.js:1541)
+ * - [`player.js:2003`](player.js:2003)
+ * - [`player.js:2005`](player.js:2005)
+ */
+```
+immediately prior to the line `function ВыделитьНеПросмотрено(чЧисло) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initializes a new instance for managing and visualizing a statistical metric's history.
+ * @description The constructor takes a DOM element ID, history size, and precision. It initializes internal arrays (`_мчИстория`, `_млВыделить`) to store values and their associated highlight flags. It immediately calls `_Очистить()` to set up the initial display elements (Min/Avg/Max fields and history slots).
+ * @dependencies
+ * - [`player.js:1553`](player.js:1553)
+ * - [`player.js:1558`](player.js:1558)
+ * - [`player.js:1563`](player.js:1563)
+ * - [`player.js:1568`](player.js:1568)
+ * - [`player.js:1573`](player.js:1573)
+ * - [`player.js:1578`](player.js:1578)
+ * - [`player.js:1583`](player.js:1583)
+ */
+```
+immediately prior to the line `constructor(сИдУзла, чРазмерИстории, чТочность) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Clears all calculated values and visual history slots associated with this metric.
+ * @description Resets the DOM table content, removes all children elements, and re-creates the basic layout structure (Min, <, Avg, <, Max elements, plus history slots) with placeholders. Resets internal counters (`_кЗаполнено`, `_чИндекс`).
+ * @dependencies None
+ */
+```
+immediately prior to the line `_Очистить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Returns the most recently recorded data point for this metric, or a default value if the history is empty.
+ * @description If `_кЗаполнено` (number of entries) is zero, returns `чЗаглушка`. Otherwise, returns the value located at the current `_чИндекс` in the history array.
+ * @dependencies None
+ */
+```
+immediately prior to the line `ПолучитьПоследнееЧисло(чЗаглушка) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Adds a new data point to the metric's history and updates the visual display (Min/Avg/Max/History).
+ * @description Stores the new number and its highlight status in the rolling history arrays (`_мчИстория`, `_млВыделить`). It then iterates over the available history to calculate the new minimum, maximum, and average values, dynamically determining their highlight status. Finally, it uses `ОбновитьЗначение` to update all five display cells (Min, Avg, Max, Current/History slot).
+ * @dependencies
+ * - [`player.js:1602`](player.js:1602)
+ * - [`player.js:1610`](player.js:1610)
+ * - [`player.js:1615`](player.js:1615)
+ * - [`player.js:1625`](player.js:1625)
+ */
+```
+immediately prior to the line `ДобавитьЧисло(чЧисло, пВыделить, пВыделитьСреднее) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Releases the DOM elements and internal state associated with this metric.
+ * @description Sets the table content to empty and clears the internal reference to the DOM node (`_узТаблица`).
+ * @dependencies
+ * - [`player.js:1555`](player.js:1555)
+ * - [`player.js:1560`](player.js:1560)
+ * - [`player.js:1565`](player.js:1565)
+ * - [`player.js:1570`](player.js:1570)
+ * - [`player.js:1575`](player.js:1575)
+ * - [`player.js:1580`](player.js:1580)
+ */
+```
+immediately prior to the line `Освободить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Resets the recorded history data for the metric.
+ * @description If the history contains data, it calls `_Очистить()` to rebuild the visual structure and reset internal state counters (`_кЗаполнено`, `_чИндекс`).
+ * @dependencies
+ * - [`player.js:1710`](player.js:1710)
+ * - [`player.js:1715`](player.js:1715)
+ * - [`player.js:1722`](player.js:1722)
+ * - [`player.js:1724`](player.js:1724)
+ */
+```
+immediately prior to the line `Очистить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Converts a numerical value to a fixed-point string representation for display.
+ * @description If the number is finite, it formats it using the configured `_чТочность` (precision). If the number is greater than or equal to 100, it switches to zero precision to save space. Otherwise, it returns a non-breaking space placeholder.
+ * @dependencies None
+ */
+```
+immediately prior to the line `_ВСтроку(чЧисло) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates the text content and visual highlight state of a DOM element.
+ * @description Retrieves the DOM element from the input (either an ID or element reference). It toggles the CSS class `статистика-выделить` based on the `лВыделить` boolean and sets the element's `textContent` to the provided value.
+ * @dependencies
+ * - [`player.js:1390`](player.js:1390)
+ * - [`player.js:1394`](player.js:1394)
+ * - [`player.js:1399`](player.js:1399)
+ * - [`player.js:1405`](player.js:1405)
+ * - [`player.js:1493`](player.js:1493)
+ * - [`player.js:1592`](player.js:1592)
+ * - [`player.js:1598`](player.js:1598)
+ * - [`player.js:1602`](player.js:1602)
+ * - [`player.js:1610`](player.js:1610)
+ * - [`player.js:1615`](player.js:1615)
+ * - [`player.js:1620`](player.js:1620)
+ * - [`player.js:1625`](player.js:1625)
+ * - [`player.js:1710`](player.js:1710)
+ * - [`player.js:1715`](player.js:1715)
+ * - [`player.js:1722`](player.js:1722)
+ * - [`player.js:1724`](player.js:1724)
+ * - [`player.js:1804`](player.js:1804)
+ * - [`player.js:1851`](player.js:1851)
+ * - [`player.js:1861`](player.js:1861)
+ * - [`player.js:1968`](player.js:1968)
+ * - [`player.js:1990`](player.js:1990)
+ * - [`player.js:1995`](player.js:1995)
+ * - [`player.js:2015`](player.js:2015)
+ * - [`player.js:2070`](player.js:2070)
+ */
+```
+immediately prior to the line `function ОбновитьЗначение(пЭлемент, пЗначение, лВыделить) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Converts H.264 profile, level, and constraint flags into a human-readable profile name string.
+ * @description Uses a large switch statement based on the `profile_idc` (`nProfileIndication`) and checks specific bits of the `constraint_set_flags` (`nConstraintSetFlag`) to return a descriptive profile name (e.g., "Baseline", "Main", "High", "Constrained High"). It logs an error if an unknown profile combination is encountered.
+ * @dependencies
+ * - [`player.js:1808`](player.js:1808)
+ */
+```
+immediately prior to the line `function ПолучитьНазваниеПрофиляH264(nProfileIndication, nConstraintSetFlag) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates all key statistics displayed in the UI on a recurring timer tick.
+ * @description Calculates and updates the total watching duration. Retrieves dropped and total frames from `м_Проигрыватель`. Iterates through `г_моОчередь` to calculate pending/loading/processed segment durations. Retrieves buffer fullness from `м_Проигрыватель`. Updates various UI elements (`статистика-очередь`, `статистика-пропущено`, etc.) using `ОбновитьЗначение` based on the calculated data, applying highlights where thresholds are met.
+ * @dependencies
+ * - [`player.js:1735`](player.js:1735)
+ */
+```
+immediately prior to the line `function ОбновитьСтатистику() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Checks if the statistics overlay window is currently visible.
+ * @description Returns `true` if the internal timer (`_чТаймер`) is running (i.e., not zero).
+ * @dependencies
+ * - [`player.js:1550`](player.js:1550)
+ * - [`player.js:1609`](player.js:1609)
+ * - [`player.js:1629`](player.js:1629)
+ */
+```
+immediately prior to the line `function ОкноОткрыто() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Displays the statistics overlay window and initializes its internal modules.
+ * @description Checks if the window is already open. If not, it instantiates or re-initializes all `Анализ` metric objects (`_оИнтервалОбновления`, `_оСегментовДобавлено`, etc.), resets the persistent counters (like errors and ad stats), sets the visibility of the main UI element (`статистика`), starts the recurring update timer (`_чТаймер`), and saves the state to settings.
+ * @dependencies
+ * - [`player.js:1719`](player.js:1719)
+ * - [`player.js:3240`](player.js:3240)
+ */
+```
+immediately prior to the line `function ОткрытьОкно() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Hides the statistics overlay window and cleans up resources.
+ * @description Checks if the window is open. If so, it hides the UI element, calls `Освободить()` on all instantiated `Анализ` objects to release their memory and DOM references, clears the update timer (`_чТаймер`), and updates the persistent setting `лПоказатьСтатистику` to `false`.
+ * @dependencies
+ * - [`player.js:1719`](player.js:1719)
+ * - [`player.js:3240`](player.js:3240)
+ */
+```
+immediately prior to the line `function ЗакрытьОкно() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles the dragging and repositioning of the statistics window on the screen.
+ * @description Listens for drag events (`чШаг 1, 2, 3`) dispatched by `м_Тащилка`. On drag start (`чШаг 1`), it caches the initial X/Y coordinates. On drag move (`чШаг 2`), it calculates the delta and updates the CSS custom properties (`--x`, `--y`) on the window element to move it.
+ * @dependencies None
+ */
+```
+immediately prior to the line `function ОбработатьПеретаскиваниеОкна(оПараметры) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initializes the statistics module on player startup based on saved settings.
+ * @description Checks the saved setting `лПоказатьСтатистику`. If true, it calls `ОткрытьОкно()` to display the statistics overlay immediately upon application launch.
+ * @dependencies
+ * - [`player.js:8954`](player.js:8954)
+ */
+```
+immediately prior to the line `function Запустить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Resets all time-series data and error counters maintained by the statistics module.
+ * @description If the statistics window is open, it calls `Очистить()` on all underlying `Анализ` objects. It resets all persistent counters related to errors (`_кОшибокЗагрузки`, `_кПереполненийБуфера`, etc.) and updates their corresponding display elements using `ОбновитьЗначение`. This is typically called when playback state significantly changes (e.g., reset, variant change).
+ * @dependencies
+ * - [`player.js:1733`](player.js:1733)
+ * - [`player.js:3450`](player.js:3450)
+ */
+```
+immediately prior to the line `function ОчиститьИсторию() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Retrieves the target duration from the most recently parsed HLS playlist.
+ * @description Returns the value of `_nTargetDuration`.
+ * @dependencies
+ * - [`player.js:5224`](player.js:5224)
+ */
+```
+immediately prior to the line `function ПолучитьTargetDuration() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Retrieves the measured minimum and maximum video frame durations in seconds.
+ * @description Returns an object containing the minimum and maximum duration found across video samples in the processed segments, clamping the values based on hardcoded bounds (17ms minimum, 40ms maximum/25fps).
+ * @dependencies
+ * - [`player.js:5246`](player.js:5246)
+ */
+```
+immediately prior to the line `function ПолучитьДлительностьКадраВСекундах() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Compiles a summary of key statistics for inclusion in the debug report.
+ * @description Gathers data on video/audio parameters, and all counted errors (rejected segments, download errors, buffer events, losses), plus a summary of ad frequency.
+ * @dependencies
+ * - [`player.js:732`](player.js:732)
+ */
+```
+immediately prior to the line `function ПолучитьДанныеДляОтчета() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Processes data received after successfully parsing an HLS segment list (media playlist).
+ * @description Stores the segment list's `nTargetDuration`. If the statistics window is open, it updates the displayed server address (extracted from the segment URL) and displays detailed information about the parsed list length, average segment duration, and ad count.
+ * @dependencies
+ * - [`player.js:6146`](player.js:6146)
+ */
+```
+immediately prior to the line `function РазобранСписокСегментов(оСписок) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Records and displays metrics related to a playlist update.
+ * @description Called when new segments are added to the queue following a playlist update. If the statistics window is open, it records the time since the last update and adds the count of added segments and duration of added seconds to the respective `Анализ` history objects for display.
+ * @dependencies
+ * - [`player.js:6155`](player.js:6155)
+ */
+```
+immediately prior to the line `function ДобавленыСегментыВОчередь(кСегментовДобавлено, кСекундДобавлено) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Increments the counter for raw transport stream segments received.
+ * @description Increments `_кИсходныхСегментов`. If the statistics window is open, it updates the display element.
+ * @dependencies
+ * - [`player.js:7050`](player.js:7050)
+ */
+```
+immediately prior to the line `function ПолученИсходныйСегмент() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Increments the counter for segments discarded during processing.
+ * @description Increments `_кЗабракованныхСегментов`. If the statistics window is open, it updates the display element and highlights it.
+ * @dependencies
+ * - [`player.js:1968`](player.js:1968)
+ */
+```
+immediately prior to the line `function ЗабракованСегмент() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates the cumulative count of total data downloaded.
+ * @description Adds the downloaded byte count (`кбСкачано`) to `_кбВсегоСкачано`. If the statistics window is open, it updates the displayed total downloaded MB count.
+ * @dependencies
+ * - [`player.js:5554`](player.js:5554)
+ * - [`player.js:5607`](player.js:5607)
+ */
+```
+immediately prior to the line `function СкачаноНечто(кбСкачано) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Records and displays metrics related to a single segment download completion.
+ * @description If the statistics window is open, it calculates and adds: 1) Segment thickness (bitrate based on segment size/duration) to `_оТолщинаСегмента`. 2) Channel thickness (actual download speed) to `_оТолщинаКанала`, applying a highlight if the download speed was slower than the segment thickness. 3) Time-to-first-byte (`чОжиданиеОтвета`) to `_оОжиданиеОтвета`, applying a highlight if the wait was long.
+ * @dependencies
+ * - [`player.js:5591`](player.js:5591)
+ */
+```
+immediately prior to the line `function ЗагруженСегмент(чРазмерСегмента, чДлительностьСегмента, чДлительностьЗагрузки, чОжиданиеОтвета) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Increments counters for failed segment downloads.
+ * @description Increments the overall `_кОшибокЗагрузки` counter and adds the count of failed segments to `_кНезагруженныхСегментов`. If the stats window is open, it updates the display elements and applies a highlight.
+ * @dependencies
+ * - [`player.js:5634`](player.js:5634)
+ */
+```
+immediately prior to the line `function НеЗагруженыСегменты(кНезагруженныхСегментов) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Increments counters for segments skipped (ignored) by the segment list updater.
+ * @description Increments the `_кПропущенныхСегментов` counter and adds the count of skipped segments to `_кНезагруженныхСегментов` (as they were not loaded). Updates the display elements and applies a highlight.
+ * @dependencies
+ * - [`player.js:6112`](player.js:6112)
+ */
+```
+immediately prior to the line `function пропущеныСегменты(кПропущенныхСегментов) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Processes metadata extracted from a newly converted segment.
+ * @description This is a detailed handler that updates stream parameters. If the segment is a discontinuity (`лРазрыв`), it updates codec and resolution displays. It calculates and checks video sample duration deviations for quality issues, potentially setting `оДанные.лПотериВидео` if excessive jitter is detected. It records the segment processing time and increments counters for video/audio losses and rejected segments based on flags set during conversion.
+ * @dependencies
+ * - [`player.js:1390`](player.js:1390)
+ * - [`player.js:1394`](player.js:1394)
+ * - [`player.js:1399`](player.js:1399)
+ * - [`player.js:1405`](player.js:1405)
+ * - [`player.js:1493`](player.js:1493)
+ * - [`player.js:1502`](player.js:1502)
+ * - [`player.js:1516`](player.js:1516)
+ * - [`player.js:5779`](player.js:5779)
+ */
+```
+immediately prior to the line `function ПолученПреобразованныйСегмент(оСегмент) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Records and displays the current un-viewed portion of the media buffer.
+ * @description If the statistics window is open, it adds the provided duration (`чНеПросмотрено`) to the `_оНеПросмотрено` `Анализ` history object. This metric is crucial for diagnosing buffer under-run issues.
+ * @dependencies
+ * - [`player.js:5005`](player.js:5005)
+ * - [`player.js:5015`](player.js:5015)
+ */
+```
+immediately prior to the line `function обновитьЗаполненностьБуфера(чНеПросмотрено) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Increments counters when the playback buffer runs out of data.
+ * @description Increments the overall `_кИсчерпанийБуфера` counter. If the optional flag `лДосрочно` is true, it increments the specific counter for early buffer exhaustion. If the statistics window is open, it updates and highlights the counter.
+ * @dependencies
+ * - [`player.js:5095`](player.js:5095)
+ */
+```
+immediately prior to the line `function ИсчерпанБуферПроигрывателя(лДосрочно) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Generates a string summarizing the frequency and duration of ad blocks.
+ * @description Iterates through the recorded ad start and end times (`_мчНачалоРекламы`, `_мчКонецРекламы`) to generate a sequence string showing the duration of each ad, interspersed with the duration of the broadcast time elapsed between ads (e.g., "5.0 <120.5> 8.0 <600.0> ?").
+ * @dependencies
+ * - [`player.js:1644`](player.js:1644)
+ * - [`player.js:1660`](player.js:1660)
+ * - [`player.js:1667`](player.js:1667)
+ * - [`player.js:1674`](player.js:1674)
+ */
+```
+immediately prior to the line `function получитьЧастотуРекламы() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Retrieves the ID of the currently open window panel.
+ * @description Reads the `data-окно-открыто` attribute from the document's body element to determine the unique ID of the actively displayed panel.
+ * @dependencies
+ * - [`player.js:2139`](player.js:2139)
+ * - [`player.js:2150`](player.js:2150)
+ * - [`player.js:2182`](player.js:2182)
+ */
+```
+immediately prior to the line `function получитьОткрытое() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Displays a specific pop-up window panel.
+ * @description Adds the necessary CSS classes (`окнооткрыто`, `анимацияокна`) to the target element, sets the `data-окно-открыто` attribute on the body, and dispatches a custom event (`окно-открыто-[id]`) indicating the window has been opened.
+ * @dependencies
+ * - [`player.js:2146`](player.js:2146)
+ */
+```
+immediately prior to the line `function открытьОкно(сИдОкна) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Hides a specific pop-up window panel.
+ * @description Removes the `окнооткрыто` class and the `data-окно-открыто` attribute from the body. It toggles the window animation class based on `лСАнимацией`.
+ * @dependencies
+ * - [`player.js:2144`](player.js:2144)
+ * - [`player.js:2152`](player.js:2152)
+ * - [`player.js:2156`](player.js:2156)
+ * - [`player.js:2188`](player.js:2188)
+ * - [`player.js:3585`](player.js:3585)
+ */
+```
+immediately prior to the line `function закрытьОкно(сИдОкна, лСАнимацией = true) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Manages the opening of a window, ensuring only one panel is visible at a time.
+ * @description Checks if the requested window (`сИдОкна`) is already open. If a *different* window is currently open, it closes the existing one using `закрытьОкно` before calling `открытьОкно` for the new one. Returns `true` if a window was opened, `false` otherwise.
+ * @dependencies
+ * - [`player.js:2156`](player.js:2156)
+ * - [`player.js:3030`](player.js:3030)
+ */
+```
+immediately prior to the line `function открыть(сИдОкна) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Closes the currently open window panel, if any.
+ * @description Retrieves the ID of the open window using `получитьОткрытое` and calls `закрытьОкно` to hide it.
+ * @dependencies
+ * - [`player.js:2210`](player.js:2210)
+ * - [`player.js:3585`](player.js:3585)
+ */
+```
+immediately prior to the line `function закрыть(лСАнимацией = true) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Toggles the visibility of a specified window panel.
+ * @description Calls `открыть(сИдОкна)`. If `открыть` returns false (meaning the window was already open), it then calls `закрытьОкно(сИдОкна)` to close it.
+ * @dependencies
+ * - [`player.js:2179`](player.js:2179)
+ * - [`player.js:2206`](player.js:2206)
+ */
+```
+immediately prior to the line `function переключить(сИдОкна) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initializes the scroll indicator for a scrollable UI element.
+ * @description Resets the element's scroll position to 0 and calls `обновитьИндикаторПрокрутки` to set the initial visibility state and attach the scroll event listener.
+ * @dependencies
+ * - [`player.js:2984`](player.js:2984)
+ */
+```
+immediately prior to the line `function настроитьИндикаторПрокрутки(пПрокрутка) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Checks scroll position and updates the visibility of the scroll-down indicator.
+ * @description Uses `этотЭлементПолностьюПрокручен` to determine if the element is scrolled to the bottom. It shows or hides the associated indicator element and manages the attachment/removal of the `scroll` event handler (`обработатьПрокрутку`) for optimization.
+ * @dependencies
+ * - [`player.js:2161`](player.js:2161)
+ * - [`player.js:2172`](player.js:2172)
+ */
+```
+immediately prior to the line `function обновитьИндикаторПрокрутки(элПрокрутка) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles the native DOM `scroll` event for updating indicators.
+ * @description A simple wrapper around `обновитьИндикаторПрокрутки` that takes the event object and passes the scrolling element to the update function.
+ * @dependencies
+ * - [`player.js:2169`](player.js:2169)
+ */
+```
+immediately prior to the line `const обработатьПрокрутку = ДобавитьОбработчикИсключений((оСобытие) => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Sets the focusability/interactivity of a specific menu item.
+ * @description Takes an element ID (`пПункт`) and a boolean (`лДоступен`). It sets the element's `tabIndex` to 0 (focusable) or -1 (non-focusable), controlling whether the menu item can be interacted with.
+ * @dependencies
+ * - [`player.js:3937`](player.js:3937)
+ * - [`player.js:3940`](player.js:3940)
+ */
+```
+immediately prior to the line `function задатьДоступностьПункта(пПункт, лДоступен) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Retrieves the specific HTML element designated as the fullscreen target.
+ * @description Returns the DOM element with the ID `проигрывательичат` (player and chat container), which is the target for entering full-screen mode.
+ * @dependencies
+ * - [`player.js:2260`](player.js:2260)
+ * - [`player.js:2271`](player.js:2271)
+ * - [`player.js:2279`](player.js:2279)
+ * - [`player.js:2401`](player.js:2401)
+ * - [`player.js:2475`](player.js:2475)
+ * - [`player.js:2476`](player.js:2476)
+ * - [`player.js:2481`](player.js:2481)
+ */
+```
+immediately prior to the line `function ПолучитьЭлемент() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Checks the current state of the browser's native fullscreen mode.
+ * @description Uses the browser-prefixed `document.fullscreenElement` property (`_sFullscreenElement`) to determine if the page is currently in fullscreen mode.
+ * @dependencies
+ * - [`player.js:2247`](player.js:2247)
+ * - [`player.js:2263`](player.js:2263)
+ * - [`player.js:2267`](player.js:2267)
+ * - [`player.js:2277`](player.js:2277)
+ * - [`player.js:2284`](player.js:2284)
+ */
+```
+immediately prior to the line `function Включен() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Synchronizes the fullscreen UI button state with the actual browser state.
+ * @description Calls `Включен()` to check the status. It logs the result, updates the visual state of the fullscreen toggle button via `ИзменитьКнопку`, and returns the current boolean state.
+ * @dependencies
+ * - [`player.js:2244`](player.js:2244)
+ * - [`player.js:2274`](player.js:2274)
+ */
+```
+immediately prior to the line `function Обновить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initiates browser fullscreen mode for the player element.
+ * @description Checks `Включен()`. If false, it calls `requestFullscreen` on the player element, immediately hides the auto-hide UI panel (`м_Автоскрытие.Скрыть`), and disables Picture-in-Picture mode to ensure exclusivity.
+ * @dependencies
+ * - [`player.js:2284`](player.js:2284)
+ * - [`player.js:2290`](player.js:2290)
+ */
+```
+immediately prior to the line `function Включить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Exits the browser's fullscreen mode.
+ * @description Checks `Включен()`. If true, it calls the browser-prefixed `document.exitFullscreen()` method and ensures the auto-hide UI panel is hidden.
+ * @dependencies
+ * - [`player.js:528`](player.js:528)
+ * - [`player.js:2288`](player.js:2288)
+ * - [`player.js:2290`](player.js:2290)
+ */
+```
+immediately prior to the line `function Отключить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Toggles the fullscreen state (enable if off, disable if on).
+ * @description Calls `Включить()`. If that fails (meaning it was already on), it calls `Отключить()`.
+ * @dependencies
+ * - [`player.js:2235`](player.js:2235)
+ * - [`player.js:3441`](player.js:3441)
+ * - [`player.js:3593`](player.js:3593)
+ */
+```
+immediately prior to the line `function Переключить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Checks the current status of the Picture-in-Picture (PiP) window.
+ * @description Returns `true` if the browser has a PiP element active (`document.pictureInPictureElement`).
+ * @dependencies
+ * - [`player.js:2322`](player.js:2322)
+ * - [`player.js:2329`](player.js:2329)
+ * - [`player.js:2334`](player.js:2334)
+ */
+```
+immediately prior to the line `function включен() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates the PiP button icon to reflect the current Picture-in-Picture state.
+ * @description Calls `включен()` to check the state, logs the result, and updates the PiP toggle button using `ИзменитьКнопку`.
+ * @dependencies
+ * - [`player.js:2337`](player.js:2337)
+ * - [`player.js:2341`](player.js:2341)
+ */
+```
+immediately prior to the line `function обновить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Requests the browser to enter Picture-in-Picture mode.
+ * @description Checks `включен()`. If false, it ensures fullscreen mode is disabled (`м_ПолноэкранныйРежим.Отключить()`) and calls `requestPictureInPicture()` on the tracked media element.
+ * @dependencies
+ * - [`player.js:2334`](player.js:2334)
+ */
+```
+immediately prior to the line `function включить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Exits Picture-in-Picture mode.
+ * @description Checks `включен()`. If true, it calls the browser's `document.exitPictureInPicture()` method.
+ * @dependencies
+ * - [`player.js:2334`](player.js:2334)
+ */
+```
+immediately prior to the line `function отключить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Toggles Picture-in-Picture mode on or off.
+ * @description Checks if a media element exists and if video is enabled (`!document.body.classList.contains("нетвидео")`). It then calls `включить()`; if that returns false, it calls `отключить()`.
+ * @dependencies
+ * - [`player.js:3437`](player.js:3437)
+ * - [`player.js:3599`](player.js:3599)
+ */
+```
+immediately prior to the line `function переключить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initializes PiP functionality for the main video element.
+ * @description Performs necessary capability checks (`document.pictureInPictureEnabled`). If supported, it stores the media element, attaches event listeners for PiP mode changes (`enterpictureinpicture`, `leavepictureinpicture`), updates the initial UI state, and shows the PiP toggle button.
+ * @dependencies
+ * - [`player.js:5914`](player.js:5914)
+ */
+```
+immediately prior to the line `function запустить(oMediaElement) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initializes the drag-and-drop mechanism upon a pointer press on a draggable element.
+ * @description Checks if another drag is already in progress. If not, it identifies the element pressed (`узНажат`) and the target drag element (`узТащится`) using `data-тащилка`. It caches start coordinates, attaches global `pointermove`, `pointerup`, and `pointercancel` listeners, registers a listener for tab focus loss (`м_Фокусник`), and sets CSS properties to prepare for dragging (e.g., cursor, class list). Finally, it sends the initial `чШаг=1` drag event.
+ * @dependencies
+ * - [`player.js:983`](player.js:983)
+ * - [`player.js:2494`](player.js:2494)
+ */
+```
+immediately prior to the line `const ОбработатьPointerDown = создатьОбработчикСобытийЭлемента((оСобытие) => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles the continuous movement during a drag operation.
+ * @description Filters events by the active pointer ID. If the mouse button is released prematurely, it calls `ЗавершитьПеретаскивание`. If enough time has passed since the last move (`МИН_ИНТЕРВАЛ_ПЕРЕТАСКИВАНИЯ`), it calculates the new drag delta, updates the parameters object (`чШаг=2`), and dispatches the continuous drag event (`тащилка-перетаскивание-[id]`).
+ * @dependencies None
+ */
+```
+immediately prior to the line `const ОбработатьPointerMove = ДобавитьОбработчикИсключений((оСобытие) => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles the termination of a drag operation upon pointer release or cancellation.
+ * @description Checks if the event pointer ID matches the active drag pointer ID. If so, it calls `ЗавершитьПеретаскивание` to clean up the drag state, specifying the event type as the reason.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const ОбработатьPointerUpИPointerCancel = ДобавитьОбработчикИсключений(`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Programmatically cancels an ongoing drag operation, optionally targeting a specific element.
+ * @description If a drag is active, it sets the `лОтмена` flag to `true` on the parameters object and calls `ЗавершитьПеретаскивание` to clean up the listeners and state.
+ * @dependencies
+ * - [`player.js:4451`](player.js:4451)
+ * - [`player.js:4475`](player.js:4475)
+ */
+```
+immediately prior to the line `function ОтменитьПеретаскивание(сИдУзла) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Cleans up resources and state after a drag operation finishes or is cancelled.
+ * @description Checks that cleanup hasn't already occurred. It dispatches the final drag event (`чШаг=3`), removes the temporary CSS styling (cursor, class list), removes all event listeners associated with the drag (move, up, cancel, focus loss), and resets module state variables (`_чИдУказателя`, `_оПараметры`).
+ * @dependencies
+ * - [`player.js:2446`](player.js:2446)
+ * - [`player.js:2462`](player.js:2462)
+ * - [`player.js:2465`](player.js:2465)
+ * - [`player.js:2469`](player.js:2469)
+ * - [`player.js:2473`](player.js:2473)
+ */
+```
+immediately prior to the line `function ЗавершитьПеретаскивание(сПричина) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Displays the player's control panels and resets the auto-hide timer.
+ * @description If the panels are hidden, it removes the `автоскрытие` class and starts the hiding timer (`_чТаймер`) using the interval defined in settings. If the timer is already running, it simply extends the time before the next hide execution (`_чСкрытьПосле`).
+ * @dependencies
+ * - [`player.js:2576`](player.js:2576)
+ * - [`player.js:2592`](player.js:2592)
+ * - [`player.js:3368`](player.js:3368)
+ * - [`player.js:3659`](player.js:3659)
+ * - [`player.js:3677`](player.js:3677)
+ * - [`player.js:3717`](player.js:3717)
+ * - [`player.js:3731`](player.js:3731)
+ * - [`player.js:4080`](player.js:4080)
+ */
+```
+immediately prior to the line `function Показать() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Hides the player's control panels immediately.
+ * @description Clears any running auto-hide timer (`_чТаймер`), adds the `автоскрытие` class to the body, and ensures the UI transition class is correctly toggled based on `лСАнимацией`. If animated, it sets a short delay (`_чНеПоказыватьДо`) during which movement events are temporarily throttled to prevent immediate re-showing.
+ * @dependencies
+ * - [`player.js:2255`](player.js:2255)
+ * - [`player.js:2265`](player.js:2265)
+ * - [`player.js:2558`](player.js:2558)
+ * - [`player.js:2595`](player.js:2595)
+ * - [`player.js:3586`](player.js:3586)
+ */
+```
+immediately prior to the line `function Скрыть(лСАнимацией = true) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose The callback function executed by the auto-hide timer.
+ * @description Checks if the scheduled hide time (`_чСкрытьПосле`) has passed. If not, it reschedules itself for the remaining duration. If the time has passed (or if no `_чСкрытьПосле` was set), it calls `Скрыть()` to hide the panels.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const обработатьТаймер = ДобавитьОбработчикИсключений(() => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles pointer movement over the player area to trigger auto-show.
+ * @description Removes itself immediately after execution to implement throttling (`МИН_ИНТЕРВАЛ_ДВИЖЕНИЯ`). If the pointer has moved beyond a threshold (`ПОРОГ_ДВИЖЕНИЯ`) and the cooldown period (`_чНеПоказыватьДо`) has expired, it calls `Показать()` to reveal the controls. It caches the new coordinates.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const обработатьДвижениеУказателя = ДобавитьОбработчикИсключений(`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Re-attaches the pointer movement listener after the throttling delay.
+ * @description This function is called by `setTimeout` after `обработатьДвижениеУказателя` executes, ensuring that pointer movement can be detected again.
+ * @dependencies
+ * - [`player.js:2603`](player.js:2603)
+ */
+```
+immediately prior to the line `const перехватитьДвижениеУказателя = ДобавитьОбработчикИсключений(() => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles click events to ensure the control panels are shown.
+ * @description A simple handler that calls `Показать()` when the player area is clicked.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const обработатьЩелчок = ДобавитьОбработчикИсключений(() => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles mouse leaving the player area to trigger auto-hide.
+ * @description A simple handler that calls `Скрыть()` when the pointer exits the player bounds.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const обработатьПокиданиеУказателя = ДобавитьОбработчикИсключений(() => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Manages the temporary display of speed options when the speed button is interacted with.
+ * @description On a left click, it sets a timeout to automatically remove the `выборскорости` class after 5 seconds, and immediately adds the class to display the speed selection dropdown.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const обработатьВыборСкорости = ДобавитьОбработчикИсключений((оСобытие) => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initializes the auto-hide module and registers all necessary event handlers.
+ * @description Calls `перехватитьДвижениеУказателя()` to enable motion detection, and attaches handlers for `click`, `mouseleave`, and `pointerdown` events to the relevant DOM elements.
+ * @dependencies
+ * - [`player.js:4079`](player.js:4079)
+ */
+```
+immediately prior to the line `function Запустить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Executes the core responsive UI adjustment logic.
+ * @description Reads the player's client height, applies size-dependent classes (`ужатьглавноеменю`, `ужатьнастройки`), and dynamically adjusts the font size of the top panel (`верхняяпанель`) to ensure text fits horizontally without overflowing the designated filler element.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const обновить = ДобавитьОбработчикИсключений(() => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Requests an immediate, high-priority recalculation of the UI layout.
+ * @description Uses `requestAnimationFrame` to schedule the `обновить` function, ensuring the update happens during the next browser repaint cycle. It prevents rescheduling if an immediate update is already pending or being processed.
+ * @dependencies
+ * - [`player.js:4332`](player.js:4332)
+ * - [`player.js:4339`](player.js:4339)
+ * - [`player.js:4358`](player.js:4358)
+ * - [`player.js:4373`](player.js:4373)
+ */
+```
+immediately prior to the line `function обновитьБыстро() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Requests a low-priority, debounced recalculation of the UI layout.
+ * @description Uses `setTimeout(..., 200)` to schedule the `обновить` function. This is typically used for less critical events like browser resizing to prevent performance overhead from rapid recalculations. It prevents scheduling if an update is already running or pending.
+ * @dependencies
+ * - [`player.js:2737`](player.js:2737)
+ * - [`player.js:4471`](player.js:4471)
+ * - [`player.js:4494`](player.js:4494)
+ * - [`player.js:4615`](player.js:4615)
+ * - [`player.js:4636`](player.js:4636)
+ */
+```
+immediately prior to the line `function обновитьМедленно() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles input events (`input`) on color pickers to trigger style updates.
+ * @description Checks if the event target is a color input. If so, it calls `ОбновитьСтили()` to recalculate and apply the CSS custom properties based on the new color value, but does *not* save the setting yet (which happens on the `change` event).
+ * @dependencies None
+ */
+```
+immediately prior to the line `const ОбработатьВводЦвета = ДобавитьОбработчикИсключений((оСобытие) => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles change events (`change`) on color pickers to save the new setting.
+ * @description Checks if the event target is a color input. If so, it updates the corresponding setting in `м_Настройки` with the new color value.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const ОбработатьИзменениеЦвета = ДобавитьОбработчикИсключений((оСобытие) => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates the UI and applies styles when a new appearance preset is selected.
+ * @description This function is called in response to the `настройки-измениласьпредустановка-оформление` event. It calls `ОбновитьОкноНастроек()` to set the UI inputs to the new preset values and `ОбновитьСтили()` to apply the theme immediately.
+ * @dependencies
+ * - [`player.js:2747`](player.js:2747)
+ * - [`player.js:2749`](player.js:2749)
+ */
+```
+immediately prior to the line `function ОбработатьИзменениеПредустановкиОформления() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Synchronizes the appearance settings UI elements with the current stored configuration.
+ * @description Iterates through all color input elements and the `_оПрозрачность` component, setting their displayed values based on the current settings retrieved from `м_Настройки`.
+ * @dependencies
+ * - [`player.js:2702`](player.js:2702)
+ */
+```
+immediately prior to the line `function ОбновитьОкноНастроек() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Applies the current color and transparency settings as CSS variables.
+ * @description Reads all color settings (hex codes). For each color, it converts the hex value into RGB triplets and sets a corresponding CSS custom property (e.g., `--сЦветФона`). It also calculates the non-transparent opacity value and sets the `--чНепрозрачность` and `--чНепрозрачностьОкна` variables, clamping the window opacity.
+ * @dependencies
+ * - [`player.js:2693`](player.js:2693)
+ * - [`player.js:2703`](player.js:2703)
+ * - [`player.js:2742`](player.js:2742)
+ */
+```
+immediately prior to the line `function ОбновитьСтили() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Applies the user-defined interface size setting (scaling factor).
+ * @description Reads the `чРазмерИнтерфейса` setting and sets the `font-size` CSS property on the root `<html>` element accordingly. This scales the entire interface relative to the default font size. It then triggers a layout check via `м_Медиазапрос.обновитьМедленно()`.
+ * @dependencies
+ * - [`player.js:2755`](player.js:2755)
+ * - [`player.js:2756`](player.js:2756)
+ */
+```
+immediately prior to the line `function ПрименитьРазмерИнтерфейса() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initializes the entire appearance module and applies the default theme.
+ * @description Translates the document using `м_i18n`. Initializes the `ВводЧисла` component for transparency (`_оПрозрачность`). Attaches event listeners for color input changes. Attaches a listener for preset changes. Applies the currently selected preset, and then sets up and applies the interface size. Finally, it makes the document body visible.
+ * @dependencies
+ * - [`player.js:4141`](player.js:4141)
+ * - [`player.js:4223`](player.js:4223)
+ */
+```
+immediately prior to the line `function Запустить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Displays a brief, temporary notification icon in the corner of the player.
+ * @description Takes an SVG symbol ID (`сИдЗначка`) and a boolean flag (`лЖопа`) to apply a "failure" style. It makes the notification element visible, sets the SVG icon reference, applies the style class, and resets/starts a timer to call `СкрытьУведомление` after a fixed duration (`ПОКАЗЫВАТЬ_УВЕДОМЛЕНИЕ`).
+ * @dependencies
+ * - [`player.js:2783`](player.js:2783)
+ * - [`player.js:2786`](player.js:2786)
+ * - [`player.js:3811`](player.js:3811)
+ * - [`player.js:4068`](player.js:4068)
+ */
+```
+immediately prior to the line `function Показать(сИдЗначка, лЖопа) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Displays a success notification using the predefined success icon.
+ * @description A convenience wrapper around `Показать` using the `svg-success` icon and the "good" style (`лЖопа=false`).
+ * @dependencies
+ * - [`player.js:3295`](player.js:3295)
+ * - [`player.js:3303`](player.js:3303)
+ * - [`player.js:3329`](player.js:3329)
+ */
+```
+immediately prior to the line `function ПоказатьСчастье() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Displays a failure notification using the predefined failure icon.
+ * @description A convenience wrapper around `Показать` using the `svg-fail` icon and the "bad" style (`лЖопа=true`).
+ * @dependencies
+ * - [`player.js:3295`](player.js:3295)
+ * - [`player.js:3309`](player.js:3309)
+ * - [`player.js:4872`](player.js:4872)
+ * - [`player.js:4883`](player.js:4883)
+ * - [`player.js:4905`](player.js:4905)
+ * - [`player.js:8790`](player.js:8790)
+ */
+```
+immediately prior to the line `function ПоказатьЖопу() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Hides the currently visible notification.
+ * @description Makes the notification element invisible and resets the internal timer state. This function is called automatically after the display timeout expires.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const СкрытьУведомление = ДобавитьОбработчикИсключений(() => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Restricts a given timestamp to the currently defined replay duration window.
+ * @description Uses `Ограничить` to ensure the timestamp falls between `_чНачало` and `_чКонец` (the start and end times of the local replay buffer).
+ * @dependencies None
+ */
+```
+immediately prior to the line `function ОграничитьВремя(чВремя) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates the visual state of the seek bar to reflect the playback progress.
+ * @description Calculates the current playback position (`_чПросмотрено`) relative to the total replay duration (`_чКонец - _чНачало`) and sets the `transform: scaleX()` CSS property on the progress bar fill element.
+ * @dependencies
+ * - [`player.js:2848`](player.js:2848)
+ */
+```
+immediately prior to the line `function Обновить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles click events on the seek bar to initiate seeking within the replay buffer.
+ * @description Only works if the player state is `СОСТОЯНИЕ_ПОВТОР`. It calculates the normalized click position relative to the bar's DOM dimensions, determines the target time (`чПеремотатьДо`), clamps it using `ОграничитьВремя`, and initiates the playback seek via `м_Проигрыватель.ПеремотатьПовторДо`.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const ОбработатьЩелчок = ДобавитьОбработчикИсключений((оСобытие) => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Sets the start and end boundaries of the local replay buffer.
+ * @description Stores the provided `чНачало` and `чКонец` values (timestamps in seconds) and attaches the click handler (`ОбработатьЩелчок`) to the main seek bar element (`шкала`).
+ * @dependencies
+ * - [`player.js:5836`](player.js:5836)
+ */
+```
+immediately prior to the line `function ЗадатьНачалоИКонец(чНачало, чКонец) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates the current playback position for visual display.
+ * @description Clamps the provided `чПросмотрено` time to the valid range using `ОграничитьВремя` and stores it. It then calls `Обновить()` to refresh the seek bar visualization.
+ * @dependencies
+ * - [`player.js:5009`](player.js:5009)
+ * - [`player.js:5020`](player.js:5020)
+ * - [`player.js:5840`](player.js:5840)
+ */
+```
+immediately prior to the line `function ЗадатьПросмотрено(чПросмотрено) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Retrieves the start timestamp of the current replay buffer.
+ * @description Returns the internal `_чНачало` variable, representing the earliest available time in the local buffer.
+ * @dependencies
+ * - [`player.js:5059`](player.js:5059)
+ * - [`player.js:5789`](player.js:5789)
+ */
+```
+immediately prior to the line `function ПолучитьНачало() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Retrieves the end timestamp of the current replay buffer.
+ * @description Returns the internal `_чКонец` variable, representing the latest available time in the local buffer.
+ * @dependencies
+ * - [`player.js:5055`](player.js:5055)
+ * - [`player.js:5790`](player.js:5790)
+ */
+```
+immediately prior to the line `function ПолучитьКонец() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Converts a version string (e.g., "2025.5.28") into a numerical UTC timestamp for comparison.
+ * @description Parses the version string using regex to extract year, month, and day components, and then uses `Date.UTC` to create a millisecond representation, facilitating numerical comparison of versions.
+ * @dependencies
+ * - [`player.js:2952`](player.js:2952)
+ * - [`player.js:3111`](player.js:3111)
+ * - [`player.js:3112`](player.js:3112)
+ * - [`player.js:3066`](player.js:3066)
+ */
+```
+immediately prior to the line `function ПеревестиВерсиюВМиллисекунды(сВерсия) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Checks if the internal news list contains any entries newer than a specified version.
+ * @description Uses `ПеревестиВерсиюВМиллисекунды` to convert the input version string to a timestamp. It then iterates over the internal news array (`_мНовости`), comparing timestamps to see if any news item is more recent.
+ * @dependencies
+ * - [`player.js:3159`](player.js:3159)
+ */
+```
+immediately prior to the line `function ЕстьНовостиСВерсиейСтарше(сВерсия) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Populates the news display area by filtering news entries based on version and type.
+ * @description Clears the existing content of the news element. It iterates through the master news array, deciding which entries to display: those newer than `чДобавитьВерсииСтарше`, or those matching special tags like `ПОЛНАЯ_СПРАВКА` or `ПОКАЗЫВАТЬ_ВСЕГДА`. Finally, it sets up the scroll indicator for the news content.
+ * @dependencies
+ * - [`player.js:3054`](player.js:3054)
+ * - [`player.js:3061`](player.js:3061)
+ * - [`player.js:3066`](player.js:3066)
+ * - [`player.js:3070`](player.js:3070)
+ */
+```
+immediately prior to the line `function ДобавитьНовости(чДобавитьВерсииСтарше, сДобавитьВерсиюСправки) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Constructs and appends the DOM structure for a single news item.
+ * @description Creates an `<h4>` element for the title/date and inserts the localized message content for the body. If the browser language is not Russian, it adds a special "Translate" link element to the title.
+ * @dependencies
+ * - [`player.js:2976`](player.js:2976)
+ * - [`player.js:2980`](player.js:2980)
+ */
+```
+immediately prior to the line `function ДобавитьНовость(элДобавитьВ, мНовость, чДатаНовости) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Opens the news panel and configures the closing mechanism based on context.
+ * @description Opens the "новости" window via `м_Окно.открыть`. If `лПодтвердитьПрочтение` is true (typically for unread major updates), it displays the "I have read" button, which, upon click, updates the version setting. Otherwise, it shows a simple "Close" button.
+ * @dependencies
+ * - [`player.js:3055`](player.js:3055)
+ * - [`player.js:3062`](player.js:3062)
+ * - [`player.js:3067`](player.js:3067)
+ * - [`player.js:3071`](player.js:3071)
+ */
+```
+immediately prior to the line `function ОткрытьОкно(лПодтвердитьПрочтение) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles click actions within the news window (closing, translating).
+ * @description Listens for a custom event from `м_Управление`. If the close button (`закрытьновости`) is clicked and confirmation is required, it updates the `сПредыдущаяВерсия` setting and hides the new news indicator. If the translate link is clicked, it gathers the relevant text from the surrounding news elements and dynamically sets the link's `href` to a Google Translate URL.
+ * @dependencies None
+ */
+```
+immediately prior to the line `function ОбработатьЛевыйЩелчок(оСобытие) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Configures and displays the full help/documentation guide.
+ * @description Calls `ДобавитьНовости` specifically requesting all entries flagged as `ПОЛНАЯ_СПРАВКА` (full help). Then opens the news window in non-confirmation mode (`лПодтвердитьПрочтение=false`).
+ * @dependencies
+ * - [`player.js:3287`](player.js:3287)
+ * - [`player.js:3514`](player.js:3514)
+ * - [`player.js:3642`](player.js:3642)
+ */
+```
+immediately prior to the line `function ОткрытьСправку() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Determines which news items (updates) need to be shown to the user.
+ * @description Compares the current extension version with the last version the user confirmed reading (`сПредыдущаяВерсия`). If it's a first run, it shows the `ПОКАЗАТЬ_ОДИН_РАЗ` message. If the version has changed and new content exists, it displays the update news and sets the "unread" indicator. Otherwise, it simply opens the full news history.
+ * @dependencies
+ * - [`player.js:3509`](player.js:3509)
+ */
+```
+immediately prior to the line `function ОткрытьНовости() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initiates a scheduled network request to check for new extension versions.
+ * @description Checks if the scheduled polling interval (`ИНТЕРВАЛ_ПРОВЕРКИ_ОБНОВЛЕНИЯ`) has passed. If so, it fetches `version.json` from a remote server. It compares the remote version against the installed one and, if an update is required, it either marks the time for the next check or displays the update notification window (`обновлениерасширения`).
+ * @dependencies
+ * - [`player.js:3166`](player.js:3166)
+ */
+```
+immediately prior to the line `function проверитьОбновлениеРасширения() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initializes the news and update-checking module on player startup.
+ * @description Checks for changes in the extension version and either sets the "new news" indicator or updates the saved version setting. It then calls `проверитьОбновлениеРасширения` to kick off the periodic check for remote updates.
+ * @dependencies
+ * - [`player.js:4081`](player.js:4081)
+ */
+```
+immediately prior to the line `function Запустить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Starts or stops listening for mouse wheel events to control player volume.
+ * @description Checks the setting `лМенятьГромкостьКолесом`. If true, it attaches `pointerdown` and `wheel` listeners to the document for muting (middle click) and volume change (scrolling). If false, it removes the listeners.
+ * @dependencies
+ * - [`player.js:4077`](player.js:4077)
+ * - [`player.js:4152`](player.js:4152)
+ */
+```
+immediately prior to the line `function запуститьИзменениеГромкостиКолесом() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles middle-click (mouse wheel press) to toggle mute status.
+ * @description If the middle button is pressed and no modifier keys are held, it prevents default behavior and calls `СохранитьИПрименитьГромкость` to toggle the `лПриглушить` setting.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const обработатьНажатиеКолеса = создатьОбработчикСобытийЭлемента((оСобытие) => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles mouse wheel rotation for continuous volume adjustment.
+ * @description If the event is not accompanied by scrollable element detection or modifier keys, it prevents default scrolling behavior. It calculates the new volume by adding or subtracting the configured step (`чШагИзмененияГромкостиКолесом`) based on `deltaY` sign, clamps the result, and calls `СохранитьИПрименитьГромкость`.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const обработатьВращениеКолеса = ДобавитьОбработчикИсключений((оСобытие) => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Applies the image scaling setting to the player CSS.
+ * @description Reads the `лМасштабироватьИзображение` setting and toggles the `масштабировать` class on the player element (`глаз`).
+ * @dependencies
+ * - [`player.js:4079`](player.js:4079)
+ * - [`player.js:4127`](player.js:4127)
+ */
+```
+immediately prior to the line `function ПрименитьМасштабированиеИзображения() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Applies the interface animation setting to the document body.
+ * @description Reads the `лАнимацияИнтерфейса` setting and toggles the `анимацияинтерфейса` class on the `body` element.
+ * @dependencies
+ * - [`player.js:4080`](player.js:4080)
+ * - [`player.js:4131`](player.js:4131)
+ */
+```
+immediately prior to the line `function ПрименитьАнимациюИнтерфейса() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Halts the consumption of the live stream and initiates local replay/looping mode.
+ * @description Checks if the player is already stopped or looping. If watching a live stream, it calls `м_Список.Остановить()` and `м_Преобразователь.Остановить()` to cease segment processing, clears the queue, adds a synthetic `СОСТОЯНИЕ_ПОВТОР` segment, and tells the player to continue consuming that segment. Returns `true` if stopping occurred.
+ * @dependencies
+ * - [`player.js:3262`](player.js:3262)
+ * - [`player.js:3272`](player.js:3272)
+ * - [`player.js:3329`](player.js:3329)
+ * - [`player.js:3587`](player.js:3587)
+ */
+```
+immediately prior to the line `function ОстановитьПросмотрТрансляции() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Toggles between live stream consumption and replay/stop mode.
+ * @description Calls `ОстановитьПросмотрТрансляции()`. If the result is false (meaning it was already stopped/in replay mode), it clears the queue, calls `м_Проигрыватель.Перезагрузить(СОСТОЯНИЕ_ЗАПУСК)`, and starts the HLS playlist updater via `м_Список.Запустить()`.
+ * @dependencies
+ * - [`player.js:3580`](player.js:3580)
+ * - [`player.js:3677`](player.js:3677)
+ * - [`player.js:4068`](player.js:4068)
+ * - [`player.js:4187`](player.js:4187)
+ */
+```
+immediately prior to the line `function ПереключитьПросмотрТрансляции() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Toggles the visibility of the statistics overlay window.
+ * @description Checks the current state using `м_Статистика.ОкноОткрыто()` and calls either `м_Статистика.ЗакрытьОкно()` or `м_Статистика.ОткрытьОкно()`.
+ * @dependencies
+ * - [`player.js:3291`](player.js:3291)
+ * - [`player.js:3646`](player.js:3646)
+ */
+```
+immediately prior to the line `function ПереключитьОкноСтатистики() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Toggles the visual color checking mode for accessibility and theme design.
+ * @description Toggles the `проверкацвета` class on the document body. If activated, it optionally toggles the `проверкацветафон` class (controlled by the SHIFT key). It also opens the help documentation using `м_Новости.ОткрытьСправку`.
+ * @dependencies
+ * - [`player.js:3642`](player.js:3642)
+ */
+```
+immediately prior to the line `function ПереключитьПроверкуЦвета(оСобытие) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Attempts to write a given string to the user's system clipboard.
+ * @description Checks if the input string is empty and displays an error if so. Uses the modern `navigator.clipboard.writeText` API. It wraps the operation in a promise chain to handle success (displaying `svg-success` notification) or failure (displaying `svg-fail` notification).
+ * @dependencies
+ * - [`player.js:3303`](player.js:3303)
+ * - [`player.js:3309`](player.js:3309)
+ * - [`player.js:3603`](player.js:3603)
+ * - [`player.js:3608`](player.js:3608)
+ * - [`player.js:3612`](player.js:3612)
+ * - [`player.js:3622`](player.js:3622)
+ * - [`player.js:3627`](player.js:3627)
+ * - [`player.js:3632`](player.js:3632)
+ */
+```
+immediately prior to the line `function КопироватьТекстВБуферОбмена(сТекст) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Retrieves the current HLS address and copies it to the clipboard.
+ * @description Prevents simultaneous execution using a flag. It fetches the absolute variant list URL via `м_Twitch.ПолучитьАбсолютныйАдресСпискаВариантов`. On success, it copies the URL to the clipboard, stops the stream consumption (`м_Управление.ОстановитьПросмотрТрансляции`), and shows a success notification. Handles errors by logging and displaying a failure notification.
+ * @dependencies
+ * - [`player.js:3313`](player.js:3313)
+ */
+```
+immediately prior to the line `function КопироватьАдресТрансляцииВБуферОбмена() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Saves the new volume/mute settings and updates the player state.
+ * @description Updates `лПриглушить` (mute toggle) and/or `чГромкость2` (volume level) in `м_Настройки`. It then calls `м_Проигрыватель.ПрименитьГромкость()` to apply the setting, updates the UI slider/button using `ОбновитьГромкость()`, and calls `м_Автоскрытие.Показать()` to reveal the controls.
+ * @dependencies
+ * - [`player.js:3215`](player.js:3215)
+ * - [`player.js:3221`](player.js:3221)
+ * - [`player.js:3227`](player.js:3227)
+ * - [`player.js:3244`](player.js:3244)
+ * - [`player.js:3266`](player.js:3266)
+ * - [`player.js:3272`](player.js:3272)
+ */
+```
+immediately prior to the line `function СохранитьИПрименитьГромкость(лПриглушить, чГромкость) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates the visual state of the volume slider and mute button.
+ * @description Reads the current volume setting (`чГромкость2`) and updates the volume slider's value and custom CSS variable (`--ширина`) to reflect the level visually. It also calls `ИзменитьКнопку` to set the correct icon (mute/unmute) based on the `лПриглушить` setting.
+ * @dependencies
+ * - [`player.js:3226`](player.js:3226)
+ * - [`player.js:3273`](player.js:3273)
+ */
+```
+immediately prior to the line `function ОбновитьГромкость() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates CSS classes on the document body based on detected media tracks.
+ * @description Toggles the `нетвидео` and `нетзвука` classes on the `body` element based on whether the HLS stream includes video or audio tracks. This controls the visibility of related UI elements (e.g., the PiP button).
+ * @dependencies
+ * - [`player.js:5928`](player.js:5928)
+ */
+```
+immediately prior to the line `function ОбновитьКоличествоДорожек(лЕстьВидео, лЕстьЗвук) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initiates a change in the viewer's channel subscription status via the Twitch API.
+ * @description If the subscription UI element (`зритель-подписка`) is not currently marked as "updating," this function calls `м_Twitch.ИзменитьПодпискуЗрителяНаКанал` with the desired new status (`чПодписка`).
+ * @dependencies
+ * - [`player.js:3632`](player.js:3632)
+ * - [`player.js:3636`](player.js:3636)
+ */
+```
+immediately prior to the line `function ИзменитьПодпискуЗрителяНаКанал(чПодписка) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose The main entry point for processing all left-click events across the interface.
+ * @description This is a delegated event handler attached to the entire document. It identifies the target element and its "call sign" (`сПозывной`/ID). It dispatches a generic `управление-левыйщелчок` event, and then uses a large switch statement to handle specific button presses (e.g., toggling playback, opening menus, changing settings, exporting data, copying URLs).
+ * @dependencies None
+ */
+```
+immediately prior to the line `const ОбработатьЛевыйЩелчок = создатьОбработчикСобытийЭлемента((оСобытие) => {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles keyboard events (`keydown` and `keyup`) for player control shortcuts.
+ * @description Uses a large switch statement keyed by `keyCode` (plus modifier key masks: SHIFT, CTRL, ALT, META). It handles various shortcuts: ESC (close menu/hide UI), ENTER/F (fullscreen), C (chat toggle), V (settings toggle), arrow keys/J/L (seeking/volume control), and numeric keys (playback speed). It prevents default browser behavior for handled keys.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const ОбработатьНажатиеИОтпусканиеКлавы = ДобавитьОбработчикИсключений(`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Synchronizes the player settings panel UI elements with the current stored settings values.
+ * @description Updates the state of complex controls like radio buttons for concurrent downloads, closed chat behavior, chat version, and the auto/manual chat positioning selectors. It initializes `ВводЧисла` components if they haven't been created yet. This function is critical for restoring user interface state when the settings window is opened.
+ * @dependencies
+ * - [`player.js:3345`](player.js:3345)
+ * - [`player.js:3367`](player.js:3367)
+ * - [`player.js:3603`](player.js:3603)
+ * - [`player.js:3677`](player.js:3677)
+ * - [`player.js:3717`](player.js:3717)
+ * - [`player.js:3731`](player.js:3731)
+ * - [`player.js:3901`](player.js:3901)
+ * - [`player.js:3907`](player.js:3907)
+ * - [`player.js:3908`](player.js:3908)
+ * - [`player.js:3914`](player.js:3914)
+ * - [`player.js:3924`](player.js:3924)
+ * - [`player.js:4080`](player.js:4080)
+ */
+```
+immediately prior to the line `function ОбновитьОкноНастроек() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles the opening of the main context menu, updating dynamic menu items.
+ * @description Called when the `главноеменю` window opens. It retrieves the URL for the broadcast recording at the current playback position (`м_Twitch.ПолучитьАдресЗаписиДляТекущейПозиции`) and sets the `href` and accessibility (`задатьДоступностьПункта`) of the "Rewatch this broadcast" menu item.
+ * @dependencies None
+ */
+```
+immediately prior to the line `function ОбработатьОткрытиеГлавногоМеню() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates the pause button icon based on the current playback state.
+ * @description Called in response to the `проигрыватель-пауза` event. It uses `ИзменитьКнопку` to toggle the visual state (play/pause icon) of the pause button element (`переключитьпаузу`).
+ * @dependencies
+ * - [`player.js:3447`](player.js:3447)
+ * - [`player.js:4099`](player.js:4099)
+ */
+```
+immediately prior to the line `function ОбработатьПаузу(лПауза) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Resets the UI components when a buffering preset is changed.
+ * @description Calls `ОбновитьОкноНастроек()` to load the new preset values into the UI and calls `м_Статистика.ОчиститьИсторию()` to clear any accumulated performance data, ensuring statistics reflect the new configuration accurately.
+ * @dependencies
+ * - [`player.js:3451`](player.js:3451)
+ */
+```
+immediately prior to the line `function ОбработатьИзменениеПредустановкиБуферизации() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Retrieves and validates the currently selected playback speed.
+ * @description Reads the selected value from the speed dropdown (`скорость`). It initializes the dropdown options with localized labels (e.g., "1x", "2.0x") if they haven't been set. It parses the numeric value and ensures it is greater than zero.
+ * @dependencies
+ * - [`player.js:3587`](player.js:3587)
+ * - [`player.js:3677`](player.js:3677)
+ */
+```
+immediately prior to the line `function получитьСкоростьПовтора() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Sets the playback speed by selecting an option in the speed dropdown.
+ * @description Takes an index or a special code (`-Infinity` or `Infinity` for next/previous index). It calculates the target index and, if valid, updates the dropdown selection and calls `м_Проигрыватель.ЗадатьСкоростьПовтора()` to apply the new speed.
+ * @dependencies
+ * - [`player.js:3587`](player.js:3587)
+ */
+```
+immediately prior to the line `function задатьСкоростьПовтора(чКод) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles changes in the playback speed dropdown to apply the new speed during replay.
+ * @description Checks if the player is in `СОСТОЯНИЕ_ПОВТОР`. If so, it retrieves the selected speed using `получитьСкоростьПовтора()` and calls `м_Проигрыватель.ЗадатьСкоростьПовтора()` to change playback speed.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const ОбработатьИзменениеСкоростиВоспроизведения = ДобавитьОбработчикИсключений(`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles changes in the video quality dropdown.
+ * @description Called in response to a change event on the `варианттрансляции` select element. It determines the newly selected variant index and calls `м_Список.ИзменитьВариантТрансляции()` to switch the stream source.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const ОбработатьИзменениеВариантаТрансляции = ДобавитьОбработчикИсключений(`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles changes to the mouse wheel volume setting and step size.
+ * @description Reads the new value from the input field. If the value is present, it enables `лМенятьГромкостьКолесом` and sets the step size (`чШагИзмененияГромкостиКолесом`). If the value is empty, it disables the feature. It then calls `запуститьИзменениеГромкостиКолесом()` to re-register the event listeners based on the new setting.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const ОбработатьИзменениеГромкостиКолесом = ДобавитьОбработчикИсключений(`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles changes in the chat URL/version selector dropdown.
+ * @description Determines the newly selected option index and updates the corresponding chat settings (`лПолноценныйЧат`, `лЗатемнитьЧат`) in `м_Настройки`. It then calls `м_Чат.ПрименитьАдрес()` to reload the chat iframe with the new configuration.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const ОбработатьИзменениеАдресаЧата = ДобавитьОбработчикИсключений(`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles the file selection dialog for importing settings.
+ * @description Checks if a single file was selected. If so, it passes the file object to `м_Настройки.Импорт()` to begin the process of reading and applying the settings from the file.
+ * @dependencies None
+ */
+```
+immediately prior to the line `const ОбработатьВыборФайлаДляИмпортаНастроек = ДобавитьОбработчикИсключений(`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Populates and configures the video quality variant dropdown menu.
+ * @description Clears the existing options in the `варианттрансляции` dropdown. It iterates through the provided array of variant objects, creates a new `<option>` for each, translates specific names ("audio_only", "(source)"), and sets the selected option. It disables the dropdown if fewer than two variants are available.
+ * @dependencies
+ * - [`player.js:3443`](player.js:3443)
+ */
+```
+immediately prior to the line `function ОбновитьСписокВариантовТрансляции([моВарианты, оВыбранныйВариант]) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates the UI when a Twitch ad block begins.
+ * @description Adds the CSS class `реклама` to the document body to signal the presence of an ad (e.g., applying specific styling or overlays).
+ * @dependencies None
+ */
+```
+immediately prior to the line `function обработатьНачалоРекламы() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates the UI when a Twitch ad block ends.
+ * @description Removes the CSS class `реклама` from the document body.
+ * @dependencies None
+ */
+```
+immediately prior to the line `function обработатьКонецРекламы() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Displays a visual notification when the local buffer has overflowed and segments were dropped.
+ * @description Calls `м_Уведомление.Показать` to display the "cut" icon (`svg-cut`) with a "failure" style (`лЖопа=true`).
+ * @dependencies None
+ */
+```
+immediately prior to the line `function обработатьПереполнениеБуфера() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Initializes all control and UI components on player application startup.
+ * @description Performs essential setup: sets the channel address link, configures the volume slider/handler, restores UI settings (`ОбновитьОкноНастроек`), initializes auto-hide, sets up news modules, restores chat, attaches numerous global event listeners (clicks, keypresses, select changes), and finally calls `ПрименитьМасштабированиеИзображения`, `ПрименитьАнимациюИнтерфейса`, and `м_Оформление.Запустить()`.
+ * @dependencies
+ * - [`player.js:8970`](player.js:8970)
+ */
+```
+immediately prior to the line `function Запустить() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Manages the central state machine for the player's lifecycle (live, loading, repeat, stop).
+ * @description Checks if `чНовоеСостояние` differs from the current state (`_чСостояние`). If so, it logs the transition, updates the `data-состояние` attribute on the body, updates the play/stop button icon, and dispatches the `управление-изменилосьсостояние` event via `м_События`. It performs state-specific UI updates, primarily managing stream metadata display and API calls for data gathering.
+ * @dependencies
+ * - [`player.js:3272`](player.js:3272)
+ * - [`player.js:8972`](player.js:8972)
+ */
+```
+immediately prior to the line `function ИзменитьСостояние(чНовоеСостояние) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Retrieves the current operational state of the player (e.g., `СОСТОЯНИЕ_ВОСПРОИЗВЕДЕНИЕ`).
+ * @description Returns the internal `_чСостояние` variable, ensuring it has been initialized.
+ * @dependencies
+ * - [`player.js:3201`](player.js:3201)
+ * - [`player.js:4183`](player.js:4183)
+ * - [`player.js:4199`](player.js:4199)
+ */
+```
+immediately prior to the line `function ПолучитьСостояние() {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates and displays static information about the viewed channel.
+ * @description Takes an object of metadata fields (`сИмя`, `сАватар`, `сОписание`, `кПодписчиков`, etc.). It updates the document title, sets the avatar source, and formats/displays various metrics, showing or hiding corresponding UI elements as necessary.
+ * @dependencies
+ * - [`player.js:3455`](player.js:3455)
+ */
+```
+immediately prior to the line `function ПоказатьМетаданныеКанала(оМетаданные) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Dynamically generates and displays a list of hyperlinked items.
+ * @description Takes an array of link objects (`моСсылки`) and the ID of the container element (`пВставить`). If the array is empty, it hides the container's parent. Otherwise, it creates `<a>` elements for each link (setting `href`, `target`, and optional tooltip/description) and appends them to the container, separated by text nodes.
+ * @dependencies
+ * - [`player.js:4287`](player.js:4287)
+ */
+```
+immediately prior to the line `function ПоказатьМассивСсылок(моСсылки, пВставить) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates and displays viewer-specific metadata, particularly subscription status.
+ * @description Takes a metadata object containing the viewer's name (`сИмя`) and channel subscription status (`чПодписка`). It updates the name display (or a login link if logged out) and sets the state and appearance of the subscription UI element (`зритель-подписка`), including the notification checkbox state.
+ * @dependencies
+ * - [`player.js:3459`](player.js:3459)
+ */
+```
+immediately prior to the line `function ПоказатьМетаданныеЗрителя(оМетаданные) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Updates and displays dynamic information about the stream itself.
+ * @description Takes an object of stream metadata (`сТипТрансляции`, `сНазваниеТрансляции`, `сНазваниеИгры`, `кЗрителей`, `чДлительностьТрансляции`). It translates the stream type (Live, Rerun, Offline), updates the titles/tooltips, formats the viewer count, and updates the duration display. It triggers layout updates via `м_Медиазапрос.обновитьБыстро()` after potentially changing element visibility.
+ * @dependencies
+ * - [`player.js:3463`](player.js:3463)
+ */
+```
+immediately prior to the line `function ПоказатьМетаданныеТрансляции(оМетаданные) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Performs a controlled, resource-releasing shutdown of the application.
+ * @description Sets the global flag `г_лРаботаЗавершена` to true and calls `window.stop()`. If `лБыстро` is false, it explicitly halts asynchronous modules (`м_Преобразователь.Остановить()`, `м_Проигрыватель.Остановить()`, `м_Помойка.Сжечь()`) to release memory and threads.
+ * @dependencies
+ * - [`player.js:688`](player.js:688)
+ * - [`player.js:710`](player.js:710)
+ * - [`player.js:780`](player.js:780)
+ * - [`player.js:800`](player.js:800)
+ * - [`player.js:8942`](player.js:8942)
+ */
+```
+immediately prior to the line `function ЗавершитьРаботу(лБыстро) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose The main entry point and self-executing function for the player application.
+ * @description This immediately invoked function block (IIFE) performs initial checks (e.g., `window.top` status, browser engine compatibility). It registers listener for other tabs to check for channel duplicates. It initiates setup by calling `м_Управление.Запустить()` and starts core processes (`м_Проигрыватель.Запустить()` and `м_Список.Запустить()`) after successfully restoring settings and checking permissions asynchronously. The entire block is wrapped in `ДобавитьОбработчикИсключений`.
+ * @dependencies None
+ */
+```
+immediately prior to the line `ДобавитьОбработчикИсключений(() => {`
+
+
+
+# JSDoc Comment Blocks for `player.js` (Continued)
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose A local utility function within the main IIFE to check if the current channel is already open in another tab.
+ * @description Sends a cross-extension message (`ЭтотКаналУжеОткрыт`) via `chrome.runtime.sendMessage` to `background.js`. If the background script confirms a duplicate tab, it terminates the player using `м_Отладка.ЗавершитьРаботуИПоказатьСообщение("J0211")`. It also sets up a listener for reverse communication from other tabs about duplicate channel detection.
+ * @dependencies
+ * - [`player.js:8964`](player.js:8964)
+ * - [`background.js`](@/background.js)
+ */
+```
+immediately prior to the line `function ЭтотКаналУжеОткрыт(сКанал) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Handles the `unload` and `beforeunload` events when the page is closed or navigated away from.
+ * @description Logs the event type and calls `ЗавершитьРаботу(true)` (fast shutdown) to immediately halt processes and release resources when the tab is closing.
+ * @dependencies
+ * - [`player.js:8966`](player.js:8966)
+ */
+```
+immediately prior to the line `function ОбработатьВыгрузкуСтраницы(оСобытие) {`
+
+#Apply the following JSDOC Comment block: 
+
+```
+/**
+ * @purpose Executes the main application initialization tasks once prerequisites are met.
+ * @description Logs the start time, registers the `unload` handler, calls `м_Управление.Запустить()`, and initiates stream playback (`м_Проигрыватель.Запустить()` and `м_Список.Запустить()`). If `м_Проигрыватель.Запустить()` fails (e.g., no media source capabilities), it forces the application into stop/replay mode via `м_Управление.ОстановитьПросмотрТрансляции()`. Finally, it starts the statistics module.
+ * @dependencies
+ * - [`player.js:8971`](player.js:8971)
+ */
+```
+immediately prior to the line `function НачатьРаботу() {`
+

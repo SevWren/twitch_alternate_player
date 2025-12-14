@@ -127,9 +127,9 @@ function Округлить(чЗначение, чТочность) {
   // function Round(nValue, nPrecision) {
   Проверить(
     typeof чЗначение == "number" &&
-      Number.isInteger(чТочность) &&
-      чТочность >= 0 &&
-      чТочность <= 20
+    Number.isInteger(чТочность) &&
+    чТочность >= 0 &&
+    чТочность <= 20
   );
   // Check(typeof nValue == 'number' && Number.isInteger(nPrecision) && nPrecision >= 0 && nPrecision <= 20);
   if (чТочность === 0) {
@@ -147,9 +147,9 @@ function Ограничить(чЗначение, чМинимум, чМакси
   // function Clamp(nValue, nMin, nMax) {
   Проверить(
     Number.isFinite(чЗначение) &&
-      Number.isFinite(чМинимум) &&
-      Number.isFinite(чМаксимум) &&
-      чМинимум <= чМаксимум
+    Number.isFinite(чМинимум) &&
+    Number.isFinite(чМаксимум) &&
+    чМинимум <= чМаксимум
   );
   // Check(Number.isFinite(nValue) && Number.isFinite(nMin) && Number.isFinite(nMax) && nMin <= nMax);
   return Math.min(Math.max(чЗначение, чМинимум), чМаксимум);
@@ -289,8 +289,8 @@ function ОткрытьАдресВНовойВкладке(сАдрес) {
 function ЗаписатьТекстВЛокальныйФайл(сТекст, сТипДанных, сИмяФайла) {
   Проверить(
     typeof сТекст == "string" &&
-      ЭтоНепустаяСтрока(сТипДанных) &&
-      ЭтоНепустаяСтрока(сИмяФайла)
+    ЭтоНепустаяСтрока(сТипДанных) &&
+    ЭтоНепустаяСтрока(сИмяФайла)
   );
   const узСсылка = document.createElement("a");
   узСсылка.href = URL.createObjectURL(
@@ -377,17 +377,60 @@ function ИзменитьКнопку(пКнопка, пСостояние) {
   return узКнопка;
 }
 
+/**
+ * **ENGLISH:** `m_Debug` (Module)
+ * 
+ * @alias m_Debug
+ * @purpose Handles crash reporting, creating the report.html overlay, and collecting system info (CPU, GPU, RAM).
+ * @description A singleton module (IIFE) that manages debug data collection, error reporting UI, and system telemetry. It provides mechanisms to display fatal errors to the user and gather context for debugging.
+ * @exports
+ * - {@link ПойманоИсключение} (CaughtException)
+ * - {@link ЗавершитьРаботуИПоказатьСообщение} (TerminateAndShowMessage)
+ * - {@link ЗавершитьРаботуИОтправитьОтчет} (TerminateAndSendReport)
+ * - {@link ЗавершитьРаботуИОтправитьОтзыв} (TerminateAndSendFeedback)
+ * - {@link сохранитьТокенТрансляции} (saveBroadcastToken)
+ * - {@link СохранитьСписокВариантов} (SaveVariantList)
+ * - {@link СохранитьСписокСегментов} (SaveSegmentList)
+ * - {@link СохранитьТранспортныйПоток} (SaveTransportStream)
+ * - {@link СохранитьПреобразованныйСегмент} (SaveConvertedSegment)
+ * @dependencies
+ * - [`player.js:642`](./player.js#L642)
+ */
 const м_Отладка = (() => {
   const МАКС_ДЛИНА_СТРОКИ_ОТЧЕТА = 15e4;
   let _сТокенТрансляции = "";
   let _сТокенТрансляцииБезРекламы = "";
   let _сСписокВариантов = "";
   let _мсСпискиСегментов = [];
-  function ВставитьСсылкиДляСкачиванияФайлов(узФорма) {}
+
+  /**
+   * **ENGLISH:** `InsertFileDownloadLinks(nodeForm)`
+   * 
+   * @alias InsertFileDownloadLinks
+   * @purpose Placeholder for functionality to insert file download links into a form.
+   * @description This function is currently defined as an empty function and does nothing. It was likely intended to add links for downloading debug files or reports from a specific form element.
+   * @param {HTMLFormElement} узФорма - (**nodeForm**) The form element to append links to.
+   * @returns {void}
+   * @dependencies
+   * - [`player.js:456`](./player.js#L456)
+   */
+  function ВставитьСсылкиДляСкачиванияФайлов(узФорма) { }
+
+  /**
+   * **ENGLISH:** `ShowPage()`
+   * 
+   * @alias ShowPage
+   * @purpose Prepares the environment and loads the debug report UI (`report.html`) into an iframe.
+   * @description First, it attempts to disable fullscreen mode via {@link м_ПолноэкранныйРежим}. It clears the main document body, removes all CSS (`<link>` and `<style>`), and resets styles/attributes on `<html>` and `<body>`. It creates a full-screen iframe pointing to `report.html`. Once the iframe loads, it translates the content using {@link м_i18n} and resolves a Promise with the iframe's document object.
+   * @returns {Promise<Document>} The document object of the loaded report iframe.
+   * @dependencies
+   * - [`player.js:527`](./player.js#L527)
+   * - [`player.js:555`](./player.js#L555)
+   */
   function ПоказатьСтраницу() {
     try {
       м_ПолноэкранныйРежим.Отключить();
-    } catch (_) {}
+    } catch (_) { }
     document.body.textContent = "";
     for (let уз of document.querySelectorAll('link[rel="stylesheet"], style')) {
       уз.remove();
@@ -414,6 +457,20 @@ const м_Отладка = (() => {
       document.body.appendChild(уз);
     });
   }
+
+  /**
+   * **ENGLISH:** `ShowForm(oDocument, sFormId, bConfigureBackground)`
+   * 
+   * @alias ShowForm
+   * @purpose Displays a specific debug/report form within the document and hides all others.
+   * @description If `лНастроитьФон` is true, it applies the form ID as a class to the `<html>` element for dedicated background styling. It iterates through all forms in the document, showing the one matching `сИдФормы` via {@link ПоказатьЭлемент} and hiding the rest. It attempts to focus the first element within the shown form that has the `autofocus` attribute.
+   * @param {Document} оДокумент - (**oDocument**) The document context (usually the iframe).
+   * @param {string} сИдФормы - (**sFormId**) The ID of the form to display.
+   * @param {boolean} лНастроитьФон - (**bConfigureBackground**) Whether to apply background styling based on the form ID.
+   * @returns {void}
+   * @dependencies
+   * - [`player.js:540`](./player.js#L540)
+   */
   function ПоказатьФорму(оДокумент, сИдФормы, лНастроитьФон) {
     if (лНастроитьФон) {
       оДокумент.documentElement.classList.add(сИдФормы);
@@ -434,6 +491,20 @@ const м_Отладка = (() => {
       }
     }
   }
+
+  /**
+   * **ENGLISH:** `ShowMessage(sMessage, sLinkCode, sLinkAddress)`
+   * 
+   * @alias ShowMessage
+   * @purpose Displays a simple, non-interactive status or error message on the debug page.
+   * @description Calls {@link ПоказатьСтраницу} to prepare the UI. It inserts the raw message text into the dedicated display area. If optional link parameters (`сКодСсылки`, `сАдресСсылки`) are provided, it translates the link code using {@link Текст} and sets the link destination. Finally, it displays the general message form (`отладка-сообщение`).
+   * @param {string} сСообщение - (**sMessage**) The main text to display.
+   * @param {string} [сКодСсылки] - (**sLinkCode**) Optional i18n code for a hyperlink text.
+   * @param {string} [сАдресСсылки] - (**sLinkAddress**) Optional URL for the hyperlink.
+   * @returns {void}
+   * @dependencies
+   * - [`player.js:760`](./player.js#L760)
+   */
   function ПоказатьСообщение(сСообщение, сКодСсылки, сАдресСсылки) {
     ПоказатьСтраницу().then((оДокумент) => {
       оДокумент.getElementById("отладка-текстсообщения").textContent =
@@ -446,6 +517,19 @@ const м_Отладка = (() => {
       ПоказатьФорму(оДокумент, "отладка-сообщение", true);
     });
   }
+
+  /**
+   * **ENGLISH:** `ShowAndSendReport(oReport, bufSend)`
+   * 
+   * @alias ShowAndSendReport
+   * @purpose Displays the comprehensive debug report or feedback form (submission disabled).
+   * @description Prepares the page using {@link ПоказатьСтраницу}. It determines the correct form (`отладка-отзыв` or `отладка-ошибка`) based on the report's `ПричинаЗавершенияРаботы`, and populates the form with the JSON-stringified report. It sets up form submission listeners. Although the code to send the data via `XMLHttpRequest` is present, it is commented out, meaning actual transmission is disabled for security/privacy.
+   * @param {Object} оОтчет - (**oReport**) The compiled debug report object.
+   * @param {ArrayBuffer} [буфОтправить] - (**bufSend**) Optional raw MPEG-TS segment data.
+   * @returns {void}
+   * @dependencies
+   * - [`player.js:711`](./player.js#L711)
+   */
   function ПоказатьИОтправитьОтчет(оОтчет, буфОтправить) {
     ПоказатьСтраницу().then((оДокумент) => {
       let узФорма;
@@ -509,6 +593,19 @@ const м_Отладка = (() => {
       });
     });
   }
+
+  /**
+   * **ENGLISH:** `saveBroadcastToken(sBroadcastToken, bWithoutAds)`
+   * 
+   * @alias saveBroadcastToken
+   * @purpose Stores the broadcast access token for debugging reports.
+   * @description Takes the access token string and a boolean flag indicating if it's the ad-free token. It first truncates the token using {@link ОграничитьДлинуСтроки} to prevent oversized reports, then saves it to the appropriate module-level variable (`_сТокенТрансляции` or `_сТокенТрансляцииБезРекламы`).
+   * @param {string} сТокенТрансляции - (**sBroadcastToken**) The raw token string.
+   * @param {boolean} лБезРекламы - (**bWithoutAds**) True if this is the ad-free token.
+   * @returns {void}
+   * @dependencies
+   * - [`player.js:8290`](./player.js#L8290)
+   */
   function сохранитьТокенТрансляции(сТокенТрансляции, лБезРекламы) {
     сТокенТрансляции = ОграничитьДлинуСтроки(
       сТокенТрансляции,
@@ -520,17 +617,77 @@ const м_Отладка = (() => {
       _сТокенТрансляции = сТокенТрансляции;
     }
   }
+
+  /**
+   * **ENGLISH:** `SaveVariantList(sVariantList)`
+   * 
+   * @alias SaveVariantList
+   * @purpose Stores the HLS master playlist (variant list) for debugging reports.
+   * @description Saves the raw content of the master playlist into the module variable `_сСписокВариантов`.
+   * @param {string} сСписокВариантов - (**sVariantList**) The raw text of the master m3u8.
+   * @returns {void}
+   * @dependencies
+   * - [`player.js:6069`](./player.js#L6069)
+   */
   function СохранитьСписокВариантов(сСписокВариантов) {
     _сСписокВариантов = сСписокВариантов;
   }
+
+  /**
+   * **ENGLISH:** `SaveSegmentList(sSegmentList)`
+   * 
+   * @alias SaveSegmentList
+   * @purpose Maintains a rolling log of recent HLS media playlists for debugging reports.
+   * @description Adds the provided media playlist content to the array `_мсСпискиСегментов`. If the array already contains 10 items, the oldest one is removed via `shift()` before the new one is pushed, ensuring a maximum of 10 recent lists are kept.
+   * @param {string} сСписокСегментов - (**sSegmentList**) The raw text of the media m3u8.
+   * @returns {void}
+   * @dependencies
+   * - [`player.js:6098`](./player.js#L6098)
+   */
   function СохранитьСписокСегментов(сСписокСегментов) {
     if (_мсСпискиСегментов.length === 10) {
       _мсСпискиСегментов.shift();
     }
     _мсСпискиСегментов.push(сСписокСегментов);
   }
-  function СохранитьТранспортныйПоток(оСегмент) {}
-  function СохранитьПреобразованныйСегмент(оСегмент) {}
+
+  /**
+   * **ENGLISH:** `SaveTransportStream(oSegment)`
+   * 
+   * @alias SaveTransportStream
+   * @purpose Placeholder function for saving raw transport stream segment data.
+   * @description This function is currently a no-op (does nothing). It was likely intended for saving the downloaded MPEG-TS segment for debugging purposes before it is processed.
+   * @param {Object} оСегмент - (**oSegment**) The segment object containing the data.
+   * @returns {void}
+   * @dependencies
+   * - [`player.js:7121`](./player.js#L7121)
+   */
+  function СохранитьТранспортныйПоток(оСегмент) { }
+
+  /**
+   * **ENGLISH:** `SaveConvertedSegment(oSegment)`
+   * 
+   * @alias SaveConvertedSegment
+   * @purpose Placeholder function for saving processed (remuxed) video segment data.
+   * @description This function is currently a no-op (does nothing). It was likely intended for saving the fMP4 segment after it has been remuxed from the source MPEG-TS, for debugging purposes.
+   * @param {Object} оСегмент - (**oSegment**) The processed segment object.
+   * @returns {void}
+   * @dependencies
+   * - [`player.js:1560`](./player.js#L1560)
+   */
+  function СохранитьПреобразованныйСегмент(оСегмент) { }
+
+  /**
+   * **ENGLISH:** `compressList(sList)`
+   * 
+   * @alias compressList
+   * @purpose Compacts raw playlist content for inclusion in debug reports.
+   * @description Uses regular expressions and {@link ОграничитьДлинуСтроки} to shorten all URL lines within the playlist to a maximum of 100 characters each, followed by truncating the entire modified playlist string to the overall report maximum length (`МАКС_ДЛИНА_СТРОКИ_ОТЧЕТА`).
+   * @param {string} сСписок - (**sList**) The raw playlist string.
+   * @returns {string} The compressed playlist string.
+   * @dependencies
+   * - [`player.js:673`](./player.js#L673)
+   */
   function сжатьСписок(сСписок) {
     return ОграничитьДлинуСтроки(
       сСписок.replace(
@@ -540,6 +697,21 @@ const м_Отладка = (() => {
       МАКС_ДЛИНА_СТРОКИ_ОТЧЕТА
     );
   }
+
+  /**
+   * **ENGLISH:** `SniffProcessorAndRAM(fCall)`
+   * 
+   * @alias SniffProcessorAndRAM
+   * @purpose Gathers detailed system hardware and JavaScript engine memory usage metrics.
+   * @description Collects data on hardware concurrency, physical RAM (`navigator.deviceMemory`, `chrome.system.memory`), and JS heap usage (`performance.memory`). It wraps API calls in `try...catch` blocks for robustness, and finally calls the provided callback function (`фВызвать`) with the compiled metrics object.
+   * @param {Function} фВызвать - (**fCall**) Callback function to receive the hardware info object.
+   * @returns {void}
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/Navigator/deviceMemory
+   * @see https://developer.chrome.com/docs/extensions/reference/system_memory/
+   * @see https://developer.chrome.com/docs/extensions/reference/system_cpu/
+   * @dependencies
+   * - [`player.js:711`](./player.js#L711)
+   */
   function ОбнюхатьПроцессорИОперативку(фВызвать) {
     const оПроцессорИОперативка = {
       capacity: navigator.deviceMemory,
@@ -573,7 +745,7 @@ const м_Отладка = (() => {
                 оПроцессор.numOfProcessors;
               оПроцессорИОперативка.modelName = оПроцессор.modelName;
               оПроцессорИОперативка.archName = оПроцессор.archName;
-            } catch (_) {}
+            } catch (_) { }
             фВызвать(оПроцессорИОперативка);
           });
         } catch (_) {
@@ -584,6 +756,18 @@ const м_Отладка = (() => {
       фВызвать(оПроцессорИОперативка);
     }
   }
+
+  /**
+   * **ENGLISH:** `SniffGPU()`
+   * 
+   * @alias SniffGPU
+   * @purpose Retrieves graphics card (GPU) vendor and renderer information via WebGL.
+   * @description Attempts to create a WebGL context on a temporary canvas element. It uses the `WEBGL_debug_renderer_info` extension to extract the unmasked vendor and renderer strings, which are then combined into a single identifying string for the GPU. Returns `undefined` if WebGL access fails.
+   * @returns {string|undefined} A string containing the GPU Vendor and Renderer, or undefined.
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_debug_renderer_info
+   * @dependencies
+   * - [`player.js:731`](./player.js#L731)
+   */
   function ОбнюхатьВидюху() {
     try {
       const oContext = document.createElement("canvas").getContext("webgl");
@@ -591,8 +775,20 @@ const м_Отладка = (() => {
       return `${oContext.getParameter(
         oExtension.UNMASKED_VENDOR_WEBGL
       )} | ${oContext.getParameter(oExtension.UNMASKED_RENDERER_WEBGL)}`;
-    } catch (_) {}
+    } catch (_) { }
   }
+
+  /**
+   * **ENGLISH:** `getConnectionParameters()`
+   * 
+   * @alias getConnectionParameters
+   * @purpose Gathers basic network connection status and quality parameters.
+   * @description Collects network metrics available through the `navigator.connection` object (Network Information API), such as whether the device is online, effective connection type, downlink speed, and round-trip time (RTT).
+   * @returns {Object} An object containing properties like `online`, `effectiveType`, `downlink`, `rtt`.
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation
+   * @dependencies
+   * - [`player.js:733`](./player.js#L733)
+   */
   function получитьПараметрыСоединения() {
     const оСоединение = navigator.connection || {};
     return {
@@ -604,20 +800,70 @@ const м_Отладка = (() => {
       downlinkMax: оСоединение.downlinkMax,
     };
   }
+
+  /**
+   * **ENGLISH:** `GetLanguages()`
+   * 
+   * @alias GetLanguages
+   * @purpose Retrieves the current browser and system language settings.
+   * @description Concatenates the user's primary language (`navigator.language`), the preferred languages array (`navigator.languages`), and the localized string code `J0103` retrieved via {@link Текст} for inclusion in reports.
+   * @returns {string} A formatted string of language settings.
+   * @dependencies
+   * - [`player.js:734`](./player.js#L734)
+   */
   function ПолучитьЯзыки() {
     try {
       return `${navigator.language} | ${navigator.languages} | ${Текст(
         "J0103"
       )}`;
-    } catch (_) {}
+    } catch (_) { }
   }
+
+  /**
+   * **ENGLISH:** `GetDateSettings()`
+   * 
+   * @alias GetDateSettings
+   * @purpose Retrieves the user's resolved locale and time settings.
+   * @description Uses `Intl.DateTimeFormat().resolvedOptions()` to gather details about the locale, including calendar, numbering system, and time zone. It also adds the current timezone offset in minutes.
+   * @returns {Object} An object containing locale options and `timezoneOffset`.
+   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/resolvedOptions
+   * @dependencies
+   * - [`player.js:735`](./player.js#L735)
+   */
   function ПолучитьУстановкиДаты() {
     try {
       const оУстановки = new Intl.DateTimeFormat().resolvedOptions();
       оУстановки.timezoneOffset = new Date().getTimezoneOffset();
       return оУстановки;
-    } catch (_) {}
+    } catch (_) { }
   }
+
+  /**
+   * @typedef {Object} DebugReport
+   * @property {string} ПричинаЗавершенияРаботы - Reason for termination (error message or "ОТПРАВИТЬ ОТЗЫВ")
+   * @property {string} ВерсияРасширения - Extension version from manifest
+   * @property {string} Оборзеватель - User agent string
+   * @property {Object} Настройки - User settings snapshot
+   * @property {Object} Статистика - Playback statistics
+   * @property {Array<string>} СпискиСегментов - Recent HLS playlists
+   * @property {Object} Экран - Screen properties
+   * @property {Object} ПроцессорИОперативка - Hardware stats
+   */
+
+  /**
+   * **ENGLISH:** `CreateShowAndSendReport(terminationReason, bufferToSend)`
+   * 
+   * @alias CreateShowAndSendReport
+   * @purpose Orchestrates the collection of all debug data, formats the report, and triggers its display.
+   * @description Calls {@link ОбнюхатьПроцессорИОперативку} asynchronously to gather hardware data. Once received, it compiles a massive object containing all possible metrics (version, time, URL, system specs, player state, settings, statistics, GPU via {@link ОбнюхатьВидюху}, CPU/RAM, log history from {@link м_Журнал}, and stream tokens). It then passes this compiled report object and the optional transport stream buffer (`буфОтправить`) to {@link ПоказатьИОтправитьОтчет}.
+   * @param {string} сПричинаЗавершенияРаботы - (**terminationReason**) The error message or reason code.
+   * @param {ArrayBuffer} [буфОтправить] - (**bufferToSend**) Optional raw MPEG-TS segment data.
+   * @returns {void}
+   * @dependencies
+   * - [`player.js:749`](./player.js#L749)
+   * - [`player.js:782`](./player.js#L782)
+   * - [`player.js:802`](./player.js#L802)
+   */
   function СоздатьПоказатьИОтправитьОтчет(
     сПричинаЗавершенияРаботы,
     буфОтправить
@@ -675,6 +921,20 @@ const м_Отладка = (() => {
       );
     });
   }
+
+  /**
+   * **ENGLISH:** `TerminateAndShowMessage(messageCode, linkCode, linkAddress)`
+   * 
+   * @alias TerminateAndShowMessage
+   * @purpose Terminates the player gracefully and displays a localized, non-critical error message.
+   * @description Checks the global termination flag {@link г_лРаботаЗавершена}. If work is ongoing, it logs the message code, calls {@link ЗавершитьРаботу} to halt execution, and then calls {@link ПоказатьСообщение} with the localized message text retrieved via {@link Текст}. Crucially, it throws `void 0` to immediately stop all remaining script execution paths.
+   * @param {string} сКодСообщения - (**messageCode**) The i18n code for the error message.
+   * @param {string} [сКодСсылки] - (**linkCode**) Optional i18n code for a link text.
+   * @param {string} [сАдресСсылки] - (**linkAddress**) Optional URL for the link.
+   * @returns {void} Throws `void 0` to exit.
+   * @dependencies
+   * - [`player.js:760`](./player.js#L760)
+   */
   function ЗавершитьРаботуИПоказатьСообщение(
     сКодСообщения,
     сКодСсылки,
@@ -687,6 +947,19 @@ const м_Отладка = (() => {
     }
     throw void 0;
   }
+
+  /**
+   * **ENGLISH:** `TerminateAndSendReport(terminationReason, bufferToSend)`
+   * 
+   * @alias TerminateAndSendReport
+   * @purpose Terminates the player and initiates the generation/display of a full debug report.
+   * @description Checks the global termination flag. If work is ongoing, it logs the reason, truncates the reason string, and checks if it contains an "out of memory" marker, calling {@link ЗавершитьРаботуИПоказатьСообщение} if so. It updates player status messages, halts all operations via {@link ЗавершитьРаботу}, and calls {@link СоздатьПоказатьИОтправитьОтчет} to handle data collection. Throws `void 0` to halt script execution.
+   * @param {string} сПричинаЗавершенияРаботы - (**terminationReason**) The error string or code.
+   * @param {ArrayBuffer} [буфОтправить] - (**bufferToSend**) Optional raw segment data for the report.
+   * @returns {void} Throws `void 0` to exit.
+   * @dependencies
+   * - [`player.js:749`](./player.js#L749)
+   */
   function ЗавершитьРаботуИОтправитьОтчет(
     сПричинаЗавершенияРаботы,
     буфОтправить
@@ -703,19 +976,42 @@ const м_Отладка = (() => {
       try {
         м_Проигрыватель.ПоказатьСостояние("Вот", "Завершаю работу");
         г_моОчередь.ПоказатьСостояние();
-      } catch (_) {}
+      } catch (_) { }
       ЗавершитьРаботу(false);
       СоздатьПоказатьИОтправитьОтчет(сПричинаЗавершенияРаботы, буфОтправить);
     }
     throw void 0;
   }
+
+  /**
+   * **ENGLISH:** `CaughtException(exception)`
+   * 
+   * @alias CaughtException
+   * @purpose The universal fallback for handling uncaught exceptions.
+   * @description Converts the received exception object into a stack trace string using `ПеревестиИсключениеВСтроку` (from `common.js`). It then passes this string to {@link ЗавершитьРаботуИОтправитьОтчет} to generate and display a debug report. It is used via the {@link ДобавитьОбработчикИсключений} wrapper.
+   * @param {Error|any} пИсключение - (**exception**) The caught error object.
+   * @returns {void}
+   * @dependencies
+   * - [`common.js:128`](./common.js#L128)
+   */
   function ПойманоИсключение(пИсключение) {
     ЗавершитьРаботуИОтправитьОтчет(ПеревестиИсключениеВСтроку(пИсключение));
   }
+
+  /**
+   * **ENGLISH:** `TerminateAndSendFeedback()`
+   * 
+   * @alias TerminateAndSendFeedback
+   * @purpose To initiate the user feedback workflow.
+   * @description A wrapper that calls {@link ЗавершитьРаботуИОтправитьОтчет} with a specific reason code (`"ОТПРАВИТЬ ОТЗЫВ"`). This indicates to the reporting mechanism that the feedback form, rather than the general error form, should be displayed.
+   * @returns {void}
+   * @dependencies
+   * - [`player.js:3518`](./player.js#L3518)
+   */
   function ЗавершитьРаботуИОтправитьОтзыв() {
     try {
       ЗавершитьРаботуИОтправитьОтчет("ОТПРАВИТЬ ОТЗЫВ");
-    } catch (_) {}
+    } catch (_) { }
   }
   return {
     ПойманоИсключение,
@@ -790,14 +1086,14 @@ class Сегмент {
   constructor(чОбработка, пДанные, чДлительность, лРазрыв, чНомер) {
     Проверить(
       typeof чОбработка == "number" &&
-        чОбработка >= ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ &&
-        чОбработка <= ОБРАБОТКА_ПРЕОБРАЗОВАН
+      чОбработка >= ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ &&
+      чОбработка <= ОБРАБОТКА_ПРЕОБРАЗОВАН
     );
     Проверить(
       (typeof пДанные == "number" && чОбработка >= ОБРАБОТКА_ЗАГРУЖЕН) ||
-        (typeof пДанные == "string" &&
-          чОбработка === ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ) ||
-        (ЭтоОбъект(пДанные) && чОбработка > ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ)
+      (typeof пДанные == "string" &&
+        чОбработка === ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ) ||
+      (ЭтоОбъект(пДанные) && чОбработка > ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ)
     );
     switch (arguments.length) {
       case 2:
@@ -945,9 +1241,9 @@ class ВводЧисла {
     this._узЧисло.value =
       чЗначение === АВТОНАСТРОЙКА
         ? Текст(
-            м_Настройки.ПолучитьПараметрыНастройки(this._сИмяНастройки)
-              .сАвтонастройка
-          )
+          м_Настройки.ПолучитьПараметрыНастройки(this._сИмяНастройки)
+            .сАвтонастройка
+        )
         : м_i18n.ФорматироватьЧисло(чЗначение, this._чТочность);
   }
   _ОбработатьПеретаскивание(оПараметры) {
@@ -1085,7 +1381,7 @@ const м_Помойка = (() => {
         }
       }
     }
-    Сжечь() {}
+    Сжечь() { }
   }
   class ПомойкаВРабочемПотоке {
     constructor() {
@@ -1299,9 +1595,9 @@ const м_Статистика = (() => {
     return (
       чЧисло < ВЫДЕЛИТЬ_НЕ_ПРОСМОТРЕНО_МИН ||
       чЧисло >=
-        м_Настройки.Получить("чМаксРазмерБуфера") +
-          м_Настройки.Получить("чРастягиваниеБуфера") *
-            ВЫДЕЛИТЬ_НЕ_ПРОСМОТРЕНО_МАКС
+      м_Настройки.Получить("чМаксРазмерБуфера") +
+      м_Настройки.Получить("чРастягиваниеБуфера") *
+      ВЫДЕЛИТЬ_НЕ_ПРОСМОТРЕНО_МАКС
     );
   }
   class Анализ {
@@ -1419,7 +1715,7 @@ const м_Статистика = (() => {
       узФрагмент.lastChild.className = "статистика-символ";
       узФрагмент.appendChild(document.createElement("td")).className =
         "анализ-максимум";
-      for (let ы = this._мчИстория.length; --ы >= 0; ) {
+      for (let ы = this._мчИстория.length; --ы >= 0;) {
         узФрагмент.appendChild(document.createElement("td")).className =
           "анализ-история статистика-подробно";
       }
@@ -1765,11 +2061,10 @@ const м_Статистика = (() => {
         (чСумма, { чДлительность }) => чСумма + чДлительность,
         0
       );
-      Узел("статистика-список").textContent = `${
-        оСписок.моСегменты.length
-      } × ${(чДлительностьСписка / оСписок.моСегменты.length).toFixed(
-        1
-      )} = ${чДлительностьСписка.toFixed(1)} − ${оСписок.кРекламныхСегментов}`;
+      Узел("статистика-список").textContent = `${оСписок.моСегменты.length
+        } × ${(чДлительностьСписка / оСписок.моСегменты.length).toFixed(
+          1
+        )} = ${чДлительностьСписка.toFixed(1)} − ${оСписок.кРекламныхСегментов}`;
       Узел("статистика-targetduration").textContent = оСписок.nTargetDuration;
     }
   }
@@ -1885,9 +2180,8 @@ const м_Статистика = (() => {
             сСжатиеВидео += " чересстрочное";
           }
           if (оДанные.чЧастотаКадров !== 0) {
-            сСжатиеВидео += ` ${
-              оДанные.чЧастотаКадров < 0 ? "≈" : ""
-            }${Math.abs(оДанные.чЧастотаКадров).toFixed(2)} ${Текст("J0140")}`;
+            сСжатиеВидео += ` ${оДанные.чЧастотаКадров < 0 ? "≈" : ""
+              }${Math.abs(оДанные.чЧастотаКадров).toFixed(2)} ${Текст("J0140")}`;
           }
           Узел("статистика-сжатиевидео").textContent = сСжатиеВидео;
           Узел(
@@ -1901,7 +2195,7 @@ const м_Статистика = (() => {
         if (оДанные.лЕстьЗвук) {
           Узел("статистика-сжатиезвука").textContent =
             ["AAC-Main", "AAC-LC", "AAC-SSR", "AAC-LTP"][
-              оДанные.nAudioObjectType - 1
+            оДанные.nAudioObjectType - 1
             ] +
             ` ${оДанные.чЧастотаДискретизации} ${Текст("J0141")}` +
             ` ${оДанные.чКоличествоКаналов} ${Текст("J0142")}`;
@@ -1928,13 +2222,13 @@ const м_Статистика = (() => {
         ) {
           м_Журнал.Ой(
             `[Статистика] Превышено отклонение длительности кадра в сегменте ${оСегмент.чНомер}` +
-              ` СредняяДлительностьКадра=${м_Журнал.F0(
-                оДанные.чСредняяДлительностьВидеоСемпла
-              )}мс` +
-              ` АбсолютноеОтклонение=${м_Журнал.F0(чАбсолютноеОтклонение)}мс` +
-              ` ОтносительноеОтклонение=${м_Журнал.F2(
-                чОтносительноеОтклонение
-              )}`
+            ` СредняяДлительностьКадра=${м_Журнал.F0(
+              оДанные.чСредняяДлительностьВидеоСемпла
+            )}мс` +
+            ` АбсолютноеОтклонение=${м_Журнал.F0(чАбсолютноеОтклонение)}мс` +
+            ` ОтносительноеОтклонение=${м_Журнал.F2(
+              чОтносительноеОтклонение
+            )}`
           );
           оДанные.лПотериВидео = true;
         }
@@ -1944,7 +2238,7 @@ const м_Статистика = (() => {
           ).toFixed(1)}`;
           if (
             оДанные.чМаксДлительностьВидеоСемпла -
-              оДанные.чМинДлительностьВидеоСемпла >
+            оДанные.чМинДлительностьВидеоСемпла >
             2
           ) {
             сОтклонение +=
@@ -1952,12 +2246,12 @@ const м_Статистика = (() => {
                 100 -
                 (оДанные.чСредняяДлительностьВидеоСемпла /
                   оДанные.чМаксДлительностьВидеоСемпла) *
-                  100
+                100
               ).toFixed()}%` +
               ` +${(
                 (оДанные.чСредняяДлительностьВидеоСемпла /
                   оДанные.чМинДлительностьВидеоСемпла) *
-                  100 -
+                100 -
                 100
               ).toFixed()}%`;
           }
@@ -2711,10 +3005,10 @@ const м_Оформление = (() => {
       оСтиль.setProperty(
         `--${узКнопка.id}`,
         Number.parseInt(узКнопка.value.slice(1, 3), 16) +
-          "," +
-          Number.parseInt(узКнопка.value.slice(3, 5), 16) +
-          "," +
-          Number.parseInt(узКнопка.value.slice(5, 7), 16)
+        "," +
+        Number.parseInt(узКнопка.value.slice(3, 5), 16) +
+        "," +
+        Number.parseInt(узКнопка.value.slice(5, 7), 16)
       );
     }
     const чНепрозрачность = Округлить(
@@ -2728,9 +3022,8 @@ const м_Оформление = (() => {
     );
   }
   function ПрименитьРазмерИнтерфейса() {
-    document.documentElement.style.fontSize = `${
-      (16 * м_Настройки.Получить("чРазмерИнтерфейса")) / 100
-    }px`;
+    document.documentElement.style.fontSize = `${(16 * м_Настройки.Получить("чРазмерИнтерфейса")) / 100
+      }px`;
     м_Медиазапрос.обновитьМедленно();
   }
   function Запустить() {
@@ -2803,8 +3096,8 @@ const м_Шкала = (() => {
   function Обновить() {
     Проверить(
       Number.isFinite(_чНачало) &&
-        Number.isFinite(_чКонец) &&
-        Number.isFinite(_чПросмотрено)
+      Number.isFinite(_чКонец) &&
+      Number.isFinite(_чПросмотрено)
     );
     Узел("шкала-просмотрено").style.transform = `scaleX(${(
       (_чПросмотрено - _чНачало) /
@@ -2826,8 +3119,8 @@ const м_Шкала = (() => {
     const чУказатель = оСобытие.clientX + 1;
     const чПеремотатьДо = ОграничитьВремя(
       ((чУказатель - чНачалоШкалы) / (чКонецШкалы - чНачалоШкалы)) *
-        (_чКонец - _чНачало) +
-        _чНачало
+      (_чКонец - _чНачало) +
+      _чНачало
     );
     м_Журнал.Окак(`[Шкала] Перематываю до ${чПеремотатьДо}`);
     м_Проигрыватель.ПеремотатьПовторДо(чПеремотатьДо);
@@ -3135,12 +3428,12 @@ const м_Новости = (() => {
           } = оРезультат;
           Проверить(
             ЭтоНепустаяСтрока(сВерсияРасширения) &&
-              Number.isSafeInteger(чВерсияБраузера)
+            Number.isSafeInteger(чВерсияБраузера)
           );
           лОбновлениеДоступно =
             получитьВерсиюДвижкаБраузера() >= чВерсияБраузера &&
             ПеревестиВерсиюВМиллисекунды(ВЕРСИЯ_РАСШИРЕНИЯ) <
-              ПеревестиВерсиюВМиллисекунды(сВерсияРасширения);
+            ПеревестиВерсиюВМиллисекунды(сВерсияРасширения);
         } catch (пИсключение) {
           throw String(пИсключение);
         }
@@ -3261,8 +3554,8 @@ const м_Управление = (() => {
           void 0,
           Ограничить(
             м_Настройки.Получить("чГромкость2") -
-              м_Настройки.Получить("чШагИзмененияГромкостиКолесом") *
-                Math.sign(оСобытие.deltaY),
+            м_Настройки.Получить("чШагИзмененияГромкостиКолесом") *
+            Math.sign(оСобытие.deltaY),
             МИНИМАЛЬНАЯ_ГРОМКОСТЬ,
             МАКСИМАЛЬНАЯ_ГРОМКОСТЬ
           )
@@ -3404,9 +3697,8 @@ const м_Управление = (() => {
     узГромкость.value = чГромкость;
     узГромкость.style.setProperty(
       "--ширина",
-      `${
-        ((чГромкость - МИНИМАЛЬНАЯ_ГРОМКОСТЬ) / (100 - МИНИМАЛЬНАЯ_ГРОМКОСТЬ)) *
-        100
+      `${((чГромкость - МИНИМАЛЬНАЯ_ГРОМКОСТЬ) / (100 - МИНИМАЛЬНАЯ_ГРОМКОСТЬ)) *
+      100
       }%`
     );
     ИзменитьКнопку(
@@ -3603,11 +3895,11 @@ const м_Управление = (() => {
       const лНажатие = оСобытие.type === "keydown";
       const лНажатие1 = лНажатие && !оСобытие.repeat;
       switch (
-        оСобытие.keyCode +
-        оСобытие.shiftKey * SHIFT_KEY +
-        оСобытие.ctrlKey * CTRL_KEY +
-        оСобытие.altKey * ALT_KEY +
-        оСобытие.metaKey * META_KEY
+      оСобытие.keyCode +
+      оСобытие.shiftKey * SHIFT_KEY +
+      оСобытие.ctrlKey * CTRL_KEY +
+      оСобытие.altKey * ALT_KEY +
+      оСобытие.metaKey * META_KEY
       ) {
         case 27:
           оСобытие.preventDefault();
@@ -3790,7 +4082,7 @@ const м_Управление = (() => {
               false,
               Math.min(
                 м_Настройки.Получить("чГромкость2") +
-                  ШАГ_ПОВЫШЕНИЯ_ГРОМКОСТИ_КЛАВОЙ,
+                ШАГ_ПОВЫШЕНИЯ_ГРОМКОСТИ_КЛАВОЙ,
                 МАКСИМАЛЬНАЯ_ГРОМКОСТЬ
               )
             );
@@ -3803,7 +4095,7 @@ const м_Управление = (() => {
               false,
               Math.max(
                 м_Настройки.Получить("чГромкость2") -
-                  ШАГ_ПОНИЖЕНИЯ_ГРОМКОСТИ_КЛАВОЙ,
+                ШАГ_ПОНИЖЕНИЯ_ГРОМКОСТИ_КЛАВОЙ,
                 МИНИМАЛЬНАЯ_ГРОМКОСТЬ
               )
             );
@@ -3872,8 +4164,8 @@ const м_Управление = (() => {
     Узел("адресчата").selectedIndex = м_Настройки.Получить("лПолноценныйЧат")
       ? 0
       : м_Настройки.Получить("лЗатемнитьЧат")
-      ? 2
-      : 1;
+        ? 2
+        : 1;
     Узел("масштабироватьизображение").checked = м_Настройки.Получить(
       "лМасштабироватьИзображение"
     );
@@ -3951,7 +4243,7 @@ const м_Управление = (() => {
       _оНачалоВоспроизведения.ПослеИзменения =
         _оРазмерБуфера.ПослеИзменения =
         _оРастягиваниеБуфера.ПослеИзменения =
-          м_Статистика.ОчиститьИсторию;
+        м_Статистика.ОчиститьИсторию;
       _оИнтервалАвтоскрытия = new ВводЧисла(
         "чИнтервалАвтоскрытия",
         0.5,
@@ -3996,7 +4288,7 @@ const м_Управление = (() => {
     if (!Number.isSafeInteger(чКод)) {
       Проверить(
         узСкорость.selectedIndex >= 0 &&
-          (чКод === -Infinity || чКод === Infinity)
+        (чКод === -Infinity || чКод === Infinity)
       );
       чКод = узСкорость.selectedIndex + Math.sign(чКод);
     }
@@ -4184,7 +4476,7 @@ const м_Управление = (() => {
     ИзменитьКнопку(
       "переключитьтрансляцию",
       чНовоеСостояние === СОСТОЯНИЕ_ОСТАНОВКА ||
-        чНовоеСостояние === СОСТОЯНИЕ_ПОВТОР
+      чНовоеСостояние === СОСТОЯНИЕ_ПОВТОР
     );
     м_События.ПослатьСобытие("управление-изменилосьсостояние", чНовоеСостояние);
     switch (чНовоеСостояние) {
@@ -4406,11 +4698,11 @@ const м_Управление = (() => {
     if (оМетаданные.чДлительностьТрансляции !== void 0) {
       Узел("позиция").textContent =
         Number.isFinite(оМетаданные.чДлительностьТрансляции) &&
-        оМетаданные.чДлительностьТрансляции >= 0
+          оМетаданные.чДлительностьТрансляции >= 0
           ? м_i18n.ПеревестиСекундыВСтроку(
-              оМетаданные.чДлительностьТрансляции / 1e3,
-              false
-            )
+            оМетаданные.чДлительностьТрансляции / 1e3,
+            false
+          )
           : "";
     }
   }
@@ -4429,8 +4721,8 @@ const м_Чат = (() => {
   //! <iframe>
   function ПолучитьПоложениеПанели() {
     switch (
-      getComputedStyle(document.getElementById("проигрывательичат"))
-        .flexDirection
+    getComputedStyle(document.getElementById("проигрывательичат"))
+      .flexDirection
     ) {
       case "column-reverse":
         return ВЕРХНЯЯ_СТОРОНА;
@@ -4907,8 +5199,7 @@ const м_Аудиоустройство = (() => {
           );
         } else {
           м_Журнал.Ой(
-            `[Аудиоустройства] Разрешение не получено: ${
-              chrome.runtime.lastError && chrome.runtime.lastError.message
+            `[Аудиоустройства] Разрешение не получено: ${chrome.runtime.lastError && chrome.runtime.lastError.message
             }`
           );
           м_Уведомление.ПоказатьЖопу();
@@ -5002,7 +5293,7 @@ const м_Проигрыватель = (() => {
         );
       }
     },
-    ОбработатьWaiting() {},
+    ОбработатьWaiting() { },
     ОбработатьPlaying() {
       if (
         м_Управление.ПолучитьСостояние() === СОСТОЯНИЕ_НАЧАЛО_ВОСПРОИЗВЕДЕНИЯ &&
@@ -5054,15 +5345,15 @@ const м_Проигрыватель = (() => {
       Проверить(Number.isFinite(чВремя));
       Проверить(
         чВремя === ПРОВЕРИТЬ_НАЧАЛО_ВОСПРОИЗВЕДЕНИЯ ||
-          чВремя === ПРОВЕРИТЬ_ВОСПРОИЗВЕДЕНИЕ ||
-          чВремя >= 0
+        чВремя === ПРОВЕРИТЬ_ВОСПРОИЗВЕДЕНИЕ ||
+        чВремя >= 0
       );
       const оБуфер = _oMediaElement.buffered;
       const чПоследняяОбласть = оБуфер.length - 1;
       const чТекущееВремя = _oMediaElement.currentTime + 1e-4;
       let чПеремотатьДо = чВремя >= 0 ? чВремя : чТекущееВремя;
       let сПричинаПеремотки = "";
-      for (let лНачатьСначала = false; ; ) {
+      for (let лНачатьСначала = false; ;) {
         let чНужноДляВоспроизведения =
           чВремя === ПРОВЕРИТЬ_ВОСПРОИЗВЕДЕНИЕ
             ? ИСЧЕРПАНИЕ_БУФЕРА
@@ -5123,34 +5414,34 @@ const м_Проигрыватель = (() => {
     }
     м_Журнал[сВажность](
       `${сЗапись.charAt(0) === "[" ? "" : "[Проигрыватель] "}${сЗапись} •••` +
-        (оБуфер && оБуфер.updating ? " [U]" : "") +
-        (_oMediaElement.paused ? " [P]" : "") +
-        (_oMediaElement.seeking ? " [S]" : "") +
-        (_oMediaElement.ended ? " [E]" : "") +
-        (_oMediaElement.error ? ` error=${_oMediaElement.error.code}` : "") +
-        (_oMediaElement.src.startsWith("blob:") ||
+      (оБуфер && оБуфер.updating ? " [U]" : "") +
+      (_oMediaElement.paused ? " [P]" : "") +
+      (_oMediaElement.seeking ? " [S]" : "") +
+      (_oMediaElement.ended ? " [E]" : "") +
+      (_oMediaElement.error ? ` error=${_oMediaElement.error.code}` : "") +
+      (_oMediaElement.src.startsWith("blob:") ||
         _oMediaElement.src.startsWith("mediasource:")
-          ? ""
-          : ` src=${_oMediaElement.src}`) +
-        (_oMediaSource.readyState === "open"
-          ? ""
-          : ` MSE.readyState=${_oMediaSource.readyState}`) +
-        (_oMediaSource.sourceBuffers.length === 1
-          ? ""
-          : ` MSE.buffers=${_oMediaSource.sourceBuffers.length}`) +
-        (_oMediaElement.networkState === HTMLMediaElement.NETWORK_LOADING
-          ? ""
-          : ` networkState=${_oMediaElement.networkState}`) +
-        ` readyState=${_oMediaElement.readyState}` +
-        ` currentTime=${_oMediaElement.currentTime}` +
-        (лОбластиРавны
-          ? ` buffered=${сОбласти}`
-          : ` MSE.buffered=${сОбластиБуфера} buffered=${сОбласти}`) +
-        (_oMediaElement.duration === Infinity
-          ? ""
-          : ` duration=${_oMediaElement.duration}`) +
-        ` seekable=${ПеревестиОбластиВСтроку(_oMediaElement.seekable)}` +
-        ` played=${ПеревестиОбластиВСтроку(_oMediaElement.played)}`
+        ? ""
+        : ` src=${_oMediaElement.src}`) +
+      (_oMediaSource.readyState === "open"
+        ? ""
+        : ` MSE.readyState=${_oMediaSource.readyState}`) +
+      (_oMediaSource.sourceBuffers.length === 1
+        ? ""
+        : ` MSE.buffers=${_oMediaSource.sourceBuffers.length}`) +
+      (_oMediaElement.networkState === HTMLMediaElement.NETWORK_LOADING
+        ? ""
+        : ` networkState=${_oMediaElement.networkState}`) +
+      ` readyState=${_oMediaElement.readyState}` +
+      ` currentTime=${_oMediaElement.currentTime}` +
+      (лОбластиРавны
+        ? ` buffered=${сОбласти}`
+        : ` MSE.buffered=${сОбластиБуфера} buffered=${сОбласти}`) +
+      (_oMediaElement.duration === Infinity
+        ? ""
+        : ` duration=${_oMediaElement.duration}`) +
+      ` seekable=${ПеревестиОбластиВСтроку(_oMediaElement.seekable)}` +
+      ` played=${ПеревестиОбластиВСтроку(_oMediaElement.played)}`
     );
   }
   function ПеревестиОбластиВСтроку(оОбласти) {
@@ -5194,9 +5485,9 @@ const м_Проигрыватель = (() => {
     return _oMediaElement.getVideoPlaybackQuality
       ? _oMediaElement.getVideoPlaybackQuality()
       : {
-          totalVideoFrames: _oMediaElement.webkitDecodedFrameCount,
-          droppedVideoFrames: _oMediaElement.webkitDroppedFrameCount,
-        };
+        totalVideoFrames: _oMediaElement.webkitDecodedFrameCount,
+        droppedVideoFrames: _oMediaElement.webkitDroppedFrameCount,
+      };
   }
   function ПолучитьПозициюВоспроизведенияТрансляции(лДляКлипа) {
     if (Number.isNaN(_чСмещениеТрансляции)) {
@@ -5345,8 +5636,7 @@ const м_Проигрыватель = (() => {
 
         case "timeupdate":
           м_Журнал.Вот(
-            `${сЗапись} readyState=${_oMediaElement.readyState} currentTime=${
-              _oMediaElement.currentTime
+            `${сЗапись} readyState=${_oMediaElement.readyState} currentTime=${_oMediaElement.currentTime
             } НеПросмотрено=${м_Журнал.F2(
               ПолучитьЗаполненностьБуфера().чНеПросмотрено
             )}`
@@ -5410,8 +5700,8 @@ const м_Проигрыватель = (() => {
       чИсточникПроверки === ПРОВЕРИТЬ_ВОСПРОИЗВЕДЕНИЕ
         ? ИСЧЕРПАНИЕ_БУФЕРА
         : чИсточникПроверки === ПРОВЕРИТЬ_ОСТАНОВКА_ВОСПРОИЗВЕДЕНИЯ
-        ? Infinity
-        : МИН_РАЗМЕР_БУФЕРА;
+          ? Infinity
+          : МИН_РАЗМЕР_БУФЕРА;
     let лВоспроизведениеВозможно = _oMediaSource.readyState === "ended";
     let чДоКонцаОбласти;
     for (let чОбласть = 0; чОбласть <= чПоследняяОбласть; ++чОбласть) {
@@ -5707,13 +5997,13 @@ const м_Проигрыватель = (() => {
       );
       Проверить(
         м_Управление.ПолучитьСостояние() === СОСТОЯНИЕ_ЗАПУСК ||
-          м_Управление.ПолучитьСостояние() === СОСТОЯНИЕ_НАЧАЛО_ТРАНСЛЯЦИИ
+        м_Управление.ПолучитьСостояние() === СОСТОЯНИЕ_НАЧАЛО_ТРАНСЛЯЦИИ
       );
       м_Управление.ОстановитьПросмотрТрансляции();
     }
   }
   function НайтиИОбработатьСменуВариантаТрансляции() {
-    for (let ы = г_моОчередь.length; --ы >= 0; ) {
+    for (let ы = г_моОчередь.length; --ы >= 0;) {
       if (
         г_моОчередь[ы].пДанные === СОСТОЯНИЕ_СМЕНА_ВАРИАНТА &&
         г_моОчередь[ы].чОбработка === ОБРАБОТКА_ПРЕОБРАЗОВАН
@@ -5755,7 +6045,7 @@ const м_Проигрыватель = (() => {
     if (оСегмент.пДанные === СОСТОЯНИЕ_ПОВТОР) {
       Проверить(
         м_Управление.ПолучитьСостояние() !== СОСТОЯНИЕ_ОСТАНОВКА &&
-          м_Управление.ПолучитьСостояние() !== СОСТОЯНИЕ_ПОВТОР
+        м_Управление.ПолучитьСостояние() !== СОСТОЯНИЕ_ПОВТОР
       );
       ЗапуститьПовтор();
       г_моОчередь.Удалить(0);
@@ -5856,7 +6146,7 @@ const м_Проигрыватель = (() => {
     if (
       _oMediaElement.played.length === 0 ||
       ПолучитьЗаполненностьБуфера().чПросмотрено <
-        ПОВТОР_ДОСТУПЕН_ЕСЛИ_ПРОСМОТРЕНО
+      ПОВТОР_ДОСТУПЕН_ЕСЛИ_ПРОСМОТРЕНО
     ) {
       ПоказатьСостояние("Окак", "Повторять нечего");
       м_Управление.ИзменитьСостояние(СОСТОЯНИЕ_ОСТАНОВКА);
@@ -6050,10 +6340,8 @@ const м_Список = (() => {
         }
       }
       м_Журнал.Вот(
-        `[Список] Для списка ${+this._лБезРекламы} выбран вариант трансляции ${
-          оВыбранныйВариант.сИдентификатор
-        }/${
-          оВыбранныйВариант.чБитрейт
+        `[Список] Для списка ${+this._лБезРекламы} выбран вариант трансляции ${оВыбранныйВариант.сИдентификатор
+        }/${оВыбранныйВариант.чБитрейт
         }. Сохраненный ${сСохраненныйИд}/${чСохраненныйБитрейт}`
       );
       return оВыбранныйВариант;
@@ -6069,8 +6357,8 @@ const м_Список = (() => {
         м_Журнал.Ой(
           `[Список] Обновление списков ${+this
             ._лБезРекламы} начнется через ${МИН_ИНТЕРВАЛ_ОБНОВЛЕНИЯ_СПИСКОВ}мс вместо ${м_Журнал.F0(
-            чЧерез
-          )}мс`
+              чЧерез
+            )}мс`
         );
         чЧерез = МИН_ИНТЕРВАЛ_ОБНОВЛЕНИЯ_СПИСКОВ;
       }
@@ -6194,7 +6482,7 @@ const м_Список = (() => {
       Проверить(
         !(
           this.оСписокВариантов.сИдТрансляции !==
-            оСписокВариантов.сИдТрансляции &&
+          оСписокВариантов.сИдТрансляции &&
           this.оСписокВариантов.чИдСессии === оСписокВариантов.чИдСессии
         )
       );
@@ -6203,8 +6491,7 @@ const м_Список = (() => {
         оСписокСегментов.nTargetDuration
       ) {
         м_Журнал.Ой(
-          `[Список] В списке ${+this._лБезРекламы} изменился target duration ${
-            this.оСписокСегментов.nTargetDuration
+          `[Список] В списке ${+this._лБезРекламы} изменился target duration ${this.оСписокСегментов.nTargetDuration
           } ==> ${оСписокСегментов.nTargetDuration}`
         );
       }
@@ -6227,8 +6514,7 @@ const м_Список = (() => {
             this.оСписокСегментов.моСегменты[чСтарый].сАдрес
           ) {
             м_Журнал.Ой(
-              `[Список] В списке ${+this._лБезРекламы} у сегмента ${
-                оСписокСегментов.чПорядковыйНомер + чНовый
+              `[Список] В списке ${+this._лБезРекламы} у сегмента ${оСписокСегментов.чПорядковыйНомер + чНовый
               } изменился адрес ${ОграничитьДлинуСтроки(
                 this.оСписокСегментов.моСегменты[чСтарый].сАдрес,
                 100
@@ -6251,10 +6537,8 @@ const м_Список = (() => {
         if (this.оВыбранныйВариант === null && чРазница <= ПОРОГ_СМЕНЫ_СЕССИИ) {
           м_Журнал.Ой(
             `[Список] При переключении варианта в списке ${+this
-              ._лБезРекламы} уменьшился порядковый номер ${
-              this.оСписокСегментов.чПорядковыйНомер
-            } + ${this.оСписокСегментов.моСегменты.length} ==> ${
-              оСписокСегментов.чПорядковыйНомер
+              ._лБезРекламы} уменьшился порядковый номер ${this.оСписокСегментов.чПорядковыйНомер
+            } + ${this.оСписокСегментов.моСегменты.length} ==> ${оСписокСегментов.чПорядковыйНомер
             } + ${оСписокСегментов.моСегменты.length}`
           );
           return false;
@@ -6265,10 +6549,8 @@ const м_Список = (() => {
         ) {
           м_Журнал.Ой(
             `[Список] Меняю ИдСессии: в списке ${+this
-              ._лБезРекламы} уменьшился порядковый номер ${
-              this.оСписокСегментов.чПорядковыйНомер
-            } + ${this.оСписокСегментов.моСегменты.length} ==> ${
-              оСписокСегментов.чПорядковыйНомер
+              ._лБезРекламы} уменьшился порядковый номер ${this.оСписокСегментов.чПорядковыйНомер
+            } + ${this.оСписокСегментов.моСегменты.length} ==> ${оСписокСегментов.чПорядковыйНомер
             } + ${оСписокСегментов.моСегменты.length}`
           );
           оСписокВариантов.чИдСессии = _чИдСессии++;
@@ -6276,10 +6558,8 @@ const м_Список = (() => {
         }
         м_Журнал.Ой(
           `[Список] Получен протухший список ${+this
-            ._лБезРекламы}: порядковый номер ${
-            this.оСписокСегментов.чПорядковыйНомер
-          } + ${this.оСписокСегментов.моСегменты.length} ==> ${
-            оСписокСегментов.чПорядковыйНомер
+            ._лБезРекламы}: порядковый номер ${this.оСписокСегментов.чПорядковыйНомер
+          } + ${this.оСписокСегментов.моСегменты.length} ==> ${оСписокСегментов.чПорядковыйНомер
           } + ${оСписокСегментов.моСегменты.length}`
         );
         return true;
@@ -6290,8 +6570,7 @@ const м_Список = (() => {
       ) {
         м_Журнал.Ой(
           `[Список] В списке ${+this
-            ._лБезРекламы} уменьшился порядковый номер ${
-            this.оСписокСегментов.чПорядковыйНомер
+            ._лБезРекламы} уменьшился порядковый номер ${this.оСписокСегментов.чПорядковыйНомер
           } ==> ${оСписокСегментов.чПорядковыйНомер}`
         );
       }
@@ -6324,9 +6603,9 @@ const м_Список = (() => {
       return лСписокЗаканчиваетсяРекламой
         ? ИНТЕРВАЛ_ОБНОВЛЕНИЯ_СПИСКА_С_РЕКЛАМОЙ
         : получитьИнтервалОбновленияСпискаСегментов(
-            this.оСписокСегментов,
-            лУкороченныйИнтервал
-          );
+          this.оСписокСегментов,
+          лУкороченныйИнтервал
+        );
     }
     _списокНеОбновлен(оОтменаОбещания, сПричина) {
       if (сПричина === "ОТКАЗАНО_В_ДОСТУПЕ") {
@@ -6539,18 +6818,15 @@ const м_Список = (() => {
             чВремя++;
             if (оНовыйСегмент.чДлительность < 0) {
               м_Журнал.Ой(
-                `[Список] У сегмента ${
-                  чПорядковыйНомер + моСегменты.length
+                `[Список] У сегмента ${чПорядковыйНомер + моСегменты.length
                 } отрицательная длительность ${сЗначениеТега}`
               );
               оНовыйСегмент.чДлительность = 0;
             }
             if (Math.round(оНовыйСегмент.чДлительность) > nTargetDuration) {
               м_Журнал.Ой(
-                `[Список] Длительность сегмента ${
-                  чПорядковыйНомер + моСегменты.length
-                } больше target duration на ${
-                  оНовыйСегмент.чДлительность - nTargetDuration
+                `[Список] Длительность сегмента ${чПорядковыйНомер + моСегменты.length
+                } больше target duration на ${оНовыйСегмент.чДлительность - nTargetDuration
                 }с`
               );
               if (оНовыйСегмент.чДлительность > nTargetDuration * 3) {
@@ -6676,30 +6952,30 @@ const м_Список = (() => {
                   // Extract specific Ad Tracking tokens and IDs for analytics
                   // These IDs are NOT used for playback logic. They are only used to construct
                   // the "Proof of View" telemetry packet sent back to Twitch via 'recordAdEvent'.
-                  
+
                   // RADS Token: The unique cryptographic token validating this specific ad impression.
                   сТокенРекламы =
                     амАтрибуты.get("X-TV-TWITCH-AD-RADS-TOKEN") || "";
-                  
+
                   // Advertiser ID: Identifies the company buying the ad (mapped to 'ad_id' in GQL).
                   сИдРолика1 =
                     амАтрибуты.get("X-TV-TWITCH-AD-ADVERTISER-ID") || "";
-                  
+
                   // Creative ID: Identifies the specific video asset/commercial (mapped to 'creative_id').
                   сИдРолика2 =
                     амАтрибуты.get("X-TV-TWITCH-AD-CREATIVE-ID") || "";
-                  
+
                   // Line Item ID: Internal campaign management ID (mapped to 'line_item_id').
                   сИдРолика3 =
                     амАтрибуты.get("X-TV-TWITCH-AD-LINE-ITEM-ID") || "";
-                  
+
                   // Order ID: Purchase order ID for the ad campaign (mapped to 'order_id').
                   сИдРолика4 = амАтрибуты.get("X-TV-TWITCH-AD-ORDER-ID") || "";
-                  
+
                   // Ad Session ID: Ties this ad view to the user's viewing session (mapped to 'ad_session_id').
                   сИдРолика5 =
                     амАтрибуты.get("X-TV-TWITCH-AD-AD-SESSION-ID") || "";
-                  
+
                   // Ad Format: The format of the ad, e.g., 'Video', 'Display' (mapped to 'format_name').
                   сИдРолика6 = амАтрибуты.get("X-TV-TWITCH-AD-AD-FORMAT") || "";
 
@@ -6744,8 +7020,8 @@ const м_Список = (() => {
             );
             Проверить(
               !амАтрибуты.has("AUDIO") &&
-                !амАтрибуты.has("SUBTITLES") &&
-                !амАтрибуты.has("CLOSED-CAPTIONS")
+              !амАтрибуты.has("SUBTITLES") &&
+              !амАтрибуты.has("CLOSED-CAPTIONS")
             );
             оНовыйВариант.сИдентификатор = амАтрибуты.get("VIDEO") || "";
             break;
@@ -6977,7 +7253,7 @@ const м_Список = (() => {
       if (
         !оНовыеСегменты.моСегменты[чИндексДобавляемогоСегмента].лРеклама &&
         оНовыеСегменты.моСегменты[чИндексДобавляемогоСегмента].чДлительность !==
-          0
+        0
       ) {
         кДобавитьСегментов--;
         чДобавитьСекунд -=
@@ -7070,8 +7346,7 @@ const м_Список = (() => {
         _чДобавленныйПорядковыйНомер + 1 < чПорядковыйНомер
       ) {
         м_Журнал.Ой(
-          `[Список] Пропущены сегменты с ${
-            _чДобавленныйПорядковыйНомер + 1
+          `[Список] Пропущены сегменты с ${_чДобавленныйПорядковыйНомер + 1
           } по ${чПорядковыйНомер - 1}`
         );
         м_Статистика.пропущеныСегменты(
@@ -7132,15 +7407,14 @@ const м_Список = (() => {
           чМинДлительностьСегмента
         )}<${м_Журнал.F2(чСредняяДлительностьСегмента)}<${м_Журнал.F2(
           чМаксДлительностьСегмента
-        )} ДлительностьСписка=${м_Журнал.F1(чДлительностьСписка)} НеЗагружать=${
-          оСписокСегментов.моСегменты.length - кСегментов
+        )} ДлительностьСписка=${м_Журнал.F1(чДлительностьСписка)} НеЗагружать=${оСписокСегментов.моСегменты.length - кСегментов
         }`
       );
     } else {
       чСредняяДлительностьСегмента =
         чМинДлительностьСегмента =
         чМаксДлительностьСегмента =
-          Math.max(оСписокСегментов.nTargetDuration / 3, 1);
+        Math.max(оСписокСегментов.nTargetDuration / 3, 1);
       м_Журнал.Ой(
         `[Список] Предполагаемая длительность сегментов ${м_Журнал.F1(
           чСредняяДлительностьСегмента
@@ -7295,8 +7569,7 @@ const м_Преобразователь = (() => {
             мДанные[1].чНомер
           );
           м_Журнал.Вот(
-            `[Преобразование] Получен сегмент ${
-              оСегмент.чНомер
+            `[Преобразование] Получен сегмент ${оСегмент.чНомер
             } ПреобразованЗа=${м_Журнал.F0(оСегмент.пДанные.чПреобразованЗа)}мс`
           );
           if (typeof оСегмент.пДанные != "number") {
@@ -7315,16 +7588,16 @@ const м_Преобразователь = (() => {
             мсЗаписи = мДанные[2];
           Проверить(
             мДанные.length === 3 &&
-              Array.isArray(мсВажность) &&
-              Array.isArray(мсЗаписи) &&
-              мсВажность.length === мсЗаписи.length
+            Array.isArray(мсВажность) &&
+            Array.isArray(мсЗаписи) &&
+            мсВажность.length === мсЗаписи.length
           );
           for (let ы = 0; ы < мсВажность.length; ++ы) {
             Проверить(
               (мсВажность[ы] === "Вот" ||
                 мсВажность[ы] === "Окак" ||
                 мсВажность[ы] === "Ой") &&
-                typeof мсЗаписи[ы] == "string"
+              typeof мсЗаписи[ы] == "string"
             );
             м_Журнал[мсВажность[ы]](мсЗаписи[ы]);
           }
@@ -7333,8 +7606,8 @@ const м_Преобразователь = (() => {
         case 3:
           Проверить(
             мДанные.length === 3 &&
-              typeof мДанные[1] == "string" &&
-              typeof мДанные[2] == "object"
+            typeof мДанные[1] == "string" &&
+            typeof мДанные[2] == "object"
           );
           м_Отладка.ЗавершитьРаботуИОтправитьОтчет(мДанные[1], мДанные[2]);
           return;
@@ -7446,9 +7719,9 @@ const м_Загрузчик = (() => {
     }
     Проверить(
       сМетод === "GET" ||
-        сМетод === "PUT" ||
-        сМетод === "DELETE" ||
-        сМетод === "POST"
+      сМетод === "PUT" ||
+      сМетод === "DELETE" ||
+      сМетод === "POST"
     );
     Проверить(typeof сАдрес == "string");
     Проверить(
@@ -7456,22 +7729,22 @@ const м_Загрузчик = (() => {
     );
     Проверить(
       пТело === null ||
-        (сМетод !== "GET" &&
-          (пТело instanceof URLSearchParams ||
-            (typeof пТело == "string" &&
-              оЗаголовки &&
-              ЭтоНепустаяСтрока(оЗаголовки["Content-Type"]))))
+      (сМетод !== "GET" &&
+        (пТело instanceof URLSearchParams ||
+          (typeof пТело == "string" &&
+            оЗаголовки &&
+            ЭтоНепустаяСтрока(оЗаголовки["Content-Type"]))))
     );
     Проверить(
       typeof оЗаголовки == "object" &&
-        typeof сНазвание == "string" &&
-        typeof лЖурнал == "boolean"
+      typeof сНазвание == "string" &&
+      typeof лЖурнал == "boolean"
     );
     Проверить(
       пТипДанных === "none" ||
-        пТипДанных === "text" ||
-        пТипДанных === "json" ||
-        Number.isFinite(пТипДанных)
+      пТипДанных === "text" ||
+      пТипДанных === "json" ||
+      Number.isFinite(пТипДанных)
     );
     if (оОтменаОбещания && оОтменаОбещания.лОтменено) {
       return Promise.reject(ОтменаОбещания.ПРИЧИНА);
@@ -7568,10 +7841,10 @@ const м_Загрузчик = (() => {
     ({ target: оЗапрос, type: сТипСобытия }) => {
       м_Журнал.Ой(
         `[Загрузчик] Не удалось загрузить ${оЗапрос._сНазвание}. Произошло событие ${сТипСобытия}` +
-          ` readyState=${оЗапрос.readyState}` +
-          (оЗапрос._лЖурнал && typeof оЗапрос._пТипДанных == "number"
-            ? ` ОжиданиеОтвета=${оЗапрос._чОжиданиеОтвета}мс`
-            : ``)
+        ` readyState=${оЗапрос.readyState}` +
+        (оЗапрос._лЖурнал && typeof оЗапрос._пТипДанных == "number"
+          ? ` ОжиданиеОтвета=${оЗапрос._чОжиданиеОтвета}мс`
+          : ``)
       );
       if (сТипСобытия === "abort" || !ПослатьЗапрос(оЗапрос, true)) {
         if (оЗапрос.responseType === "arraybuffer") {
@@ -7599,22 +7872,22 @@ const м_Загрузчик = (() => {
           оЗапрос._оОтменаОбещания.ЗаменитьОбработчик(null);
         м_Журнал.Вот(
           `[Загрузчик] Загрузил ${оЗапрос._сНазвание} за ${чДлительностьЗагрузки}мс` +
-            (оЗапрос._лЖурнал && typeof оЗапрос._пТипДанных == "number"
-              ? ` ОжиданиеОтвета=${оЗапрос._чОжиданиеОтвета}мс`
-              : ``) +
-            (typeof оЗапрос._пТипДанных == "number"
-              ? ` Отношение=${м_Журнал.F1(
-                  чДлительностьЗагрузки / оЗапрос._пТипДанных / 1e3
-                )}`
-              : ``) +
-            (чКод === 200 ? `` : ` Код=${чКод} ${оЗапрос.statusText}`) +
-            (оЗапрос._пТипДанных === "none"
-              ? ""
-              : оЗапрос._лЖурнал && ЭтоНепустаяСтрока(оЗапрос.response)
+          (оЗапрос._лЖурнал && typeof оЗапрос._пТипДанных == "number"
+            ? ` ОжиданиеОтвета=${оЗапрос._чОжиданиеОтвета}мс`
+            : ``) +
+          (typeof оЗапрос._пТипДанных == "number"
+            ? ` Отношение=${м_Журнал.F1(
+              чДлительностьЗагрузки / оЗапрос._пТипДанных / 1e3
+            )}`
+            : ``) +
+          (чКод === 200 ? `` : ` Код=${чКод} ${оЗапрос.statusText}`) +
+          (оЗапрос._пТипДанных === "none"
+            ? ""
+            : оЗапрос._лЖурнал && ЭтоНепустаяСтрока(оЗапрос.response)
               ? `\n${оЗапрос.response}`
               : оЗапрос.responseType === "arraybuffer"
-              ? ` Размер=${оЗапрос.response.byteLength}байт`
-              : ` Размер=${оЗапрос.response.length}символов`)
+                ? ` Размер=${оЗапрос.response.byteLength}байт`
+                : ` Размер=${оЗапрос.response.length}символов`)
         );
         if (оЗапрос._чНеДольше !== 0) {
           м_Статистика.СкачаноНечто(ПолучитьРазмерОтвета(оЗапрос));
@@ -7650,19 +7923,18 @@ const м_Загрузчик = (() => {
         }
       } else {
         м_Журнал.Ой(
-          `[Загрузчик] Не удалось загрузить ${оЗапрос._сНазвание}. ${
-            КОД_ОТВЕТА + чКод
+          `[Загрузчик] Не удалось загрузить ${оЗапрос._сНазвание}. ${КОД_ОТВЕТА + чКод
           } ${оЗапрос.statusText}` +
-            (оЗапрос._лЖурнал && typeof оЗапрос._пТипДанных == "number"
-              ? ` ОжиданиеОтвета=${оЗапрос._чОжиданиеОтвета}мс`
-              : ``) +
-            (ЭтоНепустаяСтрока(оЗапрос.response)
-              ? `\n${оЗапрос.response}`
-              : оЗапрос.response === null
+          (оЗапрос._лЖурнал && typeof оЗапрос._пТипДанных == "number"
+            ? ` ОжиданиеОтвета=${оЗапрос._чОжиданиеОтвета}мс`
+            : ``) +
+          (ЭтоНепустаяСтрока(оЗапрос.response)
+            ? `\n${оЗапрос.response}`
+            : оЗапрос.response === null
               ? " response=null"
               : оЗапрос.responseType === "arraybuffer"
-              ? ` Размер=${оЗапрос.response.byteLength}байт`
-              : ` Размер=${оЗапрос.response.length}символов`)
+                ? ` Размер=${оЗапрос.response.byteLength}байт`
+                : ` Размер=${оЗапрос.response.length}символов`)
         );
         if (
           (чКод >= 400 && чКод <= 499) ||
@@ -7819,7 +8091,7 @@ const м_Загрузчик = (() => {
       г_моОчередь.Удалить(оНезагруженныйСегмент);
     } else {
       let чРазмерБуфера = м_Настройки.Получить("чРазмерБуфера");
-      for (let оСегмент, ы = кВОчереди; (оСегмент = г_моОчередь[--ы]); ) {
+      for (let оСегмент, ы = кВОчереди; (оСегмент = г_моОчередь[--ы]);) {
         if (оСегмент.чОбработка === ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ) {
           if (чРазмерБуфера > 0) {
             чРазмерБуфера -= оСегмент.чДлительность;
@@ -7836,8 +8108,7 @@ const м_Загрузчик = (() => {
   }
   const обработатьИзменениеСети = ДобавитьОбработчикИсключений((оСобытие) => {
     м_Журнал.Ой(
-      `[Загрузчик] Событие ${оСобытие.type} navigator.onLine=${
-        navigator.onLine
+      `[Загрузчик] Событие ${оСобытие.type} navigator.onLine=${navigator.onLine
       } connection.type=${navigator.connection && navigator.connection.type}`
     );
   });
@@ -7885,8 +8156,8 @@ const м_Twitch = (() => {
   function ПолучитьАдресКанала(лНеПеренаправлять) {
     return лНеПеренаправлять
       ? `https://www.twitch.tv/${encodeURIComponent(
-          _сКодКанала
-        )}?${АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ}`
+        _сКодКанала
+      )}?${АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ}`
       : `https://www.twitch.tv/${encodeURIComponent(_сКодКанала)}`;
   }
   function ПолучитьАдресПанелиЧата() {
@@ -7897,9 +8168,8 @@ const м_Twitch = (() => {
     }
     return `https://www.twitch.tv/embed/${encodeURIComponent(
       _сКодКанала
-    )}/chat?${
-      м_Настройки.Получить("лЗатемнитьЧат") ? "darkpopout&" : ""
-    }parent=localhost`;
+    )}/chat?${м_Настройки.Получить("лЗатемнитьЧат") ? "darkpopout&" : ""
+      }parent=localhost`;
   }
   function ПолучитьАдресЗаписи(сИдЗаписи) {
     Проверить(ЭтоНепустаяСтрока(сИдЗаписи));
@@ -7935,7 +8205,7 @@ const м_Twitch = (() => {
     while (сРезультат.length !== кДлина) {
       сРезультат +=
         сДопустимыеСимволы[
-          Math.floor(Math.random() * сДопустимыеСимволы.length)
+        Math.floor(Math.random() * сДопустимыеСимволы.length)
         ];
     }
     return сРезультат;
@@ -8287,8 +8557,7 @@ const м_Twitch = (() => {
           true,
           false,
           false,
-          `${
-            оСписокСегментов.сТипРекламы
+          `${оСписокСегментов.сТипРекламы
           } ${оСписокСегментов.сТокенРекламы.slice(-10)}`,
           3e4
         );
@@ -8458,8 +8727,7 @@ const м_Twitch = (() => {
         Проверить(_сИдКанала === String(оТокен.channel_id));
       }
       let сАдрес =
-        `${
-          лБезHttps ? "http" : "https"
+        `${лБезHttps ? "http" : "https"
         }://usher.ttvnw.net/api/channel/hls/${encodeURIComponent(
           _сКодКанала
         )}.m3u8` +
@@ -8504,12 +8772,12 @@ const м_Twitch = (() => {
         const о = JSON.parse(decodeURIComponent(сПеченька));
         Проверить(
           ЭтоОбъект(о) &&
-            ЭтоНепустаяСтрока(о.id) &&
-            ЭтоНепустаяСтрока(о.login) &&
-            ЭтоНепустаяСтрока(о.authToken)
+          ЭтоНепустаяСтрока(о.id) &&
+          ЭтоНепустаяСтрока(о.login) &&
+          ЭтоНепустаяСтрока(о.authToken)
         );
         return о;
-      } catch (_) {}
+      } catch (_) { }
       м_Журнал.Ой(
         `[Twitch] Не удалось разобрать печеньку авторизации: ${сПеченька}`
       );
@@ -8665,10 +8933,10 @@ const м_Twitch = (() => {
         const чПодписка = !цепочка(oUser.self, "canFollow")
           ? ПОДПИСКА_НЕДОСТУПНА
           : !oUser.self.follower
-          ? ПОДПИСКА_НЕОФОРМЛЕНА
-          : oUser.self.follower.disableNotifications
-          ? ПОДПИСКА_НЕУВЕДОМЛЯТЬ
-          : ПОДПИСКА_УВЕДОМЛЯТЬ;
+            ? ПОДПИСКА_НЕОФОРМЛЕНА
+            : oUser.self.follower.disableNotifications
+              ? ПОДПИСКА_НЕУВЕДОМЛЯТЬ
+              : ПОДПИСКА_УВЕДОМЛЯТЬ;
         м_События.ПослатьСобытие("twitch-полученыметаданныеканала", {
           сИмя: oUser.displayName || _сКодКанала,
           сАватар: oUser.profileImageURL || "player.svg#svg-missingavatar",
@@ -8771,8 +9039,8 @@ const м_Twitch = (() => {
             сТипТрансляции === "live"
               ? "прямая"
               : сТипТрансляции === "rerun"
-              ? "повтор"
-              : null;
+                ? "повтор"
+                : null;
         }
         if (_сИдТрансляции === "" || _сИдТрансляции === сИдТрансляции) {
           const сНазваниеТрансляции = цепочка(
@@ -9054,7 +9322,7 @@ function ЗавершитьРаботу(лБыстро) {
       м_Помойка.Сжечь();
     }
     м_Журнал.Окак("[Запускалка] Работа завершена");
-  } catch (_) {}
+  } catch (_) { }
 }
 
 ДобавитьОбработчикИсключений(() => {
