@@ -1,1 +1,35 @@
 digest.txt
+Documentation\notes
+bak\
+
+*.bak
+*.back
+*.old
+*.backup
+*.png
+*.jpg
+*prompt*.txt
+
+player.js.documentation - Copy.html
+player.js.documentation - Copy.md
+player.js.documentation(Good).html
+player.js.documentation.html
+player.js.documentation.md
+bak/player.js.broken
+Documentation/notes/Gemini-CLI Suggested Performance Issues & Recommendations.md
+Documentation/notes/New 1440p bypass plan. Gemini 2.5 flash.md
+Documentation/notes/New 1440p bypass plan. Gemini 2.5 pro.md
+Documentation/notes/new-feature-plan-2.5-flash.md
+Documentation/notes/new-feature-plan-2.5-pro.md
+Documentation/notes/plan.md
+player-GabePc.js
+debug/window.addEventListener unload - future depreciation.png
+debug/console/2253-09c34ee1589cdaff0d97 message handler took violation.js
+debug/console/9457-7d5ad8140bbef7f3f5f3  message handler took violation.js
+debug/console/chrome console log during 'bypassing ads'.log
+debug/console/cibbpdjdfkcaigemiekmahpgkgalmili-1765656212353 V3.log
+debug/console/cibbpdjdfkcaigemiekmahpgkgalmili-1765656212353.log
+debug/console/other messages during an ad block in which the PLAYER DOES NOT SHOW ANY VIDEO AT ALL.log
+debug/console/player.js messages during an ad block in which the PLAYER DOES NOT SHOW ANY VIDEO AT ALL.log
+debug/console/warnings during an ad block in which the PLAYER DOES NOT SHOW ANY VIDEO AT ALL.log
+.vscode/launch.json
