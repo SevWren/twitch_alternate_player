@@ -1,3 +1,5 @@
+[Outdated] - This does not include the correct tempalte to follow to ensure JSBlock follows the template that is optimized for intellisense and Russian -> English reading
+
 The JSDoc comment blocks for all functions and methods within `player.js` (using the provided file content and dependencies from the accompanying digest) are listed below, formatted for insertion immediately prior to their respective definitions.
 
 ---

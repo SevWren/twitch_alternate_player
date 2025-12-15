@@ -1,7 +1,7 @@
 digest.txt
 Documentation\notes
 bak\
-
+bak*
 *.bak
 *.back
 *.old
@@ -9,6 +9,13 @@ bak\
 *.png
 *.jpg
 *prompt*.txt
+debug\window.addEventListener unload - future depreciation.png
+manifest.png
+*.log
+.vscode
+_locales
+_metadata\generated_indexed_rulesets
+Documentation\notes
 
 player.js.documentation - Copy.html
 player.js.documentation - Copy.md
