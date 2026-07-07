@@ -1,0 +1,260 @@
+========================================================================
+CRITICAL BUG DIAGNOSIS REPORT
+========================================================================
+Bug: TypeError at player.js:1846 - accessing statistics-videocompression element fails
+
+ROOT CAUSE:
+The HTML has been partially translated from Russian to English, but the JavaScript
+still references the old Russian element IDs. This creates ID mismatches where:
+- JavaScript: looks for "статистика-сжатиевидео" (Russian)
+- HTML: has "statistics-videocompression" (English) - and the Russian version is commented out
+
+========================================================================
+FUNCTION ANALYSIS: ПолучитьДанныеДляОтчета() at lines 1841-1860
+========================================================================
+
+Line 1841: function ПолучитьДанныеДляОтчета() {
+Line 1842:   return {
+Line 1843:     ПараметрыВидео:
+Line 1844:       Узел("статистика-разрешениевидео").textContent +
+Line 1845:       " " +
+Line 1846:       Узел("статистика-сжатиевидео").textContent,    <-- ERROR HERE
+Line 1847:     ПараметрыЗвука: Узел("статистика-сжатиезвука").textContent,
+Line 1848-1859: [other properties using module variables]
+Line 1860: }
+
+Function purpose: Collects current statistics data for report generation.
+
+Helper function: Узел() (defined in common.js:216)
+- Takes string ID or element
+- Calls document.getElementById(id)
+- Returns the element
+- Fails if element is null/undefined
+
+========================================================================
+COMPLETE ELEMENT ID INVENTORY - ALL IDs REFERENCED IN PLAYER.JS
+========================================================================
+
+Total unique statistics element IDs referenced: 14
+
+ID: статистика-количестворекламы
+  - Status: ✓ EXISTS in HTML (line 227)
+  - Used in: lines 1691, 2147
+
+ID: статистика-частотарекламы
+  - Status: ✓ EXISTS in HTML (line 231)
+  - Used in: lines 1692, 2148, 2159
+
+ID: статистика-исходных
+  - Status: ✓ EXISTS in HTML (line 281)
+  - Used in: line 1693
+
+ID: статистика-незагруженныхсегментов
+  - Status: ✓ EXISTS in HTML (line 328)
+  - Used in: lines 1709, 1822, 1953, 1967
+
+ID: статистика-разрешениевидео
+  - Status: ✓ EXISTS in HTML (line 57) - ACTIVE
+  - Comment: ✗ English version commented out (line 58)
+  - Used in: lines 1844, 2001
+
+ID: статистика-сжатиевидео
+  - Status: ✗ COMMENTED OUT in HTML (line 67)
+  - Active: statistics-videocompression (line 68) <-- MISMATCH!
+  - Used in: lines 1846, 1995, 2000
+  - Translation: video compression
+
+ID: статистика-сжатиезвука
+  - Status: ✓ EXISTS in HTML (line 79) - ACTIVE
+  - Comment: ✗ English version commented out (line 80)
+  - Used in: lines 1847, 2005, 2012
+
+ID: статистика-сервер
+  - Status: ✗ COMMENTED OUT in HTML (line 89)
+  - Active: statistics-server (line 90) <-- MISMATCH!
+  - Used in: line 1865
+  - Translation: server
+
+ID: статистика-список
+  - Status: ✓ EXISTS in HTML (line 98) - ACTIVE
+  - Comment: ✗ English version commented out (line 99)
+  - Used in: line 1873
+
+ID: статистика-targetduration
+  - Status: ✓ EXISTS in HTML (line 102) - ACTIVE
+  - Comment: ✗ English version commented out (line 103)
+  - Used in: line 1877
+
+ID: статистика-частотакадров
+  - Status: ✓ EXISTS in HTML (line 59) - ACTIVE
+  - Comment: ✗ English version commented out (line 60)
+  - Used in: line 2003
+
+ID: статистика-битрейтзвука
+  - Status: ✓ EXISTS in HTML (line 81) - ACTIVE
+  - Comment: ✗ English version commented out (line 82)
+  - Used in: line 2014
+
+ID: статистика-преобразованза
+  - Status: ✓ EXISTS in HTML (line 205) - ACTIVE
+  - Comment: ✗ English version commented out (line 206)
+  - Used in: line 2081
+
+ID: статистика-задержкатрансляции
+  - Status: ✓ EXISTS in HTML (line 211) - ACTIVE
+  - Comment: ✗ English version commented out (line 212)
+  - Used in: lines 4323, 4337, 5355
+
+========================================================================
+MISMATCH TABLE - CRITICAL ERRORS
+========================================================================
+
+JavaScript ID (Russian)              | HTML Status | Active HTML ID (English)
+-------------------------------------|-------------|---------------------------
+статистика-сжатиевидео              | COMMENTED   | statistics-videocompression
+статистика-сервер                   | COMMENTED   | statistics-server
+
+TOTAL MISMATCHES: 2 critical errors causing TypeError exceptions
+
+========================================================================
+ADDITIONAL FINDINGS - ENGLISH IDs IN HTML NOT USED IN JS
+========================================================================
+
+The following English element IDs exist in HTML but have no JS references:
+- statistics-updateinterval (line 136)
+- statistics-segmentsadded (line 142)
+- statistics-secondsadded (line 146)
+- statistics-segmentthickness (line 164)
+- statistics-channelthickness (line 169)
+- statistics-responsewait (line 177)
+- statistics-unwatched (line 195)
+
+These may be legacy elements or planned features not yet implemented.
+
+========================================================================
+COMPREHENSIVE FIX PLAN
+========================================================================
+
+PHASE 1: IMMEDIATE FIXES - Fix Critical TypeErrors
+--------------------------------------------------
+Priority: CRITICAL - These cause runtime exceptions
+
+Fix 1a: статистика-сжатиевидео → statistics-videocompression
+  Files: player.js lines 1846, 1995, 2000
+  Action: Replace Узел("статистика-сжатиевидео") with Узел("statistics-videocompression")
+
+Fix 1b: статистика-сервер → statistics-server
+  Files: player.js line 1865
+  Action: Replace Узел("статистика-сервер") with Узел("statistics-server")
+
+Testing: After fixes, call ПолучитьДанныеДляОтчета() and verify no TypeErrors
+
+PHASE 2: CONSISTENCY DECISION - Choose Translation Strategy
+----------------------------------------------------------
+Priority: HIGH - Prevents future mismatches
+
+Option A: Keep Russian IDs (Rollback English IDs in HTML)
+  - Uncomment Russian IDs in HTML lines 67, 89
+  - Comment out or remove English IDs lines 68, 90
+  - PRO: No JS changes needed (except Phase 1)
+  - CON: Inconsistent with project's English translation goal
+
+Option B: Complete English Translation (Recommended)
+  - Replace ALL Russian IDs in player.js with English equivalents
+  - Uncomment/activate English IDs in HTML
+  - Comment out Russian IDs in HTML
+  - PRO: Aligns with CLAUDE.md translation mandate
+  - CON: 27 lines of JS changes required
+
+RECOMMENDATION: Option B - Complete the translation effort
+
+PHASE 3: COMPLETE ENGLISH TRANSLATION (If Option B chosen)
+---------------------------------------------------------
+Priority: MEDIUM - Prevents technical debt
+
+Step 3.1: Create Russian-to-English ID mapping table
+  статистика-количестворекламы      → statistics-adcount
+  статистика-частотарекламы         → statistics-adfrequency
+  статистика-исходных               → statistics-original
+  статистика-незагруженныхсегментов → statistics-unloadedsegments
+  статистика-разрешениевидео        → statistics-videoresolution
+  статистика-сжатиевидео            → statistics-videocompression (already in HTML)
+  статистика-сжатиезвука            → statistics-audiocompression
+  статистика-сервер                 → statistics-server (already in HTML)
+  статистика-список                 → statistics-list
+  статистика-targetduration         → statistics-targetduration
+  статистика-частотакадров          → statistics-framerate
+  статистика-битрейтзвука           → statistics-audiobitrate
+  статистика-преобразованза         → statistics-convertedin
+  статистика-задержкатрансляции     → statistics-streamdelay
+
+Step 3.2: Update player.html (atomic commit)
+  - Uncomment all English statistics-* IDs
+  - Comment out or remove all Russian статистика-* IDs
+  - Verify no duplicate IDs exist
+
+Step 3.3: Update player.js (atomic commit)
+  - Replace all Узел("статистика-*") calls with Узел("statistics-*")
+  - Use find-replace with regex: Узел\("статистика-([^"]+)"\)
+  - Document changes in commit message: "translate(player): statistics IDs Russian→English"
+
+Step 3.4: Verification
+  - Load extension in Chrome
+  - Open Twitch stream
+  - Press 'S' key to open statistics overlay
+  - Verify all statistics display correctly
+  - Test report generation (calls ПолучитьДанныеДляОтчета)
+  - Check browser console for any TypeErrors
+
+PHASE 4: PREVENT FUTURE MISMATCHES
+-----------------------------------
+Priority: LOW - Process improvement
+
+Action 4.1: Add comment in player.html before statistics section:
+  <!-- IMPORTANT: All statistics element IDs must match player.js references -->
+  <!-- Pattern: statistics-<name> (English only, as per CLAUDE.md) -->
+
+Action 4.2: Document in CLAUDE.md under "Translation Plan":
+  - Add checkpoint: ✓ Statistics overlay element IDs translated to English
+  - Add date completed: [current date]
+
+========================================================================
+IMPLEMENTATION COMMANDS (for Phase 1 - Immediate Fix)
+========================================================================
+
+# Fix 1: Update player.js line 1846
+sed -i '1846s/статистика-сжатиевидео/statistics-videocompression/' player.js
+
+# Fix 2: Update player.js line 1995
+sed -i '1995s/статистика-сжатиевидео/statistics-videocompression/' player.js
+
+# Fix 3: Update player.js line 2000
+sed -i '2000s/статистика-сжатиевидео/statistics-videocompression/' player.js
+
+# Fix 4: Update player.js line 1865
+sed -i '1865s/статистика-сервер/statistics-server/' player.js
+
+# Verify changes
+grep -n 'statistics-videocompression\|statistics-server' player.js
+
+========================================================================
+RISK ASSESSMENT
+========================================================================
+
+Risk Level: HIGH
+Impact: CRITICAL - Runtime exceptions, broken statistics reporting
+Scope: Statistics overlay feature, report generation
+
+Current Impact:
+- Users pressing 'S' key may see incomplete statistics
+- Report generation fails with TypeError
+- Data collection for bug reports is broken
+
+Mitigation:
+- Phase 1 fixes are low-risk, surgical changes (4 lines)
+- Phase 3 is moderate-risk, requires comprehensive testing
+- All changes are reversible via git
+
+========================================================================
+END OF REPORT
+========================================================================

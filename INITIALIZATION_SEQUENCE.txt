@@ -1,0 +1,198 @@
+INITIALIZATION SEQUENCE - Statistics Overlay Error at player.js:743
+========================================================================
+
+CALL STACK TRACE:
+-----------------
+
+1. Anonymous Function (player.js:730)
+   ОбнюхатьПроцессорИОперативку((оПроцессорИОперативка) => {
+     |
+     v
+2. ПоказатьИОтправитьОтчет (player.js:731)
+   Building crash/error report object with diagnostic data
+     |
+     v
+3. м_Статистика.ПолучитьДанныеДляОтчета() (player.js:743) ⚠️ CRASH POINT
+   Collecting statistics data for the report
+     |
+     v
+4. ПолучитьДанныеДляОтчета() function (player.js:1841-1859)
+   return {
+     ПараметрыВидео:
+       Узел("статистика-разрешениевидео").textContent +    // Line 1844 ✅ OK
+       " " +
+       Узел("статистика-сжатиевидео").textContent,          // Line 1846 ❌ FAILS
+     ПараметрыЗвука: Узел("статистика-сжатиезвука").textContent,
+     // ...
+   };
+     |
+     v
+5. Узел("статистика-сжатиевидео") (common.js:216)
+   const элЭлемент = document.getElementById("статистика-сжатиевидео");
+   // Returns: null (element doesn't exist in DOM)
+     |
+     v
+6. Проверить(элЭлемент.nodeType === 1) (common.js:220)
+   // Attempts: null.nodeType
+   // ❌ TypeError: Cannot read property 'nodeType' of null
+
+
+DOM ELEMENT STATUS:
+-------------------
+
+player.html Line 67-68:
+    <!-- <span id=статистика-сжатиевидео title="..."></span> -->  ⬅️ COMMENTED OUT
+    <span id=statistics-videocompression title="..."></span>       ⬅️ NEW ENGLISH ID
+
+Result:
+    document.getElementById("статистика-сжатиевидео") → null ❌
+    document.getElementById("statistics-videocompression") → <span> element ✅
+
+
+УЗЕЛ() CALLS IN ПолучитьДанныеДляОтчета():
+-------------------------------------------
+
+Line 1844: Узел("статистика-разрешениевидео")
+           └─> document.getElementById("статистика-разрешениевидео")
+               └─> <span id=статистика-разрешениевидео></span> (player.html:57) ✅
+
+Line 1846: Узел("статистика-сжатиевидео")
+           └─> document.getElementById("статистика-сжатиевидео")
+               └─> null ❌ ELEMENT MISSING
+                   └─> null.nodeType throws TypeError ❌
+
+Line 1847: Узел("статистика-сжатиезвука")
+           └─> document.getElementById("статистика-сжатиезвука")
+               └─> <span id=статистика-сжатиезвука></span> (player.html:79) ✅
+
+
+ACCESSED IDS AND THEIR STATUS:
+-------------------------------
+
+ID: статистика-разрешениевидео
+    JavaScript: player.js:1844, 2001
+    HTML: line 57
+    Status: ✅ EXISTS
+
+ID: статистика-сжатиевидео
+    JavaScript: player.js:1846, 1995, 2000
+    HTML: line 67 (COMMENTED OUT)
+    Replacement: statistics-videocompression (line 68)
+    Status: ❌ MISSING - CAUSES CRASH
+
+ID: статистика-сжатиезвука
+    JavaScript: player.js:1847, 2005, 2012
+    HTML: line 79
+    Status: ✅ EXISTS
+
+ID: статистика-сервер
+    JavaScript: player.js:1865
+    HTML: line 89 (COMMENTED OUT)
+    Replacement: statistics-server (line 90)
+    Status: ❌ MISSING - WILL CAUSE CRASH IF ACCESSED
+
+
+INITIALIZATION CONTEXT:
+-----------------------
+
+This code runs during error/crash reporting. The function attempts to collect
+diagnostic information about the current state of the player, including
+statistics data. The crash occurs while trying to build the diagnostic report
+itself, creating a secondary crash during crash reporting.
+
+The initialization happens in this context:
+- User action or error triggers crash reporting
+- System collects processor/memory information
+- System collects statistics data for report
+- Statistics module tries to read DOM elements
+- Missing element causes null reference error
+- Original crash report never completes
+
+
+WHY THIS HAPPENED:
+------------------
+
+1. Translation effort started to convert Russian IDs to English
+2. HTML file (player.html) had IDs changed from Russian to English
+3. Original Russian IDs were commented out (not removed)
+4. JavaScript file (player.js) was not updated to use new English IDs
+5. Result: JavaScript references non-existent IDs
+
+This is a classic case of incomplete refactoring where one layer (HTML) was
+updated but the corresponding layer (JavaScript) was not updated in sync.
+
+
+TIMELINE OF EXECUTION:
+----------------------
+
+┌─────────────────────────────────────────────────────────────────┐
+│ player.js:730 - ОбнюхатьПроцессорИОперативку callback          │
+│                                                                 │
+│ ┌─────────────────────────────────────────────────────────────┐│
+│ │ player.js:731 - ПоказатьИОтправитьОтчет                    ││
+│ │                                                             ││
+│ │ Building object with:                                       ││
+│ │   - ПричинаЗавершенияРаботы                                ││
+│ │   - ВерсияРасширения                                       ││
+│ │   - Оборзеватель: navigator.userAgent                      ││
+│ │   - Время: new Date().toISOString()                        ││
+│ │   - Фокусник: м_Фокусник.ПолучитьСостояние()              ││
+│ │   - Пульс: м_Пульс.ПолучитьДанныеДляОтчета()             ││
+│ │   - Настройки: м_Настройки.ПолучитьДанныеДляОтчета()      ││
+│ │                                                             ││
+│ │ ┌─────────────────────────────────────────────────────────┐││
+│ │ │ player.js:743 - Collecting statistics data             │││
+│ │ │                                                         │││
+│ │ │ ┌─────────────────────────────────────────────────────┐│││
+│ │ │ │ player.js:1841 - ПолучитьДанныеДляОтчета()        ││││
+│ │ │ │                                                     ││││
+│ │ │ │ Line 1844: Get video resolution ✅                 ││││
+│ │ │ │ Line 1846: Get video compression ❌ CRASH HERE    ││││
+│ │ │ │                                                     ││││
+│ │ │ │ ┌─────────────────────────────────────────────────┐││││
+│ │ │ │ │ common.js:216 - Узел()                         │││││
+│ │ │ │ │                                                 │││││
+│ │ │ │ │ getElementById("статистика-сжатиевидео")       │││││
+│ │ │ │ │ Returns: null                                   │││││
+│ │ │ │ │                                                 │││││
+│ │ │ │ │ ┌─────────────────────────────────────────────┐│││││
+│ │ │ │ │ │ common.js:220 - Проверить()                ││││││
+│ │ │ │ │ │                                             ││││││
+│ │ │ │ │ │ null.nodeType                               ││││││
+│ │ │ │ │ │ ❌ TypeError!                               ││││││
+│ │ │ │ │ └─────────────────────────────────────────────┘│││││
+│ │ │ │ └─────────────────────────────────────────────────┘││││
+│ │ │ └─────────────────────────────────────────────────────┘│││
+│ │ └─────────────────────────────────────────────────────────┘││
+│ └─────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────┘
+
+                        ⚠️ EXECUTION HALTED ⚠️
+           Crash report could not be generated due to crash
+                 while generating crash report
+
+
+VERIFICATION STEPS TO REPRODUCE:
+--------------------------------
+
+1. Open player.html in browser with extension loaded
+2. Trigger any error that would generate a crash report
+3. Observe TypeError at player.js:743
+4. Check browser console for "Cannot read property 'nodeType' of null"
+5. Stack trace will point to common.js:220 (Узел function)
+
+
+AFFECTED CODE PATHS:
+--------------------
+
+Primary (Immediate Crash):
+  → player.js:1846 in ПолучитьДанныеДляОтчета()
+  → Called during error reporting initialization
+  → Blocks all crash reports from being generated
+
+Secondary (Potential Crashes):
+  → player.js:1865 when displaying server info
+  → player.js:1995 when setting video codec info
+  → player.js:2000 when clearing video codec info
+
+All of these access missing DOM elements and will fail if executed.

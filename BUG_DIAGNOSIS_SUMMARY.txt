@@ -1,0 +1,228 @@
+================================================================================
+BUG DIAGNOSIS SUMMARY: Statistics Overlay Initialization Failure
+================================================================================
+
+BUG LOCATION:     player.js:743
+ERROR TYPE:       TypeError: Cannot read property 'nodeType' of null
+FUNCTION:         м_Статистика.ПолучитьДанныеДляОтчета()
+SEVERITY:         HIGH - Breaks error reporting system
+STATUS:           Root cause identified, fix plan documented
+
+================================================================================
+
+ROOT CAUSE (Simple Explanation):
+--------------------------------
+
+JavaScript code is looking for HTML elements with Russian IDs:
+  - "статистика-сжатиевидео" (video compression)
+  - "статистика-сервер" (server)
+
+These elements were renamed to English IDs in the HTML file:
+  - "statistics-videocompression"
+  - "statistics-server"
+
+But the JavaScript code was NOT updated, so it's looking for elements that
+no longer exist. When it can't find them, it crashes.
+
+================================================================================
+
+WHAT HAPPENS:
+-------------
+
+1. Error reporting code runs (player.js:730-760)
+2. Tries to collect statistics data for the report (line 743)
+3. Statistics module reads DOM elements to get current values (line 1841-1859)
+4. Line 1846: Tries to access "статистика-сжатиевидео"
+5. Element doesn't exist, returns null
+6. Узел() function tries to check null.nodeType
+7. TypeError: Cannot read property 'nodeType' of null
+8. Crash during crash reporting!
+
+================================================================================
+
+MISSING ELEMENTS:
+-----------------
+
+Element ID                     | Used in player.js    | Status in player.html
+------------------------------|----------------------|----------------------
+статистика-сжатиевидео        | Lines 1846,1995,2000 | ❌ Commented out (line 67)
+статистика-сервер             | Line 1865            | ❌ Commented out (line 89)
+
+Replaced with:
+  statistics-videocompression (line 68)
+  statistics-server (line 90)
+
+================================================================================
+
+THE FIX (Three Options):
+------------------------
+
+OPTION 1: RESTORE MISSING IDS (Recommended - Immediate Fix)
+  Action:   Uncomment the Russian IDs in player.html
+  Time:     5 minutes
+  Risk:     Very Low
+  Result:   Both Russian and English IDs exist, system works
+  Files:    player.html (lines 67, 89)
+
+OPTION 2: UPDATE JAVASCRIPT (Complete Translation)
+  Action:   Change JavaScript to use English IDs
+  Time:     30 minutes + testing
+  Risk:     Medium
+  Result:   Complete translation, no duplicate elements
+  Files:    player.js (lines 1846, 1865, 1995, 2000) + player.html cleanup
+
+OPTION 3: DEFENSIVE CODING (Safety Net)
+  Action:   Make Узел() handle missing elements gracefully
+  Time:     10 minutes
+  Risk:     Low
+  Result:   Prevents all future crashes from missing elements
+  Files:    common.js (line 216-224)
+
+RECOMMENDED: Apply Option 1 now, Option 3 soon, Option 2 later as part of
+             comprehensive translation effort.
+
+================================================================================
+
+FILES TO READ:
+--------------
+
+Complete Analysis:
+  → /home/vercel-sandbox/twitch_alternate_player/BUG_ANALYSIS_STATISTICS_OVERLAY.md
+
+Detailed Call Stack:
+  → /home/vercel-sandbox/twitch_alternate_player/INITIALIZATION_SEQUENCE.txt
+
+Step-by-Step Fix Guide:
+  → /home/vercel-sandbox/twitch_alternate_player/FIX_IMPLEMENTATION_GUIDE.md
+
+This Summary:
+  → /home/vercel-sandbox/twitch_alternate_player/BUG_DIAGNOSIS_SUMMARY.txt
+
+================================================================================
+
+KEY CODE LOCATIONS:
+-------------------
+
+Crash Point:
+  player.js:743       → м_Статистика.ПолучитьДанныеДляОтчета()
+
+Statistics Module:
+  player.js:1355      → const м_Статистика = (() => {
+  player.js:1841-1859 → function ПолучитьДанныеДляОтчета()
+  player.js:1844      → Узел("статистика-разрешениевидео") ✅
+  player.js:1846      → Узел("статистика-сжатиевидео") ❌ CRASHES HERE
+  player.js:1847      → Узел("статистика-сжатиезвука") ✅
+  player.js:1865      → Узел("статистика-сервер") ❌ WILL CRASH IF REACHED
+
+Узел Function (Element Lookup):
+  common.js:216-224   → function Узел(пЭлемент)
+  common.js:220       → Проверить(элЭлемент.nodeType === 1) ← Actual crash
+
+Missing HTML Elements:
+  player.html:67      → статистика-сжатиевидео (commented out)
+  player.html:68      → statistics-videocompression (replacement)
+  player.html:89      → статистика-сервер (commented out)
+  player.html:90      → statistics-server (replacement)
+
+================================================================================
+
+QUICK FIX SNIPPET (Option 1):
+------------------------------
+
+File: player.html
+
+Line 67-68, change from:
+    <!-- <span id=статистика-сжатиевидео title="..."></span> -->
+    <span id=statistics-videocompression title="..."></span>
+
+To:
+    <span id=статистика-сжатиевидео title="..."></span>
+    <span id=statistics-videocompression title="..."></span>
+
+
+Line 89-90, change from:
+    <!-- <span id=статистика-сервер data-очистить="" title="..."></span> -->
+    <span id=statistics-server data-clear="" title="..."></span>
+
+To:
+    <span id=статистика-сервер data-очистить="" title="..."></span>
+    <span id=statistics-server data-clear="" title="..."></span>
+
+Then reload extension in chrome://extensions
+
+================================================================================
+
+TESTING AFTER FIX:
+------------------
+
+1. Reload extension in Chrome
+2. Navigate to any Twitch channel
+3. Press 'S' key to open statistics overlay
+4. Check console for errors (should be none)
+5. Verify statistics display correctly
+6. Check that video codec info appears
+7. Check that server name appears
+
+================================================================================
+
+WHY THIS MATTERS:
+-----------------
+
+This bug breaks the error reporting system. When the player encounters an
+error and tries to generate a crash report, it crashes while generating the
+report itself. This means:
+
+  - No crash reports are sent to developers
+  - Bugs go unreported
+  - Issues are harder to diagnose
+  - User experience degrades silently
+
+Fixing this ensures that when real bugs occur, developers get proper
+diagnostic information to fix them.
+
+================================================================================
+
+CONTEXT (From CLAUDE.md):
+--------------------------
+
+This project is undergoing Russian → English translation. The maintainer does
+not speak Russian. This bug occurred because HTML translation was incomplete:
+
+  ✅ HTML element IDs were changed to English (partially)
+  ❌ JavaScript references were NOT updated
+  ❌ Changes were not done atomically
+
+The proper translation process should:
+  1. Update HTML IDs and JavaScript references in same commit
+  2. Test thoroughly before committing
+  3. Follow atomic commit principle (no partial translations)
+
+This bug is a learning example for the translation effort going forward.
+
+================================================================================
+
+DIAGNOSTIC TOOLS USED:
+----------------------
+
+✓ Read player.js lines 735-750 (initialization code)
+✓ Read player.js lines 1841-1859 (ПолучитьДанныеДляОтчета function)
+✓ Read common.js lines 216-224 (Узел function)
+✓ Grep for all Узел("статистика-") calls in player.js
+✓ Grep for all id=статистика- in player.html
+✓ Grep for all id=statistics- in player.html
+✓ Cross-referenced all IDs used in JavaScript with HTML
+
+================================================================================
+
+CONCLUSION:
+-----------
+
+Bug is well-understood and easily fixable. Root cause is incomplete refactoring
+during Russian-to-English translation effort. Quick fix (Option 1) can be
+applied immediately with minimal risk. Long-term fix (Option 2) should be part
+of comprehensive translation effort.
+
+All affected code paths identified. No other missing elements found in the
+statistics module during this analysis.
+
+================================================================================
