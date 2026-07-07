@@ -1,5 +1,108 @@
+/**
+ * @toc
+ *
+ * =============================================================================
+ *                     TABLE OF CONTENTS (GOTO Line: control+g)
+ * =============================================================================
+ *
+ *  In order of appearance in the file:
+ *
+ *  1. CONSTANTS...........................................(lines 4-82)
+ *     - Global constants for player states, processing status, etc.
+ *
+ *  2. UTILITY FUNCTIONS...................................(lines 84-417)
+ *     - Generic helper functions (Text, Round, Clamp, DOM manipulation, etc.).
+ *
+ *  3. DEBUG & ERROR REPORTING (м_Отладка).................(lines 419-866)
+ *     - Handles all fatal errors, exceptions, and user-submitted reports.
+ *     - Displays the final error/feedback screen.
+ *
+ *  4. CORE DATA STRUCTURES & ASYNC........................(lines 868-1191)
+ *     - Promise Cancellation (ОтменаОбещания): Custom promise cancellation logic.
+ *     - Segment (Сегмент): Class representing a single video/audio segment.
+ *     - Segment Queue (г_моОчередь): Global queue for managing segments through
+ *       the processing pipeline (download -> convert -> buffer).
+ *
+ *  5. UI & UX MODULES.....................................(lines 1193-3435)
+ *     - Number Input (ВводЧисла): Reusable component for number inputs.
+ *     - Event Bus (м_События): Global pub/sub for inter-module communication.
+ *     - Memory Recycler (м_Помойка): Manages memory by offloading ArrayBuffers.
+ *     - Focus Manager (м_Фокусник): Tracks browser tab focus/visibility.
+ *     - Pulse Checker (м_Пульс): Monitors for UI thread freezes.
+ *     - Statistics (м_Статистика): Core module for collecting and displaying
+ *       all playback, network, and performance metrics in the stats overlay.
+ *     - Window Manager (м_Окно): Manages modal dialogs (Settings, News, etc.).
+ *     - Menu (м_Меню): Handles the main player context menu.
+ *     - Fullscreen Mode (м_ПолноэкранныйРежим): Manages fullscreen state.
+ *     - Picture-in-Picture (м_КартинкаВКартинке): Manages PiP state.
+ *     - Dragger (м_Тащилка): Handles dragging/resizing UI elements (e.g., chat).
+ *     - Auto-Hide Controls (м_Автоскрытие): Manages auto-hiding of player controls.
+ *     - Media Query (м_Медиазапрос): Handles responsive UI adjustments.
+ *     - Theming/Appearance (м_Оформление): Manages custom styling and UI colors.
+ *
+ *  6. NEWS & UPDATES (м_Новости)..........................(lines 3437-3861)
+ *     - Displays the changelog and help manual.
+ *     - Checks for new versions of the extension.
+ *
+ *  7. CENTRAL CONTROL (м_Управление)......................(lines 3863-5050)
+ *     - Central hub for all user input (keyboard shortcuts, clicks).
+ *     - Manages player state transitions (playing, stopped, replay).
+ *     - Bridges UI actions to player logic.
+ *
+ *  8. CHAT MODULE (м_Чат).................................(lines 5052-5445)
+ *     - Manages the integrated Twitch chat iframe, including its position and state.
+ *
+ *  9. PLAYER CORE (м_Проигрыватель).......................(lines 5447-6001)
+ *     - The heart of the player. Manages the `<video>` element and MediaSource Extensions (MSE).
+ *     - Appends processed segments to the SourceBuffer.
+ *     - Handles playback state (play, pause, seeking, ended).
+ *     - Manages buffer health (stalls, overflow) and seeking logic.
+ *
+ *  10. PLAYLIST MANAGER (м_Список)........................(lines 6003-7502)
+ *      - Fetches and parses M3U8 master and media playlists.
+ *      - Manages ad-detection and switching between ad/clean streams.
+ *      - Identifies new segments and adds them to the processing queue.
+ *
+ *  11. SEGMENT PROCESSOR (м_Преобразователь)..............(lines 7504-7694)
+ *      - Uses a Web Worker to process downloaded TS segments.
+ *      - Receives raw segments and sends back transmuxed/inspected segments.
+ *
+ *  12. HTTP DOWNLOADER (м_Загрузчик)......................(lines 7696-8096)
+ *      - Low-level XHR-based utility for downloading playlists and segments.
+ *      - Includes retry logic, timeout handling, and stats collection.
+ *
+ *  13. TWITCH API WRAPPER (м_Twitch)......................(lines 8098-9043)
+ *      - Handles all communication with Twitch's backend (GQL, Usher).
+ *      - Fetches stream access tokens, channel metadata, user info, etc.
+ *      - Sends telemetry for ad viewership.
+ *
+ *  14. MAIN INITIALIZATION (Запускалка)...................(lines 9045-9095)
+ *      - The main entry point. Initializes all modules and starts the player.
+ * 
+ *  15. AD Data Debug Logging ..............................(lines 6716)
+ *      - The control for where are beginning the search for information
+ *        pertaining to the "Hiding ADS" problem where either the player's 
+ *        video freezes, displays a solid black screen, or on first load of a stream
+ *        the player erroneously waits for the entire set of pre-roll ads until
+ *        video playback starts
+ * 
+ * 
+ * This triggers outside of the devtools console
+ * console.warn(`[AdBlock] Skipping Expired Ad...`);
+ * 
+ * console.log(`[AdBlock] Skipping Expired Ad...`);
+ * // OR
+ * console.info(`[AdBlock] Skipping Expired Ad...`);
+ * 
+ * 
+ * Line ~6802
+ * console.warn  >>  console.log
+ * Line ~6809
+ * console.warn  >>  console.log
+ * 
+ * 
+ */
 "use strict";
-
 const ВЕРСИЯ_РАСШИРЕНИЯ = chrome.runtime.getManifest().version;
 // const EXTENSION_VERSION = chrome.runtime.getManifest().version;
 
@@ -59,6 +162,8 @@ const ПОДПИСКА_НЕДОСТУПНА = 0;
 
 const ПОДПИСКА_НЕОФОРМЛЕНА = 1;
 // const SUBSCRIPTION_NOT_SUBSCRIBED = 1;
+
+let г_лИгнорироватьСегментыРекламы = false;
 
 const ПОДПИСКА_НЕУВЕДОМЛЯТЬ = 2;
 // const SUBSCRIPTION_DO_NOT_NOTIFY = 2;
@@ -127,9 +232,9 @@ function Округлить(чЗначение, чТочность) {
   // function Round(nValue, nPrecision) {
   Проверить(
     typeof чЗначение == "number" &&
-      Number.isInteger(чТочность) &&
-      чТочность >= 0 &&
-      чТочность <= 20
+    Number.isInteger(чТочность) &&
+    чТочность >= 0 &&
+    чТочность <= 20
   );
   // Check(typeof nValue == 'number' && Number.isInteger(nPrecision) && nPrecision >= 0 && nPrecision <= 20);
   if (чТочность === 0) {
@@ -147,9 +252,9 @@ function Ограничить(чЗначение, чМинимум, чМакси
   // function Clamp(nValue, nMin, nMax) {
   Проверить(
     Number.isFinite(чЗначение) &&
-      Number.isFinite(чМинимум) &&
-      Number.isFinite(чМаксимум) &&
-      чМинимум <= чМаксимум
+    Number.isFinite(чМинимум) &&
+    Number.isFinite(чМаксимум) &&
+    чМинимум <= чМаксимум
   );
   // Check(Number.isFinite(nValue) && Number.isFinite(nMin) && Number.isFinite(nMax) && nMin <= nMax);
   return Math.min(Math.max(чЗначение, чМинимум), чМаксимум);
@@ -289,8 +394,8 @@ function ОткрытьАдресВНовойВкладке(сАдрес) {
 function ЗаписатьТекстВЛокальныйФайл(сТекст, сТипДанных, сИмяФайла) {
   Проверить(
     typeof сТекст == "string" &&
-      ЭтоНепустаяСтрока(сТипДанных) &&
-      ЭтоНепустаяСтрока(сИмяФайла)
+    ЭтоНепустаяСтрока(сТипДанных) &&
+    ЭтоНепустаяСтрока(сИмяФайла)
   );
   const узСсылка = document.createElement("a");
   узСсылка.href = URL.createObjectURL(
@@ -383,11 +488,11 @@ const м_Отладка = (() => {
   let _сТокенТрансляцииБезРекламы = "";
   let _сСписокВариантов = "";
   let _мсСпискиСегментов = [];
-  function ВставитьСсылкиДляСкачиванияФайлов(узФорма) {}
+  function ВставитьСсылкиДляСкачиванияФайлов(узФорма) { }
   function ПоказатьСтраницу() {
     try {
       м_ПолноэкранныйРежим.Отключить();
-    } catch (_) {}
+    } catch (_) { }
     document.body.textContent = "";
     for (let уз of document.querySelectorAll('link[rel="stylesheet"], style')) {
       уз.remove();
@@ -529,8 +634,8 @@ const м_Отладка = (() => {
     }
     _мсСпискиСегментов.push(сСписокСегментов);
   }
-  function СохранитьТранспортныйПоток(оСегмент) {}
-  function СохранитьПреобразованныйСегмент(оСегмент) {}
+  function СохранитьТранспортныйПоток(оСегмент) { }
+  function СохранитьПреобразованныйСегмент(оСегмент) { }
   function сжатьСписок(сСписок) {
     return ОграничитьДлинуСтроки(
       сСписок.replace(
@@ -573,7 +678,7 @@ const м_Отладка = (() => {
                 оПроцессор.numOfProcessors;
               оПроцессорИОперативка.modelName = оПроцессор.modelName;
               оПроцессорИОперативка.archName = оПроцессор.archName;
-            } catch (_) {}
+            } catch (_) { }
             фВызвать(оПроцессорИОперативка);
           });
         } catch (_) {
@@ -591,7 +696,7 @@ const м_Отладка = (() => {
       return `${oContext.getParameter(
         oExtension.UNMASKED_VENDOR_WEBGL
       )} | ${oContext.getParameter(oExtension.UNMASKED_RENDERER_WEBGL)}`;
-    } catch (_) {}
+    } catch (_) { }
   }
   function получитьПараметрыСоединения() {
     const оСоединение = navigator.connection || {};
@@ -609,14 +714,14 @@ const м_Отладка = (() => {
       return `${navigator.language} | ${navigator.languages} | ${Текст(
         "J0103"
       )}`;
-    } catch (_) {}
+    } catch (_) { }
   }
   function ПолучитьУстановкиДаты() {
     try {
       const оУстановки = new Intl.DateTimeFormat().resolvedOptions();
       оУстановки.timezoneOffset = new Date().getTimezoneOffset();
       return оУстановки;
-    } catch (_) {}
+    } catch (_) { }
   }
   function СоздатьПоказатьИОтправитьОтчет(
     сПричинаЗавершенияРаботы,
@@ -703,7 +808,7 @@ const м_Отладка = (() => {
       try {
         м_Проигрыватель.ПоказатьСостояние("Вот", "Завершаю работу");
         г_моОчередь.ПоказатьСостояние();
-      } catch (_) {}
+      } catch (_) { }
       ЗавершитьРаботу(false);
       СоздатьПоказатьИОтправитьОтчет(сПричинаЗавершенияРаботы, буфОтправить);
     }
@@ -715,7 +820,7 @@ const м_Отладка = (() => {
   function ЗавершитьРаботуИОтправитьОтзыв() {
     try {
       ЗавершитьРаботуИОтправитьОтчет("ОТПРАВИТЬ ОТЗЫВ");
-    } catch (_) {}
+    } catch (_) { }
   }
   return {
     ПойманоИсключение,
@@ -790,14 +895,14 @@ class Сегмент {
   constructor(чОбработка, пДанные, чДлительность, лРазрыв, чНомер) {
     Проверить(
       typeof чОбработка == "number" &&
-        чОбработка >= ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ &&
-        чОбработка <= ОБРАБОТКА_ПРЕОБРАЗОВАН
+      чОбработка >= ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ &&
+      чОбработка <= ОБРАБОТКА_ПРЕОБРАЗОВАН
     );
     Проверить(
       (typeof пДанные == "number" && чОбработка >= ОБРАБОТКА_ЗАГРУЖЕН) ||
-        (typeof пДанные == "string" &&
-          чОбработка === ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ) ||
-        (ЭтоОбъект(пДанные) && чОбработка > ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ)
+      (typeof пДанные == "string" &&
+        чОбработка === ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ) ||
+      (ЭтоОбъект(пДанные) && чОбработка > ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ)
     );
     switch (arguments.length) {
       case 2:
@@ -945,9 +1050,9 @@ class ВводЧисла {
     this._узЧисло.value =
       чЗначение === АВТОНАСТРОЙКА
         ? Текст(
-            м_Настройки.ПолучитьПараметрыНастройки(this._сИмяНастройки)
-              .сАвтонастройка
-          )
+          м_Настройки.ПолучитьПараметрыНастройки(this._сИмяНастройки)
+            .сАвтонастройка
+        )
         : м_i18n.ФорматироватьЧисло(чЗначение, this._чТочность);
   }
   _ОбработатьПеретаскивание(оПараметры) {
@@ -1085,7 +1190,7 @@ const м_Помойка = (() => {
         }
       }
     }
-    Сжечь() {}
+    Сжечь() { }
   }
   class ПомойкаВРабочемПотоке {
     constructor() {
@@ -1299,9 +1404,9 @@ const м_Статистика = (() => {
     return (
       чЧисло < ВЫДЕЛИТЬ_НЕ_ПРОСМОТРЕНО_МИН ||
       чЧисло >=
-        м_Настройки.Получить("чМаксРазмерБуфера") +
-          м_Настройки.Получить("чРастягиваниеБуфера") *
-            ВЫДЕЛИТЬ_НЕ_ПРОСМОТРЕНО_МАКС
+      м_Настройки.Получить("чМаксРазмерБуфера") +
+      м_Настройки.Получить("чРастягиваниеБуфера") *
+      ВЫДЕЛИТЬ_НЕ_ПРОСМОТРЕНО_МАКС
     );
   }
   class Анализ {
@@ -1419,7 +1524,7 @@ const м_Статистика = (() => {
       узФрагмент.lastChild.className = "статистика-символ";
       узФрагмент.appendChild(document.createElement("td")).className =
         "анализ-максимум";
-      for (let ы = this._мчИстория.length; --ы >= 0; ) {
+      for (let ы = this._мчИстория.length; --ы >= 0;) {
         узФрагмент.appendChild(document.createElement("td")).className =
           "анализ-история статистика-подробно";
       }
@@ -1765,11 +1870,10 @@ const м_Статистика = (() => {
         (чСумма, { чДлительность }) => чСумма + чДлительность,
         0
       );
-      Узел("статистика-список").textContent = `${
-        оСписок.моСегменты.length
-      } × ${(чДлительностьСписка / оСписок.моСегменты.length).toFixed(
-        1
-      )} = ${чДлительностьСписка.toFixed(1)} − ${оСписок.кРекламныхСегментов}`;
+      Узел("статистика-список").textContent = `${оСписок.моСегменты.length
+        } × ${(чДлительностьСписка / оСписок.моСегменты.length).toFixed(
+          1
+        )} = ${чДлительностьСписка.toFixed(1)} − ${оСписок.кРекламныхСегментов}`;
       Узел("статистика-targetduration").textContent = оСписок.nTargetDuration;
     }
   }
@@ -1885,9 +1989,8 @@ const м_Статистика = (() => {
             сСжатиеВидео += " чересстрочное";
           }
           if (оДанные.чЧастотаКадров !== 0) {
-            сСжатиеВидео += ` ${
-              оДанные.чЧастотаКадров < 0 ? "≈" : ""
-            }${Math.abs(оДанные.чЧастотаКадров).toFixed(2)} ${Текст("J0140")}`;
+            сСжатиеВидео += ` ${оДанные.чЧастотаКадров < 0 ? "≈" : ""
+              }${Math.abs(оДанные.чЧастотаКадров).toFixed(2)} ${Текст("J0140")}`;
           }
           Узел("статистика-сжатиевидео").textContent = сСжатиеВидео;
           Узел(
@@ -1901,7 +2004,7 @@ const м_Статистика = (() => {
         if (оДанные.лЕстьЗвук) {
           Узел("статистика-сжатиезвука").textContent =
             ["AAC-Main", "AAC-LC", "AAC-SSR", "AAC-LTP"][
-              оДанные.nAudioObjectType - 1
+            оДанные.nAudioObjectType - 1
             ] +
             ` ${оДанные.чЧастотаДискретизации} ${Текст("J0141")}` +
             ` ${оДанные.чКоличествоКаналов} ${Текст("J0142")}`;
@@ -1928,13 +2031,13 @@ const м_Статистика = (() => {
         ) {
           м_Журнал.Ой(
             `[Статистика] Превышено отклонение длительности кадра в сегменте ${оСегмент.чНомер}` +
-              ` СредняяДлительностьКадра=${м_Журнал.F0(
-                оДанные.чСредняяДлительностьВидеоСемпла
-              )}мс` +
-              ` АбсолютноеОтклонение=${м_Журнал.F0(чАбсолютноеОтклонение)}мс` +
-              ` ОтносительноеОтклонение=${м_Журнал.F2(
-                чОтносительноеОтклонение
-              )}`
+            ` СредняяДлительностьКадра=${м_Журнал.F0(
+              оДанные.чСредняяДлительностьВидеоСемпла
+            )}мс` +
+            ` АбсолютноеОтклонение=${м_Журнал.F0(чАбсолютноеОтклонение)}мс` +
+            ` ОтносительноеОтклонение=${м_Журнал.F2(
+              чОтносительноеОтклонение
+            )}`
           );
           оДанные.лПотериВидео = true;
         }
@@ -1944,7 +2047,7 @@ const м_Статистика = (() => {
           ).toFixed(1)}`;
           if (
             оДанные.чМаксДлительностьВидеоСемпла -
-              оДанные.чМинДлительностьВидеоСемпла >
+            оДанные.чМинДлительностьВидеоСемпла >
             2
           ) {
             сОтклонение +=
@@ -1952,12 +2055,12 @@ const м_Статистика = (() => {
                 100 -
                 (оДанные.чСредняяДлительностьВидеоСемпла /
                   оДанные.чМаксДлительностьВидеоСемпла) *
-                  100
+                100
               ).toFixed()}%` +
               ` +${(
                 (оДанные.чСредняяДлительностьВидеоСемпла /
                   оДанные.чМинДлительностьВидеоСемпла) *
-                  100 -
+                100 -
                 100
               ).toFixed()}%`;
           }
@@ -2711,10 +2814,10 @@ const м_Оформление = (() => {
       оСтиль.setProperty(
         `--${узКнопка.id}`,
         Number.parseInt(узКнопка.value.slice(1, 3), 16) +
-          "," +
-          Number.parseInt(узКнопка.value.slice(3, 5), 16) +
-          "," +
-          Number.parseInt(узКнопка.value.slice(5, 7), 16)
+        "," +
+        Number.parseInt(узКнопка.value.slice(3, 5), 16) +
+        "," +
+        Number.parseInt(узКнопка.value.slice(5, 7), 16)
       );
     }
     const чНепрозрачность = Округлить(
@@ -2728,9 +2831,8 @@ const м_Оформление = (() => {
     );
   }
   function ПрименитьРазмерИнтерфейса() {
-    document.documentElement.style.fontSize = `${
-      (16 * м_Настройки.Получить("чРазмерИнтерфейса")) / 100
-    }px`;
+    document.documentElement.style.fontSize = `${(16 * м_Настройки.Получить("чРазмерИнтерфейса")) / 100
+      }px`;
     м_Медиазапрос.обновитьМедленно();
   }
   function Запустить() {
@@ -2803,8 +2905,8 @@ const м_Шкала = (() => {
   function Обновить() {
     Проверить(
       Number.isFinite(_чНачало) &&
-        Number.isFinite(_чКонец) &&
-        Number.isFinite(_чПросмотрено)
+      Number.isFinite(_чКонец) &&
+      Number.isFinite(_чПросмотрено)
     );
     Узел("шкала-просмотрено").style.transform = `scaleX(${(
       (_чПросмотрено - _чНачало) /
@@ -2826,8 +2928,8 @@ const м_Шкала = (() => {
     const чУказатель = оСобытие.clientX + 1;
     const чПеремотатьДо = ОграничитьВремя(
       ((чУказатель - чНачалоШкалы) / (чКонецШкалы - чНачалоШкалы)) *
-        (_чКонец - _чНачало) +
-        _чНачало
+      (_чКонец - _чНачало) +
+      _чНачало
     );
     м_Журнал.Окак(`[Шкала] Перематываю до ${чПеремотатьДо}`);
     м_Проигрыватель.ПеремотатьПовторДо(чПеремотатьДо);
@@ -3135,12 +3237,12 @@ const м_Новости = (() => {
           } = оРезультат;
           Проверить(
             ЭтоНепустаяСтрока(сВерсияРасширения) &&
-              Number.isSafeInteger(чВерсияБраузера)
+            Number.isSafeInteger(чВерсияБраузера)
           );
           лОбновлениеДоступно =
             получитьВерсиюДвижкаБраузера() >= чВерсияБраузера &&
             ПеревестиВерсиюВМиллисекунды(ВЕРСИЯ_РАСШИРЕНИЯ) <
-              ПеревестиВерсиюВМиллисекунды(сВерсияРасширения);
+            ПеревестиВерсиюВМиллисекунды(сВерсияРасширения);
         } catch (пИсключение) {
           throw String(пИсключение);
         }
@@ -3261,8 +3363,8 @@ const м_Управление = (() => {
           void 0,
           Ограничить(
             м_Настройки.Получить("чГромкость2") -
-              м_Настройки.Получить("чШагИзмененияГромкостиКолесом") *
-                Math.sign(оСобытие.deltaY),
+            м_Настройки.Получить("чШагИзмененияГромкостиКолесом") *
+            Math.sign(оСобытие.deltaY),
             МИНИМАЛЬНАЯ_ГРОМКОСТЬ,
             МАКСИМАЛЬНАЯ_ГРОМКОСТЬ
           )
@@ -3404,9 +3506,8 @@ const м_Управление = (() => {
     узГромкость.value = чГромкость;
     узГромкость.style.setProperty(
       "--ширина",
-      `${
-        ((чГромкость - МИНИМАЛЬНАЯ_ГРОМКОСТЬ) / (100 - МИНИМАЛЬНАЯ_ГРОМКОСТЬ)) *
-        100
+      `${((чГромкость - МИНИМАЛЬНАЯ_ГРОМКОСТЬ) / (100 - МИНИМАЛЬНАЯ_ГРОМКОСТЬ)) *
+      100
       }%`
     );
     ИзменитьКнопку(
@@ -3603,11 +3704,11 @@ const м_Управление = (() => {
       const лНажатие = оСобытие.type === "keydown";
       const лНажатие1 = лНажатие && !оСобытие.repeat;
       switch (
-        оСобытие.keyCode +
-        оСобытие.shiftKey * SHIFT_KEY +
-        оСобытие.ctrlKey * CTRL_KEY +
-        оСобытие.altKey * ALT_KEY +
-        оСобытие.metaKey * META_KEY
+      оСобытие.keyCode +
+      оСобытие.shiftKey * SHIFT_KEY +
+      оСобытие.ctrlKey * CTRL_KEY +
+      оСобытие.altKey * ALT_KEY +
+      оСобытие.metaKey * META_KEY
       ) {
         case 27:
           оСобытие.preventDefault();
@@ -3790,7 +3891,7 @@ const м_Управление = (() => {
               false,
               Math.min(
                 м_Настройки.Получить("чГромкость2") +
-                  ШАГ_ПОВЫШЕНИЯ_ГРОМКОСТИ_КЛАВОЙ,
+                ШАГ_ПОВЫШЕНИЯ_ГРОМКОСТИ_КЛАВОЙ,
                 МАКСИМАЛЬНАЯ_ГРОМКОСТЬ
               )
             );
@@ -3803,7 +3904,7 @@ const м_Управление = (() => {
               false,
               Math.max(
                 м_Настройки.Получить("чГромкость2") -
-                  ШАГ_ПОНИЖЕНИЯ_ГРОМКОСТИ_КЛАВОЙ,
+                ШАГ_ПОНИЖЕНИЯ_ГРОМКОСТИ_КЛАВОЙ,
                 МИНИМАЛЬНАЯ_ГРОМКОСТЬ
               )
             );
@@ -3872,8 +3973,8 @@ const м_Управление = (() => {
     Узел("адресчата").selectedIndex = м_Настройки.Получить("лПолноценныйЧат")
       ? 0
       : м_Настройки.Получить("лЗатемнитьЧат")
-      ? 2
-      : 1;
+        ? 2
+        : 1;
     Узел("масштабироватьизображение").checked = м_Настройки.Получить(
       "лМасштабироватьИзображение"
     );
@@ -3951,7 +4052,7 @@ const м_Управление = (() => {
       _оНачалоВоспроизведения.ПослеИзменения =
         _оРазмерБуфера.ПослеИзменения =
         _оРастягиваниеБуфера.ПослеИзменения =
-          м_Статистика.ОчиститьИсторию;
+        м_Статистика.ОчиститьИсторию;
       _оИнтервалАвтоскрытия = new ВводЧисла(
         "чИнтервалАвтоскрытия",
         0.5,
@@ -3996,7 +4097,7 @@ const м_Управление = (() => {
     if (!Number.isSafeInteger(чКод)) {
       Проверить(
         узСкорость.selectedIndex >= 0 &&
-          (чКод === -Infinity || чКод === Infinity)
+        (чКод === -Infinity || чКод === Infinity)
       );
       чКод = узСкорость.selectedIndex + Math.sign(чКод);
     }
@@ -4184,7 +4285,7 @@ const м_Управление = (() => {
     ИзменитьКнопку(
       "переключитьтрансляцию",
       чНовоеСостояние === СОСТОЯНИЕ_ОСТАНОВКА ||
-        чНовоеСостояние === СОСТОЯНИЕ_ПОВТОР
+      чНовоеСостояние === СОСТОЯНИЕ_ПОВТОР
     );
     м_События.ПослатьСобытие("управление-изменилосьсостояние", чНовоеСостояние);
     switch (чНовоеСостояние) {
@@ -4406,11 +4507,11 @@ const м_Управление = (() => {
     if (оМетаданные.чДлительностьТрансляции !== void 0) {
       Узел("позиция").textContent =
         Number.isFinite(оМетаданные.чДлительностьТрансляции) &&
-        оМетаданные.чДлительностьТрансляции >= 0
+          оМетаданные.чДлительностьТрансляции >= 0
           ? м_i18n.ПеревестиСекундыВСтроку(
-              оМетаданные.чДлительностьТрансляции / 1e3,
-              false
-            )
+            оМетаданные.чДлительностьТрансляции / 1e3,
+            false
+          )
           : "";
     }
   }
@@ -4429,8 +4530,8 @@ const м_Чат = (() => {
   //! <iframe>
   function ПолучитьПоложениеПанели() {
     switch (
-      getComputedStyle(document.getElementById("проигрывательичат"))
-        .flexDirection
+    getComputedStyle(document.getElementById("проигрывательичат"))
+      .flexDirection
     ) {
       case "column-reverse":
         return ВЕРХНЯЯ_СТОРОНА;
@@ -4907,8 +5008,7 @@ const м_Аудиоустройство = (() => {
           );
         } else {
           м_Журнал.Ой(
-            `[Аудиоустройства] Разрешение не получено: ${
-              chrome.runtime.lastError && chrome.runtime.lastError.message
+            `[Аудиоустройства] Разрешение не получено: ${chrome.runtime.lastError && chrome.runtime.lastError.message
             }`
           );
           м_Уведомление.ПоказатьЖопу();
@@ -5002,7 +5102,7 @@ const м_Проигрыватель = (() => {
         );
       }
     },
-    ОбработатьWaiting() {},
+    ОбработатьWaiting() { },
     ОбработатьPlaying() {
       if (
         м_Управление.ПолучитьСостояние() === СОСТОЯНИЕ_НАЧАЛО_ВОСПРОИЗВЕДЕНИЯ &&
@@ -5054,15 +5154,15 @@ const м_Проигрыватель = (() => {
       Проверить(Number.isFinite(чВремя));
       Проверить(
         чВремя === ПРОВЕРИТЬ_НАЧАЛО_ВОСПРОИЗВЕДЕНИЯ ||
-          чВремя === ПРОВЕРИТЬ_ВОСПРОИЗВЕДЕНИЕ ||
-          чВремя >= 0
+        чВремя === ПРОВЕРИТЬ_ВОСПРОИЗВЕДЕНИЕ ||
+        чВремя >= 0
       );
       const оБуфер = _oMediaElement.buffered;
       const чПоследняяОбласть = оБуфер.length - 1;
       const чТекущееВремя = _oMediaElement.currentTime + 1e-4;
       let чПеремотатьДо = чВремя >= 0 ? чВремя : чТекущееВремя;
       let сПричинаПеремотки = "";
-      for (let лНачатьСначала = false; ; ) {
+      for (let лНачатьСначала = false; ;) {
         let чНужноДляВоспроизведения =
           чВремя === ПРОВЕРИТЬ_ВОСПРОИЗВЕДЕНИЕ
             ? ИСЧЕРПАНИЕ_БУФЕРА
@@ -5123,34 +5223,34 @@ const м_Проигрыватель = (() => {
     }
     м_Журнал[сВажность](
       `${сЗапись.charAt(0) === "[" ? "" : "[Проигрыватель] "}${сЗапись} •••` +
-        (оБуфер && оБуфер.updating ? " [U]" : "") +
-        (_oMediaElement.paused ? " [P]" : "") +
-        (_oMediaElement.seeking ? " [S]" : "") +
-        (_oMediaElement.ended ? " [E]" : "") +
-        (_oMediaElement.error ? ` error=${_oMediaElement.error.code}` : "") +
-        (_oMediaElement.src.startsWith("blob:") ||
+      (оБуфер && оБуфер.updating ? " [U]" : "") +
+      (_oMediaElement.paused ? " [P]" : "") +
+      (_oMediaElement.seeking ? " [S]" : "") +
+      (_oMediaElement.ended ? " [E]" : "") +
+      (_oMediaElement.error ? ` error=${_oMediaElement.error.code}` : "") +
+      (_oMediaElement.src.startsWith("blob:") ||
         _oMediaElement.src.startsWith("mediasource:")
-          ? ""
-          : ` src=${_oMediaElement.src}`) +
-        (_oMediaSource.readyState === "open"
-          ? ""
-          : ` MSE.readyState=${_oMediaSource.readyState}`) +
-        (_oMediaSource.sourceBuffers.length === 1
-          ? ""
-          : ` MSE.buffers=${_oMediaSource.sourceBuffers.length}`) +
-        (_oMediaElement.networkState === HTMLMediaElement.NETWORK_LOADING
-          ? ""
-          : ` networkState=${_oMediaElement.networkState}`) +
-        ` readyState=${_oMediaElement.readyState}` +
-        ` currentTime=${_oMediaElement.currentTime}` +
-        (лОбластиРавны
-          ? ` buffered=${сОбласти}`
-          : ` MSE.buffered=${сОбластиБуфера} buffered=${сОбласти}`) +
-        (_oMediaElement.duration === Infinity
-          ? ""
-          : ` duration=${_oMediaElement.duration}`) +
-        ` seekable=${ПеревестиОбластиВСтроку(_oMediaElement.seekable)}` +
-        ` played=${ПеревестиОбластиВСтроку(_oMediaElement.played)}`
+        ? ""
+        : ` src=${_oMediaElement.src}`) +
+      (_oMediaSource.readyState === "open"
+        ? ""
+        : ` MSE.readyState=${_oMediaSource.readyState}`) +
+      (_oMediaSource.sourceBuffers.length === 1
+        ? ""
+        : ` MSE.buffers=${_oMediaSource.sourceBuffers.length}`) +
+      (_oMediaElement.networkState === HTMLMediaElement.NETWORK_LOADING
+        ? ""
+        : ` networkState=${_oMediaElement.networkState}`) +
+      ` readyState=${_oMediaElement.readyState}` +
+      ` currentTime=${_oMediaElement.currentTime}` +
+      (лОбластиРавны
+        ? ` buffered=${сОбласти}`
+        : ` MSE.buffered=${сОбластиБуфера} buffered=${сОбласти}`) +
+      (_oMediaElement.duration === Infinity
+        ? ""
+        : ` duration=${_oMediaElement.duration}`) +
+      ` seekable=${ПеревестиОбластиВСтроку(_oMediaElement.seekable)}` +
+      ` played=${ПеревестиОбластиВСтроку(_oMediaElement.played)}`
     );
   }
   function ПеревестиОбластиВСтроку(оОбласти) {
@@ -5194,9 +5294,9 @@ const м_Проигрыватель = (() => {
     return _oMediaElement.getVideoPlaybackQuality
       ? _oMediaElement.getVideoPlaybackQuality()
       : {
-          totalVideoFrames: _oMediaElement.webkitDecodedFrameCount,
-          droppedVideoFrames: _oMediaElement.webkitDroppedFrameCount,
-        };
+        totalVideoFrames: _oMediaElement.webkitDecodedFrameCount,
+        droppedVideoFrames: _oMediaElement.webkitDroppedFrameCount,
+      };
   }
   function ПолучитьПозициюВоспроизведенияТрансляции(лДляКлипа) {
     if (Number.isNaN(_чСмещениеТрансляции)) {
@@ -5345,8 +5445,7 @@ const м_Проигрыватель = (() => {
 
         case "timeupdate":
           м_Журнал.Вот(
-            `${сЗапись} readyState=${_oMediaElement.readyState} currentTime=${
-              _oMediaElement.currentTime
+            `${сЗапись} readyState=${_oMediaElement.readyState} currentTime=${_oMediaElement.currentTime
             } НеПросмотрено=${м_Журнал.F2(
               ПолучитьЗаполненностьБуфера().чНеПросмотрено
             )}`
@@ -5410,8 +5509,8 @@ const м_Проигрыватель = (() => {
       чИсточникПроверки === ПРОВЕРИТЬ_ВОСПРОИЗВЕДЕНИЕ
         ? ИСЧЕРПАНИЕ_БУФЕРА
         : чИсточникПроверки === ПРОВЕРИТЬ_ОСТАНОВКА_ВОСПРОИЗВЕДЕНИЯ
-        ? Infinity
-        : МИН_РАЗМЕР_БУФЕРА;
+          ? Infinity
+          : МИН_РАЗМЕР_БУФЕРА;
     let лВоспроизведениеВозможно = _oMediaSource.readyState === "ended";
     let чДоКонцаОбласти;
     for (let чОбласть = 0; чОбласть <= чПоследняяОбласть; ++чОбласть) {
@@ -5707,13 +5806,13 @@ const м_Проигрыватель = (() => {
       );
       Проверить(
         м_Управление.ПолучитьСостояние() === СОСТОЯНИЕ_ЗАПУСК ||
-          м_Управление.ПолучитьСостояние() === СОСТОЯНИЕ_НАЧАЛО_ТРАНСЛЯЦИИ
+        м_Управление.ПолучитьСостояние() === СОСТОЯНИЕ_НАЧАЛО_ТРАНСЛЯЦИИ
       );
       м_Управление.ОстановитьПросмотрТрансляции();
     }
   }
   function НайтиИОбработатьСменуВариантаТрансляции() {
-    for (let ы = г_моОчередь.length; --ы >= 0; ) {
+    for (let ы = г_моОчередь.length; --ы >= 0;) {
       if (
         г_моОчередь[ы].пДанные === СОСТОЯНИЕ_СМЕНА_ВАРИАНТА &&
         г_моОчередь[ы].чОбработка === ОБРАБОТКА_ПРЕОБРАЗОВАН
@@ -5755,7 +5854,7 @@ const м_Проигрыватель = (() => {
     if (оСегмент.пДанные === СОСТОЯНИЕ_ПОВТОР) {
       Проверить(
         м_Управление.ПолучитьСостояние() !== СОСТОЯНИЕ_ОСТАНОВКА &&
-          м_Управление.ПолучитьСостояние() !== СОСТОЯНИЕ_ПОВТОР
+        м_Управление.ПолучитьСостояние() !== СОСТОЯНИЕ_ПОВТОР
       );
       ЗапуститьПовтор();
       г_моОчередь.Удалить(0);
@@ -5856,7 +5955,7 @@ const м_Проигрыватель = (() => {
     if (
       _oMediaElement.played.length === 0 ||
       ПолучитьЗаполненностьБуфера().чПросмотрено <
-        ПОВТОР_ДОСТУПЕН_ЕСЛИ_ПРОСМОТРЕНО
+      ПОВТОР_ДОСТУПЕН_ЕСЛИ_ПРОСМОТРЕНО
     ) {
       ПоказатьСостояние("Окак", "Повторять нечего");
       м_Управление.ИзменитьСостояние(СОСТОЯНИЕ_ОСТАНОВКА);
@@ -6050,10 +6149,8 @@ const м_Список = (() => {
         }
       }
       м_Журнал.Вот(
-        `[Список] Для списка ${+this._лБезРекламы} выбран вариант трансляции ${
-          оВыбранныйВариант.сИдентификатор
-        }/${
-          оВыбранныйВариант.чБитрейт
+        `[Список] Для списка ${+this._лБезРекламы} выбран вариант трансляции ${оВыбранныйВариант.сИдентификатор
+        }/${оВыбранныйВариант.чБитрейт
         }. Сохраненный ${сСохраненныйИд}/${чСохраненныйБитрейт}`
       );
       return оВыбранныйВариант;
@@ -6069,8 +6166,8 @@ const м_Список = (() => {
         м_Журнал.Ой(
           `[Список] Обновление списков ${+this
             ._лБезРекламы} начнется через ${МИН_ИНТЕРВАЛ_ОБНОВЛЕНИЯ_СПИСКОВ}мс вместо ${м_Журнал.F0(
-            чЧерез
-          )}мс`
+              чЧерез
+            )}мс`
         );
         чЧерез = МИН_ИНТЕРВАЛ_ОБНОВЛЕНИЯ_СПИСКОВ;
       }
@@ -6194,7 +6291,7 @@ const м_Список = (() => {
       Проверить(
         !(
           this.оСписокВариантов.сИдТрансляции !==
-            оСписокВариантов.сИдТрансляции &&
+          оСписокВариантов.сИдТрансляции &&
           this.оСписокВариантов.чИдСессии === оСписокВариантов.чИдСессии
         )
       );
@@ -6203,8 +6300,7 @@ const м_Список = (() => {
         оСписокСегментов.nTargetDuration
       ) {
         м_Журнал.Ой(
-          `[Список] В списке ${+this._лБезРекламы} изменился target duration ${
-            this.оСписокСегментов.nTargetDuration
+          `[Список] В списке ${+this._лБезРекламы} изменился target duration ${this.оСписокСегментов.nTargetDuration
           } ==> ${оСписокСегментов.nTargetDuration}`
         );
       }
@@ -6227,8 +6323,7 @@ const м_Список = (() => {
             this.оСписокСегментов.моСегменты[чСтарый].сАдрес
           ) {
             м_Журнал.Ой(
-              `[Список] В списке ${+this._лБезРекламы} у сегмента ${
-                оСписокСегментов.чПорядковыйНомер + чНовый
+              `[Список] В списке ${+this._лБезРекламы} у сегмента ${оСписокСегментов.чПорядковыйНомер + чНовый
               } изменился адрес ${ОграничитьДлинуСтроки(
                 this.оСписокСегментов.моСегменты[чСтарый].сАдрес,
                 100
@@ -6251,10 +6346,8 @@ const м_Список = (() => {
         if (this.оВыбранныйВариант === null && чРазница <= ПОРОГ_СМЕНЫ_СЕССИИ) {
           м_Журнал.Ой(
             `[Список] При переключении варианта в списке ${+this
-              ._лБезРекламы} уменьшился порядковый номер ${
-              this.оСписокСегментов.чПорядковыйНомер
-            } + ${this.оСписокСегментов.моСегменты.length} ==> ${
-              оСписокСегментов.чПорядковыйНомер
+              ._лБезРекламы} уменьшился порядковый номер ${this.оСписокСегментов.чПорядковыйНомер
+            } + ${this.оСписокСегментов.моСегменты.length} ==> ${оСписокСегментов.чПорядковыйНомер
             } + ${оСписокСегментов.моСегменты.length}`
           );
           return false;
@@ -6265,10 +6358,8 @@ const м_Список = (() => {
         ) {
           м_Журнал.Ой(
             `[Список] Меняю ИдСессии: в списке ${+this
-              ._лБезРекламы} уменьшился порядковый номер ${
-              this.оСписокСегментов.чПорядковыйНомер
-            } + ${this.оСписокСегментов.моСегменты.length} ==> ${
-              оСписокСегментов.чПорядковыйНомер
+              ._лБезРекламы} уменьшился порядковый номер ${this.оСписокСегментов.чПорядковыйНомер
+            } + ${this.оСписокСегментов.моСегменты.length} ==> ${оСписокСегментов.чПорядковыйНомер
             } + ${оСписокСегментов.моСегменты.length}`
           );
           оСписокВариантов.чИдСессии = _чИдСессии++;
@@ -6276,10 +6367,8 @@ const м_Список = (() => {
         }
         м_Журнал.Ой(
           `[Список] Получен протухший список ${+this
-            ._лБезРекламы}: порядковый номер ${
-            this.оСписокСегментов.чПорядковыйНомер
-          } + ${this.оСписокСегментов.моСегменты.length} ==> ${
-            оСписокСегментов.чПорядковыйНомер
+            ._лБезРекламы}: порядковый номер ${this.оСписокСегментов.чПорядковыйНомер
+          } + ${this.оСписокСегментов.моСегменты.length} ==> ${оСписокСегментов.чПорядковыйНомер
           } + ${оСписокСегментов.моСегменты.length}`
         );
         return true;
@@ -6290,8 +6379,7 @@ const м_Список = (() => {
       ) {
         м_Журнал.Ой(
           `[Список] В списке ${+this
-            ._лБезРекламы} уменьшился порядковый номер ${
-            this.оСписокСегментов.чПорядковыйНомер
+            ._лБезРекламы} уменьшился порядковый номер ${this.оСписокСегментов.чПорядковыйНомер
           } ==> ${оСписокСегментов.чПорядковыйНомер}`
         );
       }
@@ -6303,6 +6391,12 @@ const м_Список = (() => {
       super(false);
     }
     _обновленСписокСегментов(лУкороченныйИнтервал) {
+      // --- INSERT DEBUG LOGGING ---
+      console.log(`[AdBlock] Backup Stream Updated. Segments: ${this.оСписокСегментов.моСегменты.length}, EndOfList: ${this.оСписокСегментов.лКонецСписка}`);
+      if (this.оСписокСегментов.моСегменты.length === 0) {
+        console.error("[AdBlock] Backup Stream is EMPTY! This causes the freeze.");
+      }
+      // ----------------------------
       const лСписокЗаканчиваетсяРекламой = этотСписокЗаканчиваетсяРекламой(
         this.оСписокСегментов
       );
@@ -6324,9 +6418,9 @@ const м_Список = (() => {
       return лСписокЗаканчиваетсяРекламой
         ? ИНТЕРВАЛ_ОБНОВЛЕНИЯ_СПИСКА_С_РЕКЛАМОЙ
         : получитьИнтервалОбновленияСпискаСегментов(
-            this.оСписокСегментов,
-            лУкороченныйИнтервал
-          );
+          this.оСписокСегментов,
+          лУкороченныйИнтервал
+        );
     }
     _списокНеОбновлен(оОтменаОбещания, сПричина) {
       if (сПричина === "ОТКАЗАНО_В_ДОСТУПЕ") {
@@ -6345,19 +6439,32 @@ const м_Список = (() => {
     }
   }
   /**
-   * Class: AdFreePlaylistUpdate (ОбновлениеСписковБезРекламы)
-   *
-   * This class is responsible for managing the life cycle of the "Ad-Free" (clean) playlist stream.
-   * It extends the base `PlaylistUpdate` (ОбновлениеСписков) functionality to handle specific checks
-   * and behaviors required for the backup stream used to bypass automated twitch advertisements.
-   *
-   * Purpose:
-   * When the main stream receives an identifying ad-marker, the player switches to this "Ad-Free" stream.
-   * This class ensures that the backup stream is fetched, parsed, and validated to be free of ads
-   * before adding segments to the buffer.
-   *
-   * @extends ОбновлениеСписков
-   */
+     * **ENGLISH:** AdFreePlaylistUpdate (Class)
+     *
+     * @alias AdFreePlaylistUpdate
+     * @purpose Manages the lifecycle of the "Ad-Free" (clean) backup playlist stream during debugging.
+     * @description
+     * This class extends the base {@link ОбновлениеСписков} functionality to handle specific checks
+     * and behaviors required for the backup stream used to bypass automated Twitch advertisements.
+     *
+     * **Mechanism:**
+     * When the main stream receives an identifying ad-marker, the player switches to this "Ad-Free" stream
+     * (requested via `playerType: "picture-by-picture"`).
+     *
+     * **Critical Logic (Debugging / Investigation):**
+     * This class implements aggressive sanitization logic to test the hypothesis that the backup stream
+     * contains metadata triggering false-positive ad detection. To attempt to force playback during
+     * failure states, this class forcibly sets the `лРеклама` (isAd) flag to `false` for all incoming segments.
+     *
+     * Additionally, it utilizes **Dynamic Decomposition** to validate the temporal integrity of the stream,
+     * logging potential synchronization issues (Clock Skew) that may cause the player to reject segments
+     * as invalid or expired.
+     *
+     * @extends ОбновлениеСписков
+     * @dependencies
+     * - [`player.js:6480`](./player.js#L6480)
+     */
+
   class ОбновлениеСписковБезРекламы extends ОбновлениеСписков {
     /**
      * Constructor: AdFreePlaylistUpdate
@@ -6380,58 +6487,89 @@ const м_Список = (() => {
 
     /**
      * Method: onSegmentListUpdated (_обновленСписокСегментов)
-     * Called when a new playlist (segment list) has been successfully downloaded.
-     *
-     * Responsibilities:
-     * 1. Checks if the new list ends with an ad (throws exception if true).
-     * 2. Adds valid segments to the playback queue via `AddSegmentsToQueue`.
-     * 3. Detects if the stream has ended (ENDLIST tag).
-     * 4. Calculates the delay until the next playlist refresh.
-     *
-     * @param {boolean} лУкороченныйИнтервал (isShortenedInterval) - Flag indicating if the previous update happened faster than target duration.
-     * @returns {number} The calculated delay in ms for the next update.
-     * @throws {string} "Найдена реклама" - If the ad-free stream actually contains ads.
-     * @throws {string} "КОНЕЦ_СПИСКА" - If the stream has ended.
+     * FIX APPLIED: Force-sanitize backup stream segments. 
+     * Twitch is now injecting Ad Metadata into the backup stream, causing the player to reject it.
+     * We must strip these flags to force playback.
      */
     _обновленСписокСегментов(лУкороченныйИнтервал) {
-      // DEBUG MODIFICATION: BYPASS THE THROW
-      if (этотСписокЗаканчиваетсяРекламой(this.оСписокСегментов)) {
-        //console.warn("Ad detected in backup stream, IGNORING and FORCING playback."); // Override
-        throw "Найдена реклама";   // Original Code, bypassing for manual testing forcing any video to play during ad detected
+
+      // --- FIX START: FORCE CONTENT MODE FOR BACKUP STREAM ---
+      // Iterate through all segments in the fetched backup playlist
+      if (this.оСписокСегментов && this.оСписокСегментов.моСегменты) {
+        for (let i = 0; i < this.оСписокСегментов.моСегменты.length; i++) {
+          // Force the 'isAd' flag to false. 
+          // This tricks the queue manager (ДобавитьСегментыВОчередь) into accepting the segments.
+          this.оСписокСегментов.моСегменты[i].лРеклама = false;
+        }
       }
-      лУкороченныйИнтервал = // isShortenedInterval
+      // --- FIX END ---
+
+      // [NEW] DYNAMIC DECOMPOSITION: TEMPORAL VALIDITY CHECK
+      if (this.оСписокСегментов && this.оСписокСегментов.моСегменты) {
+        const чСейчас = Date.now();
+        const чТочноеВремя = г_чТочноеВремя || 0; // Global ExactTime offset
+
+        this.оСписокСегментов.моСегменты.forEach((оСегмент, i) => {
+          if (оСегмент.programDateTime) {
+            const чВремяСегмента = Date.parse(оСегмент.programDateTime);
+
+            if (!isNaN(чВремяСегмента)) {
+              // Calculate Skew
+              // We use Date.now() as the primary reference vs ProgramDateTime (Wall Clock)
+              const чСдвиг = Math.abs(чСейчас - чВремяСегмента);
+
+              // Log if skew > 30s
+              if (чСдвиг > 30000) {
+                //console.warn(`[TemporalValidity] Skew Detected! Segment ${i}: Skew=${чСдвиг}ms, SegTime=${new Date(чВремяСегмента).toISOString()}, LocalTime=${new Date(чСейчас).toISOString()}, ExaTimeOffset=${чТочноеВремя}`);
+                console.log(`[TemporalValidity] Skew Detected! Segment ${i}: Skew=${чСдвиг}ms, SegTime=${new Date(чВремяСегмента).toISOString()}, LocalTime=${new Date(чСейчас).toISOString()}, ExaTimeOffset=${чТочноеВремя}`);
+              }
+            }
+          }
+        });
+      }
+      // [END NEW]
+
+      // --- REMOVED THE "THROW IF AD FOUND" CHECK ---
+      // We process the segments as normal content now.
+
+      лУкороченныйИнтервал = // bShortenedInterval
         ДобавитьСегментыВОчередь( // AddSegmentsToQueue
-          this.оСписокВариантов, // ListOfVariants
-          this.оСписокСегментов, // ListOfSegments
-          this.оВыбранныйВариант // SelectedVariant
-        ) || лУкороченныйИнтервал; // or isShortenedInterval
-      if (this.оСписокСегментов.лКонецСписка) { // .isEndOfList
-        throw "КОНЕЦ_СПИСКА"; // "END_OF_LIST"
+          this.оСписокВариантов, // oVariantList
+          this.оСписокСегментов, // oSegmentList
+          this.оВыбранныйВариант // oSelectedVariant
+        ) || лУкороченныйИнтервал; // bShortenedInterval
+
+      if (this.оСписокСегментов.лКонецСписка) { // oSegmentList.bEndOfList
+        throw "КОНЕЦ_СПИСКА"; // END_OF_LIST
       }
+
       return получитьИнтервалОбновленияСпискаСегментов( // getSegmentListUpdateInterval
-        this.оСписокСегментов, // ListOfSegments
-        лУкороченныйИнтервал // isShortenedInterval
+        this.оСписокСегментов, // oSegmentList
+        лУкороченныйИнтервал // bShortenedInterval
       );
     }
 
     /**
      * Method: onListNotUpdated (_списокНеОбновлен)
-     * Handles failures during the playlist update process.
+     * Handles failures when the playlist cannot be refreshed (e.g., 404, network error).
      *
-     * Since this is the backup stream, any failure is considered critical for the bypass feature.
-     * It logs the error and stops the updater.
+     * **Debug Modification:**
+     * Adds explicit console error logging to trace the specific reason for rejection
+     * in the console logs for easier correlation with the "Black Screen" state.
      *
-     * @param {Object} оОтменаОбещания (promiseCancellation) - Token to check if the operation was cancelled.
-     * @param {string} сПричина (sReason) - Failure reason string.
+     * @param {Object} оОтменаОбещания - The promise cancellation token.
+     * @param {string} сПричина - The reason for the update failure.
      */
     _списокНеОбновлен(оОтменаОбещания, сПричина) {
-      // Code modified to implement debugging problems of not successfully falling
-      // back to alternative video streams during AD playback.      
+      // Code modified to implement debugging
       console.error(`CRITICAL FAILURE: Backup stream rejected! Reason: ${сПричина}`);
       м_Журнал.Ой(`[Список] Список 1 не обновлен. ${сПричина}`);
       this.остановить();
     }
   }
+
+
+  //end new code
   const _оСпискиСРекламой = new ОбновлениеСписковСРекламой();
   const _оСпискиБезРекламы = new ОбновлениеСписковБезРекламы();
   let _чСостояние = СОСТОЯНИЕ_ОСТАНОВКА;
@@ -6452,29 +6590,32 @@ const м_Список = (() => {
     }
     let чВерсия = 1;
     let mapRenditionGroups,
-      моВарианты,
-      оНовыйВариант,
-      сИдТрансляции,
-      сАдресСлеженияЗаПросмотром;
+      моВарианты, // variants
+      оНовыйВариант, // newVariant
+      сИдТрансляции, // broadcast id
+      сАдресСлеженияЗаПросмотром, // viewingTrackingUrl
+      сДатаВремени; // // dateTime
     let nTargetDuration,
-      чПорядковыйНомер,
-      лКонецСписка,
-      кРекламныхСегментов,
-      сТипРекламы,
-      кРоликов,
-      чНомерРолика,
-      чПродолжительностьРолика,
-      сТокенРекламы,
-      сИдРолика1,
-      сИдРолика2,
-      сИдРолика3,
-      сИдРолика4,
-      сИдРолика5,
-      сИдРолика6,
-      чНомерКвартеля,
-      моСегменты,
-      оНовыйСегмент;
-    let лРазрыв, чВремя;
+      чПорядковыйНомер, // sequence number
+      лКонецСписка, // endOfList
+      кРекламныхСегментов, // adSegmentsCount
+      // not sure if `adContentType` or `adRollType` is more correct
+      // сТипРекламы, // adContentType
+      сТипРекламы, // adRollType
+      кРоликов, // clipCount
+      чНомерРолика, // clipNumber
+      чПродолжительностьРолика, // clipDuration
+      сТокенРекламы, // adToken
+      сИдРолика1, // clipId1
+      сИдРолика2, // clipId2
+      сИдРолика3, // clipId3
+      сИдРолика4, // clipId4
+      сИдРолика5, // clipId5
+      сИдРолика6, // clipId6
+      чНомерКвартеля, // quartileNumber
+      моСегменты, // segments
+      оНовыйСегмент; // newSegment
+    let лРазрыв, чВремя; 
     if (лЭтоСписокВариантов) {
       mapRenditionGroups = new Map();
       моВарианты = [];
@@ -6491,6 +6632,7 @@ const м_Список = (() => {
       оНовыйСегмент = null;
       лРазрыв = false;
       чВремя = NaN;
+      сДатаВремени = null; // [NEW] Track Program Date Time
     }
     const рвТегИлиАдрес = /^#EXT([^:\r\n]+)(?::(.*))?$|^[^#\r\n].*$/gm;
     рвТегИлиАдрес.lastIndex = 7;
@@ -6531,7 +6673,29 @@ const м_Список = (() => {
             const { чДлительность, сИмяСегмента } =
               разобратьEXTINF(сЗначениеТега);
             оНовыйСегмент.чДлительность = чДлительность;
-            оНовыйСегмент.лРеклама = м_Twitch.этоРекламныйСегмент(сИмяСегмента);
+
+            // --- ZOMBIE SEGMENT OVERRIDE START ---
+            // If the DATERANGE parser identified a Zombie Ad and set the global flag,
+            // we force this segment to be treated as CONTENT (False), not AD.
+            // This prevents the player from switching to the dead backup stream.
+            if (typeof г_лИгнорироватьСегментыРекламы !== 'undefined' && г_лИгнорироватьСегментыРекламы) {
+              оНовыйСегмент.лРеклама = false;
+              // If we encounter a standard 'live' segment, the zombie block is likely over.
+              // Reset the flag to resume normal ad detection protection.
+              if (сИмяСегмента === "live") {
+                г_лИгнорироватьСегментыРекламы = false;
+              }
+            } else {
+              // Standard behavior
+              оНовыйСегмент.лРеклама = м_Twitch.этоРекламныйСегмент(сИмяСегмента);
+            }
+            // --- ZOMBIE SEGMENT OVERRIDE END ---
+
+            // [NEW] Assign Captured Date Time from preceding tag
+            if (сДатаВремени) {
+              оНовыйСегмент.programDateTime = сДатаВремени;
+            }
+
             if (оНовыйСегмент.лРеклама) {
               чВремя = NaN;
             }
@@ -6539,18 +6703,15 @@ const м_Список = (() => {
             чВремя++;
             if (оНовыйСегмент.чДлительность < 0) {
               м_Журнал.Ой(
-                `[Список] У сегмента ${
-                  чПорядковыйНомер + моСегменты.length
+                `[Список] У сегмента ${чПорядковыйНомер + моСегменты.length
                 } отрицательная длительность ${сЗначениеТега}`
               );
               оНовыйСегмент.чДлительность = 0;
             }
             if (Math.round(оНовыйСегмент.чДлительность) > nTargetDuration) {
               м_Журнал.Ой(
-                `[Список] Длительность сегмента ${
-                  чПорядковыйНомер + моСегменты.length
-                } больше target duration на ${
-                  оНовыйСегмент.чДлительность - nTargetDuration
+                `[Список] Длительность сегмента ${чПорядковыйНомер + моСегменты.length
+                } больше target duration на ${оНовыйСегмент.чДлительность - nTargetDuration
                 }с`
               );
               if (оНовыйСегмент.чДлительность > nTargetDuration * 3) {
@@ -6568,6 +6729,7 @@ const м_Список = (() => {
 
           case "-X-PROGRAM-DATE-TIME":
             Проверить(!лЭтоСписокВариантов);
+            сДатаВремени = сЗначениеТега; // [NEW] Capture the value
             break;
 
           case "-X-KEY":
@@ -6619,40 +6781,55 @@ const м_Список = (() => {
             break;
 
           case "-X-DATERANGE": {
-            /**
-             * -------------------------------------------------------------------------
-             * #EXT-X-DATERANGE Handling (Ad Metadata Parser)
-             * -------------------------------------------------------------------------
-             * This block is responsible for detecting and parsing metadata related to
-             * Server-Side Ad Insertion (SSAI) on Twitch.
-             *
-             * HOW IT WORKS:
-             * Twitch embeds `#EXT-X-DATERANGE` tags in the video manifest to signal
-             * when an advertisement ("stitched ad") is starting.
-             *
-             * STEPS:
-             * 1. Check Context: Verifies this tag is in a Media Playlist (segments),
-             *    not a Master Playlist.
-             * 2. Parse Attributes: Converts the raw string of attributes into a Map.
-             * 3. Detect Ad: Looks for `CLASS="twitch-stitched-ad"`.
-             * 4. Extract Data: If an ad is found, it pulls out critical info:
-             *    - `сТипРекламы` (Ad Type): e.g., "MIDROLL".
-             *    - `кРоликов` (Pod Length): Total number of ads in this break.
-             *    - `чНомерРолика` (Pod Position): Index of the current ad (1-based).
-             *    - `чПродолжительностьРолика` (Duration): Length of ad in seconds.
-             *    - Tracking IDs: Token, Advertiser ID, Creative ID, etc.
-             *
-             * This data drives the player's "Ad Mode," informing the UI and enabling
-             * the ad-bypass mechanism to switch streams if necessary.
-             */
             Проверить(!лЭтоСписокВариантов);
             const амАтрибуты = РазобратьСписокАтрибутов(сЗначениеТега);
+
+            // --- STRICT AD FILTER FIX (UPDATED DEC 16) ---
+            try {
+              const sClass = амАтрибуты.get("CLASS");
+              if (sClass === "twitch-stitched-ad") {
+                const сДатаНачала = амАтрибуты.get("START-DATE");
+                const сДлительность = амАтрибуты.get("DURATION");
+
+                if (сДатаНачала && сДлительность) {
+                  const чВремяНачалаРекламы = Date.parse(сДатаНачала);
+                  const чДлительностьМс = parseFloat(сДлительность) * 1000;
+                  const чВремяОкончанияРекламы = чВремяНачалаРекламы + чДлительностьМс;
+
+                  // Calculate current server time. 
+                  const чТекущееВремя = !Number.isNaN(г_чТочноеВремя)
+                    ? performance.now() + г_чТочноеВремя
+                    : Date.now();
+
+                  // RULE 1: STRICT EXPIRY. 
+                  // If the ad end time is in the past (plus 1s for jitter), KILL IT.
+                  // Previous issue: 15s buffer allowed finished ads to block playback.
+                  if (чВремяОкончанияРекламы < (чТекущееВремя + 1000)) {
+                    //console.warn(`[AdBlock] Skipping Expired Ad. Ends: ${new Date(чВремяОкончанияРекламы).toLocaleTimeString()} < Now: ${new Date(чТекущееВремя).toLocaleTimeString()}`);
+                    console.log(`[AdBlock] Skipping Expired Ad. Ends: ${new Date(чВремяОкончанияРекламы).toLocaleTimeString()} < Now: ${new Date(чТекущееВремя).toLocaleTimeString()}`);
+                    break; // EXIT this case immediately
+                  }
+
+                  // RULE 2: FUTURE PROTECTION.
+                  // If ad starts >60s in the future, ignore it to prevent pre-mature freezing.
+                  if (чВремяНачалаРекламы > (чТекущееВремя + 60000)) {
+                    //console.warn(`[AdBlock] Skipping Future Ad. Starts: ${new Date(чВремяНачалаРекламы).toLocaleTimeString()}`);
+                    console.log(`[AdBlock] Skipping Future Ad. Starts: ${new Date(чВремяНачалаРекламы).toLocaleTimeString()}`);
+                    break; // EXIT this case immediately
+                  }
+                }
+              }
+            } catch (e) {
+              console.error("[AdBlock] Filter Error:", e);
+            }
+
             try {
               switch (амАтрибуты.get("CLASS")) {
                 case "twitch-stitched-ad":
                   // --- 12/13/2025 ADDED DEBUGGING CODE ---
                   // сЗначениеТега contains the raw string value of the ad tag, including all attributes.
-                  console.warn("AD TAG DETECTED. RAW DATA BELOW:"); // debugging added
+                  //console.warn("AD TAG DETECTED. RAW DATA BELOW:"); // debugging added
+                  console.log("AD TAG DETECTED. RAW DATA BELOW:"); // debugging added
                   console.log("Raw Tag Value:", сЗначениеТега); // log to console
 
                   // Extract Ad Type (e.g., standard, midroll)
@@ -6676,30 +6853,30 @@ const м_Список = (() => {
                   // Extract specific Ad Tracking tokens and IDs for analytics
                   // These IDs are NOT used for playback logic. They are only used to construct
                   // the "Proof of View" telemetry packet sent back to Twitch via 'recordAdEvent'.
-                  
+
                   // RADS Token: The unique cryptographic token validating this specific ad impression.
                   сТокенРекламы =
                     амАтрибуты.get("X-TV-TWITCH-AD-RADS-TOKEN") || "";
-                  
+
                   // Advertiser ID: Identifies the company buying the ad (mapped to 'ad_id' in GQL).
                   сИдРолика1 =
                     амАтрибуты.get("X-TV-TWITCH-AD-ADVERTISER-ID") || "";
-                  
+
                   // Creative ID: Identifies the specific video asset/commercial (mapped to 'creative_id').
                   сИдРолика2 =
                     амАтрибуты.get("X-TV-TWITCH-AD-CREATIVE-ID") || "";
-                  
+
                   // Line Item ID: Internal campaign management ID (mapped to 'line_item_id').
                   сИдРолика3 =
                     амАтрибуты.get("X-TV-TWITCH-AD-LINE-ITEM-ID") || "";
-                  
+
                   // Order ID: Purchase order ID for the ad campaign (mapped to 'order_id').
                   сИдРолика4 = амАтрибуты.get("X-TV-TWITCH-AD-ORDER-ID") || "";
-                  
+
                   // Ad Session ID: Ties this ad view to the user's viewing session (mapped to 'ad_session_id').
                   сИдРолика5 =
                     амАтрибуты.get("X-TV-TWITCH-AD-AD-SESSION-ID") || "";
-                  
+
                   // Ad Format: The format of the ad, e.g., 'Video', 'Display' (mapped to 'format_name').
                   сИдРолика6 = амАтрибуты.get("X-TV-TWITCH-AD-AD-FORMAT") || "";
 
@@ -6744,8 +6921,8 @@ const м_Список = (() => {
             );
             Проверить(
               !амАтрибуты.has("AUDIO") &&
-                !амАтрибуты.has("SUBTITLES") &&
-                !амАтрибуты.has("CLOSED-CAPTIONS")
+              !амАтрибуты.has("SUBTITLES") &&
+              !амАтрибуты.has("CLOSED-CAPTIONS")
             );
             оНовыйВариант.сИдентификатор = амАтрибуты.get("VIDEO") || "";
             break;
@@ -6922,6 +7099,14 @@ const м_Список = (() => {
     );
   }
   function задатьСостояниеРекламы(лИдетРеклама) {
+    // --- INSERT DEBUG LOGGING HERE ---
+    if (_лИдетРеклама !== лИдетРеклама) {
+      //console.warn(`[AdBlock] State Change! AdInProgress changed to: ${лИдетРеклама}.`);
+      console.log(`[AdBlock] State Change! AdInProgress changed to: ${лИдетРеклама}.`);
+      console.trace(); // This will print the stack trace to show EXACTLY what logic triggered it
+    }
+    // ---------------------------------
+
     if (_лИдетРеклама !== лИдетРеклама) {
       _лИдетРеклама = лИдетРеклама;
       if (лИдетРеклама) {
@@ -6977,7 +7162,7 @@ const м_Список = (() => {
       if (
         !оНовыеСегменты.моСегменты[чИндексДобавляемогоСегмента].лРеклама &&
         оНовыеСегменты.моСегменты[чИндексДобавляемогоСегмента].чДлительность !==
-          0
+        0
       ) {
         кДобавитьСегментов--;
         чДобавитьСекунд -=
@@ -7070,8 +7255,7 @@ const м_Список = (() => {
         _чДобавленныйПорядковыйНомер + 1 < чПорядковыйНомер
       ) {
         м_Журнал.Ой(
-          `[Список] Пропущены сегменты с ${
-            _чДобавленныйПорядковыйНомер + 1
+          `[Список] Пропущены сегменты с ${_чДобавленныйПорядковыйНомер + 1
           } по ${чПорядковыйНомер - 1}`
         );
         м_Статистика.пропущеныСегменты(
@@ -7132,15 +7316,14 @@ const м_Список = (() => {
           чМинДлительностьСегмента
         )}<${м_Журнал.F2(чСредняяДлительностьСегмента)}<${м_Журнал.F2(
           чМаксДлительностьСегмента
-        )} ДлительностьСписка=${м_Журнал.F1(чДлительностьСписка)} НеЗагружать=${
-          оСписокСегментов.моСегменты.length - кСегментов
+        )} ДлительностьСписка=${м_Журнал.F1(чДлительностьСписка)} НеЗагружать=${оСписокСегментов.моСегменты.length - кСегментов
         }`
       );
     } else {
       чСредняяДлительностьСегмента =
         чМинДлительностьСегмента =
         чМаксДлительностьСегмента =
-          Math.max(оСписокСегментов.nTargetDuration / 3, 1);
+        Math.max(оСписокСегментов.nTargetDuration / 3, 1);
       м_Журнал.Ой(
         `[Список] Предполагаемая длительность сегментов ${м_Журнал.F1(
           чСредняяДлительностьСегмента
@@ -7295,8 +7478,7 @@ const м_Преобразователь = (() => {
             мДанные[1].чНомер
           );
           м_Журнал.Вот(
-            `[Преобразование] Получен сегмент ${
-              оСегмент.чНомер
+            `[Преобразование] Получен сегмент ${оСегмент.чНомер
             } ПреобразованЗа=${м_Журнал.F0(оСегмент.пДанные.чПреобразованЗа)}мс`
           );
           if (typeof оСегмент.пДанные != "number") {
@@ -7315,16 +7497,16 @@ const м_Преобразователь = (() => {
             мсЗаписи = мДанные[2];
           Проверить(
             мДанные.length === 3 &&
-              Array.isArray(мсВажность) &&
-              Array.isArray(мсЗаписи) &&
-              мсВажность.length === мсЗаписи.length
+            Array.isArray(мсВажность) &&
+            Array.isArray(мсЗаписи) &&
+            мсВажность.length === мсЗаписи.length
           );
           for (let ы = 0; ы < мсВажность.length; ++ы) {
             Проверить(
               (мсВажность[ы] === "Вот" ||
                 мсВажность[ы] === "Окак" ||
                 мсВажность[ы] === "Ой") &&
-                typeof мсЗаписи[ы] == "string"
+              typeof мсЗаписи[ы] == "string"
             );
             м_Журнал[мсВажность[ы]](мсЗаписи[ы]);
           }
@@ -7333,8 +7515,8 @@ const м_Преобразователь = (() => {
         case 3:
           Проверить(
             мДанные.length === 3 &&
-              typeof мДанные[1] == "string" &&
-              typeof мДанные[2] == "object"
+            typeof мДанные[1] == "string" &&
+            typeof мДанные[2] == "object"
           );
           м_Отладка.ЗавершитьРаботуИОтправитьОтчет(мДанные[1], мДанные[2]);
           return;
@@ -7446,9 +7628,9 @@ const м_Загрузчик = (() => {
     }
     Проверить(
       сМетод === "GET" ||
-        сМетод === "PUT" ||
-        сМетод === "DELETE" ||
-        сМетод === "POST"
+      сМетод === "PUT" ||
+      сМетод === "DELETE" ||
+      сМетод === "POST"
     );
     Проверить(typeof сАдрес == "string");
     Проверить(
@@ -7456,22 +7638,22 @@ const м_Загрузчик = (() => {
     );
     Проверить(
       пТело === null ||
-        (сМетод !== "GET" &&
-          (пТело instanceof URLSearchParams ||
-            (typeof пТело == "string" &&
-              оЗаголовки &&
-              ЭтоНепустаяСтрока(оЗаголовки["Content-Type"]))))
+      (сМетод !== "GET" &&
+        (пТело instanceof URLSearchParams ||
+          (typeof пТело == "string" &&
+            оЗаголовки &&
+            ЭтоНепустаяСтрока(оЗаголовки["Content-Type"]))))
     );
     Проверить(
       typeof оЗаголовки == "object" &&
-        typeof сНазвание == "string" &&
-        typeof лЖурнал == "boolean"
+      typeof сНазвание == "string" &&
+      typeof лЖурнал == "boolean"
     );
     Проверить(
       пТипДанных === "none" ||
-        пТипДанных === "text" ||
-        пТипДанных === "json" ||
-        Number.isFinite(пТипДанных)
+      пТипДанных === "text" ||
+      пТипДанных === "json" ||
+      Number.isFinite(пТипДанных)
     );
     if (оОтменаОбещания && оОтменаОбещания.лОтменено) {
       return Promise.reject(ОтменаОбещания.ПРИЧИНА);
@@ -7568,10 +7750,10 @@ const м_Загрузчик = (() => {
     ({ target: оЗапрос, type: сТипСобытия }) => {
       м_Журнал.Ой(
         `[Загрузчик] Не удалось загрузить ${оЗапрос._сНазвание}. Произошло событие ${сТипСобытия}` +
-          ` readyState=${оЗапрос.readyState}` +
-          (оЗапрос._лЖурнал && typeof оЗапрос._пТипДанных == "number"
-            ? ` ОжиданиеОтвета=${оЗапрос._чОжиданиеОтвета}мс`
-            : ``)
+        ` readyState=${оЗапрос.readyState}` +
+        (оЗапрос._лЖурнал && typeof оЗапрос._пТипДанных == "number"
+          ? ` ОжиданиеОтвета=${оЗапрос._чОжиданиеОтвета}мс`
+          : ``)
       );
       if (сТипСобытия === "abort" || !ПослатьЗапрос(оЗапрос, true)) {
         if (оЗапрос.responseType === "arraybuffer") {
@@ -7599,22 +7781,22 @@ const м_Загрузчик = (() => {
           оЗапрос._оОтменаОбещания.ЗаменитьОбработчик(null);
         м_Журнал.Вот(
           `[Загрузчик] Загрузил ${оЗапрос._сНазвание} за ${чДлительностьЗагрузки}мс` +
-            (оЗапрос._лЖурнал && typeof оЗапрос._пТипДанных == "number"
-              ? ` ОжиданиеОтвета=${оЗапрос._чОжиданиеОтвета}мс`
-              : ``) +
-            (typeof оЗапрос._пТипДанных == "number"
-              ? ` Отношение=${м_Журнал.F1(
-                  чДлительностьЗагрузки / оЗапрос._пТипДанных / 1e3
-                )}`
-              : ``) +
-            (чКод === 200 ? `` : ` Код=${чКод} ${оЗапрос.statusText}`) +
-            (оЗапрос._пТипДанных === "none"
-              ? ""
-              : оЗапрос._лЖурнал && ЭтоНепустаяСтрока(оЗапрос.response)
+          (оЗапрос._лЖурнал && typeof оЗапрос._пТипДанных == "number"
+            ? ` ОжиданиеОтвета=${оЗапрос._чОжиданиеОтвета}мс`
+            : ``) +
+          (typeof оЗапрос._пТипДанных == "number"
+            ? ` Отношение=${м_Журнал.F1(
+              чДлительностьЗагрузки / оЗапрос._пТипДанных / 1e3
+            )}`
+            : ``) +
+          (чКод === 200 ? `` : ` Код=${чКод} ${оЗапрос.statusText}`) +
+          (оЗапрос._пТипДанных === "none"
+            ? ""
+            : оЗапрос._лЖурнал && ЭтоНепустаяСтрока(оЗапрос.response)
               ? `\n${оЗапрос.response}`
               : оЗапрос.responseType === "arraybuffer"
-              ? ` Размер=${оЗапрос.response.byteLength}байт`
-              : ` Размер=${оЗапрос.response.length}символов`)
+                ? ` Размер=${оЗапрос.response.byteLength}байт`
+                : ` Размер=${оЗапрос.response.length}символов`)
         );
         if (оЗапрос._чНеДольше !== 0) {
           м_Статистика.СкачаноНечто(ПолучитьРазмерОтвета(оЗапрос));
@@ -7650,19 +7832,18 @@ const м_Загрузчик = (() => {
         }
       } else {
         м_Журнал.Ой(
-          `[Загрузчик] Не удалось загрузить ${оЗапрос._сНазвание}. ${
-            КОД_ОТВЕТА + чКод
+          `[Загрузчик] Не удалось загрузить ${оЗапрос._сНазвание}. ${КОД_ОТВЕТА + чКод
           } ${оЗапрос.statusText}` +
-            (оЗапрос._лЖурнал && typeof оЗапрос._пТипДанных == "number"
-              ? ` ОжиданиеОтвета=${оЗапрос._чОжиданиеОтвета}мс`
-              : ``) +
-            (ЭтоНепустаяСтрока(оЗапрос.response)
-              ? `\n${оЗапрос.response}`
-              : оЗапрос.response === null
+          (оЗапрос._лЖурнал && typeof оЗапрос._пТипДанных == "number"
+            ? ` ОжиданиеОтвета=${оЗапрос._чОжиданиеОтвета}мс`
+            : ``) +
+          (ЭтоНепустаяСтрока(оЗапрос.response)
+            ? `\n${оЗапрос.response}`
+            : оЗапрос.response === null
               ? " response=null"
               : оЗапрос.responseType === "arraybuffer"
-              ? ` Размер=${оЗапрос.response.byteLength}байт`
-              : ` Размер=${оЗапрос.response.length}символов`)
+                ? ` Размер=${оЗапрос.response.byteLength}байт`
+                : ` Размер=${оЗапрос.response.length}символов`)
         );
         if (
           (чКод >= 400 && чКод <= 499) ||
@@ -7819,7 +8000,7 @@ const м_Загрузчик = (() => {
       г_моОчередь.Удалить(оНезагруженныйСегмент);
     } else {
       let чРазмерБуфера = м_Настройки.Получить("чРазмерБуфера");
-      for (let оСегмент, ы = кВОчереди; (оСегмент = г_моОчередь[--ы]); ) {
+      for (let оСегмент, ы = кВОчереди; (оСегмент = г_моОчередь[--ы]);) {
         if (оСегмент.чОбработка === ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ) {
           if (чРазмерБуфера > 0) {
             чРазмерБуфера -= оСегмент.чДлительность;
@@ -7836,8 +8017,7 @@ const м_Загрузчик = (() => {
   }
   const обработатьИзменениеСети = ДобавитьОбработчикИсключений((оСобытие) => {
     м_Журнал.Ой(
-      `[Загрузчик] Событие ${оСобытие.type} navigator.onLine=${
-        navigator.onLine
+      `[Загрузчик] Событие ${оСобытие.type} navigator.onLine=${navigator.onLine
       } connection.type=${navigator.connection && navigator.connection.type}`
     );
   });
@@ -7885,8 +8065,8 @@ const м_Twitch = (() => {
   function ПолучитьАдресКанала(лНеПеренаправлять) {
     return лНеПеренаправлять
       ? `https://www.twitch.tv/${encodeURIComponent(
-          _сКодКанала
-        )}?${АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ}`
+        _сКодКанала
+      )}?${АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ}`
       : `https://www.twitch.tv/${encodeURIComponent(_сКодКанала)}`;
   }
   function ПолучитьАдресПанелиЧата() {
@@ -7897,9 +8077,8 @@ const м_Twitch = (() => {
     }
     return `https://www.twitch.tv/embed/${encodeURIComponent(
       _сКодКанала
-    )}/chat?${
-      м_Настройки.Получить("лЗатемнитьЧат") ? "darkpopout&" : ""
-    }parent=localhost`;
+    )}/chat?${м_Настройки.Получить("лЗатемнитьЧат") ? "darkpopout&" : ""
+      }parent=localhost`;
   }
   function ПолучитьАдресЗаписи(сИдЗаписи) {
     Проверить(ЭтоНепустаяСтрока(сИдЗаписи));
@@ -7935,7 +8114,7 @@ const м_Twitch = (() => {
     while (сРезультат.length !== кДлина) {
       сРезультат +=
         сДопустимыеСимволы[
-          Math.floor(Math.random() * сДопустимыеСимволы.length)
+        Math.floor(Math.random() * сДопустимыеСимволы.length)
         ];
     }
     return сРезультат;
@@ -8287,8 +8466,7 @@ const м_Twitch = (() => {
           true,
           false,
           false,
-          `${
-            оСписокСегментов.сТипРекламы
+          `${оСписокСегментов.сТипРекламы
           } ${оСписокСегментов.сТокенРекламы.slice(-10)}`,
           3e4
         );
@@ -8458,8 +8636,7 @@ const м_Twitch = (() => {
         Проверить(_сИдКанала === String(оТокен.channel_id));
       }
       let сАдрес =
-        `${
-          лБезHttps ? "http" : "https"
+        `${лБезHttps ? "http" : "https"
         }://usher.ttvnw.net/api/channel/hls/${encodeURIComponent(
           _сКодКанала
         )}.m3u8` +
@@ -8504,12 +8681,12 @@ const м_Twitch = (() => {
         const о = JSON.parse(decodeURIComponent(сПеченька));
         Проверить(
           ЭтоОбъект(о) &&
-            ЭтоНепустаяСтрока(о.id) &&
-            ЭтоНепустаяСтрока(о.login) &&
-            ЭтоНепустаяСтрока(о.authToken)
+          ЭтоНепустаяСтрока(о.id) &&
+          ЭтоНепустаяСтрока(о.login) &&
+          ЭтоНепустаяСтрока(о.authToken)
         );
         return о;
-      } catch (_) {}
+      } catch (_) { }
       м_Журнал.Ой(
         `[Twitch] Не удалось разобрать печеньку авторизации: ${сПеченька}`
       );
@@ -8665,10 +8842,10 @@ const м_Twitch = (() => {
         const чПодписка = !цепочка(oUser.self, "canFollow")
           ? ПОДПИСКА_НЕДОСТУПНА
           : !oUser.self.follower
-          ? ПОДПИСКА_НЕОФОРМЛЕНА
-          : oUser.self.follower.disableNotifications
-          ? ПОДПИСКА_НЕУВЕДОМЛЯТЬ
-          : ПОДПИСКА_УВЕДОМЛЯТЬ;
+            ? ПОДПИСКА_НЕОФОРМЛЕНА
+            : oUser.self.follower.disableNotifications
+              ? ПОДПИСКА_НЕУВЕДОМЛЯТЬ
+              : ПОДПИСКА_УВЕДОМЛЯТЬ;
         м_События.ПослатьСобытие("twitch-полученыметаданныеканала", {
           сИмя: oUser.displayName || _сКодКанала,
           сАватар: oUser.profileImageURL || "player.svg#svg-missingavatar",
@@ -8771,8 +8948,8 @@ const м_Twitch = (() => {
             сТипТрансляции === "live"
               ? "прямая"
               : сТипТрансляции === "rerun"
-              ? "повтор"
-              : null;
+                ? "повтор"
+                : null;
         }
         if (_сИдТрансляции === "" || _сИдТрансляции === сИдТрансляции) {
           const сНазваниеТрансляции = цепочка(
@@ -9054,7 +9231,7 @@ function ЗавершитьРаботу(лБыстро) {
       м_Помойка.Сжечь();
     }
     м_Журнал.Окак("[Запускалка] Работа завершена");
-  } catch (_) {}
+  } catch (_) { }
 }
 
 ДобавитьОбработчикИсключений(() => {
