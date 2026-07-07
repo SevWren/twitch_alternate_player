@@ -1,0 +1,107 @@
+# audit-config.yaml — Default configuration for repo-doc-audit skill.
+#
+# To customise for a specific repo, place .audit-config.yaml in the repo root.
+# enumerate_repo.py deep-merges it over these defaults at runtime.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# File classification priorities.
+# enumerate_repo.py assigns each file to exactly one bucket (P1 > P2 > P3).
+priorities:
+
+  p1:   # Read fully — documentation, governance, and project definitions
+    documentation: ["*.md", "*.rst", "*.adoc", "*.txt"]
+    governance:
+      - CLAUDE.md
+      - AGENTS.md
+      - README*
+      - CONTRIBUTING*
+      - CHANGELOG*
+      - ARCHITECTURE*
+      - SECURITY*
+      - LICENSE*
+      - ROADMAP*
+      - ADR*
+      - DECISIONS*
+    config:
+      - pyproject.toml
+      - setup.py
+      - setup.cfg
+      - package.json
+      - "*.csproj"
+      - Makefile
+      - Dockerfile*
+      - "*.toml"
+      - "*.ini"
+      - "*.cfg"
+      - "*.yaml"
+      - "*.yml"
+    ci:
+      - .github/workflows/*.yml
+      - Jenkinsfile
+      - "*.ps1"
+    env_templates:
+      - .env.example
+      - appsettings.json
+
+  p2:   # Read key files — module entry points and manifests
+    python:     ["__init__.py", "conftest.py"]
+    powershell: ["*.psd1"]
+    wpf:        ["App.xaml", "MainWindow.xaml"]
+
+  p3:   # Sample only (first sample_lines lines) — implementation files
+    sample_lines: 80
+    patterns: ["*.py", "*.ps1", "*.psm1", "*.cs", "*.js", "*.ts"]
+
+
+# Path components to exclude from enumeration entirely.
+# Matched against each directory name in the path, not the full path string.
+exclude:
+  - .git
+  - node_modules
+  - __pycache__
+  - venv
+  - .venv
+  - .tox
+  - dist
+  - build
+  - .pytest_cache
+  - "*.egg-info"
+
+
+# Files checked for version string consistency.
+# Conflicts across these files seed DC findings automatically.
+version_sources:
+  - pyproject.toml
+  - package.json
+  - setup.py
+  - setup.cfg
+  - CHANGELOG*
+  - "*.csproj"
+  - "*.psd1"
+
+
+# File-count thresholds.
+# large_repo      → triage_mode activates (source code sampled, not read fully)
+# very_large_repo → user notification required before audit begins
+thresholds:
+  large_repo:      500
+  very_large_repo: 1000
+
+
+# Finding types to execute. Set any to false to skip that category entirely.
+# The audit report will note skipped categories.
+findings:
+  DC: true   # Direct Contradictions        (DC-NNN)
+  SC: true   # Semantic Contradictions      (SC-NNN)
+  GD: true   # Glossary / Terminology Drift (GD-NNN)
+  TF: true   # Traceability Failures        (TF-NNN)
+  DD: true   # Documentation Drift          (DD-NNN)
+  PD: true   # Process Drift               (PD-NNN)
+  DK: true   # Dead Knowledge              (DK-NNN)
+  OK: true   # Orphan Knowledge            (OK-NNN)
+  CG: true   # Coverage Gaps               (CG-NNN)
+
+
+# Output configuration.
+output:
+  directory: /mnt/user-data/outputs
