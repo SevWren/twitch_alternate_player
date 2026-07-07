@@ -5,6 +5,25 @@ Read it fully before making any changes.
 
 ---
 
+## Project Ownership & Context
+
+**The current maintainer is not a Russian speaker and does not understand Russian.**
+
+This project was originally developed by a Russian-speaking developer (Alexander Choporov / CoolCmd)
+and the entire codebase — variable names, function names, constants, CSS classes, HTML IDs,
+comments, and some UI strings — is written in Russian (Cyrillic). The current maintainer has taken
+over the project and is actively working to translate **all** source code from Russian to English.
+
+Every agent working in this repo must operate with this context in mind:
+- Do not introduce new Cyrillic identifiers or strings under any circumstances.
+- All new code must use English identifiers and English comments.
+- When modifying existing code, translate any Cyrillic identifiers in the surrounding scope as part
+  of the change (opportunistic translation).
+- Use `Documentation/legacy_code_translation_reference.md` as the authoritative glossary.
+- Use `.agent/rules/js-doc-master-template.md` for JSDoc standards when documenting translated code.
+
+---
+
 ## Project Overview
 
 **Alternate Player for Twitch.tv** is a Chrome browser extension (Manifest V3) that replaces
