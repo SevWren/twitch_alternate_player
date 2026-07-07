@@ -39,6 +39,8 @@ player.js.documentation(Good).html
 player.js.documentation.html
 player.js.documentation.md
 
+*.txt
+
 # Specific Scripts & Debug Files
 player-GabePc.js
 debug\console\2253-09c34ee1589cdaff0d97 message handler took violation.js
