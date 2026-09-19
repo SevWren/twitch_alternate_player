@@ -5,31 +5,37 @@ Read it fully before making any changes.
 
 ---
 
+## Agent Start Here
+
+**Three facts every agent must hold before touching any file:**
+
+1. All identifiers in this codebase are in **Russian (Cyrillic)**. New code must use **English only**.
+2. `Documentation/legacy_code_translation_reference.md` is the authoritative Russian→English glossary.
+3. `.agent/rules/js-doc-master-template.md` defines mandatory JSDoc format for translated functions.
+
+---
+
 ## Project Ownership & Context
 
-**The current maintainer is not a Russian speaker and does not understand Russian.**
+**The current maintainer does not speak Russian.**
 
-This project was originally developed by a Russian-speaking developer (Alexander Choporov / CoolCmd)
-and the entire codebase — variable names, function names, constants, CSS classes, HTML IDs,
-comments, and some UI strings — is written in Russian (Cyrillic). The current maintainer has taken
-over the project and is actively working to translate **all** source code from Russian to English.
+This project was originally developed by a Russian-speaking developer (Alexander Choporov / CoolCmd).
+Variable names, function names, constants, CSS classes, HTML IDs, comments, and some UI strings are all Cyrillic.
+The current maintainer is actively translating **everything** to English.
 
-Every agent working in this repo must operate with this context in mind:
-- Do not introduce new Cyrillic identifiers or strings under any circumstances.
-- All new code must use English identifiers and English comments.
-- When modifying existing code, translate any Cyrillic identifiers in the surrounding scope as part
-  of the change (opportunistic translation).
-- Use `Documentation/legacy_code_translation_reference.md` as the authoritative glossary.
-- Use `.agent/rules/js-doc-master-template.md` for JSDoc standards when documenting translated code.
+- Introduce no new Cyrillic identifiers or strings under any circumstances.
+- When modifying existing code, translate Cyrillic identifiers in the surrounding scope as part of the change (opportunistic translation).
+- Translation commits must be **atomic per file** — no mixing translation with logic changes.
+- Cyrillic `chrome.runtime.sendMessage` event names must be renamed in **sender + listener pairs simultaneously**.
 
 ---
 
 ## Project Overview
 
-**Alternate Player for Twitch.tv** is a Chrome browser extension (Manifest V3) that replaces
-Twitch's native video player with a custom implementation featuring:
+**Alternate Player for Twitch.tv** — Chrome extension (Manifest V3) that replaces Twitch's native player:
+
 - Server-side ad bypass (omits `play_session_id` to skip SSAI ad injection)
-- Real-time stream diagnostics overlay (the "S" key statistics panel)
+- Real-time stream diagnostics overlay (the **S** key statistics panel)
 - WebAssembly-accelerated TS→MP4 transcoding via a Web Worker
 - BetterTTV / FrankerFaceZ emote integration (generic CDN fallback)
 - Auto-claim channel points, GraphQL token interception, duplicate-tab prevention
@@ -39,7 +45,7 @@ Twitch's native video player with a custom implementation featuring:
 
 ---
 
-## Architecture Overview
+## Architecture
 
 ### File Roles
 
@@ -57,7 +63,7 @@ Twitch's native video player with a custom implementation featuring:
 | `player.css` | Styles | Player UI styling |
 | `common.js` | Shared Util | Shared helpers: i18n wrapper, storage, DOM utilities |
 | `worker.js` | Web Worker | MPEG-TS demuxer → MP4 muxer, runs off main thread |
-| `wasm.wasm` | Binary | Compiled WebAssembly runtime for segment transcoding |
+| `wasm.wasm` | Binary | Compiled WebAssembly runtime for segment transcoding — **never open as text** |
 | `asmjs.js` | Fallback | asm.js fallback when WASM unavailable |
 | `rules.json` | Net Rules | `declarativeNetRequest` rules — strips ad-related request/response headers |
 | `_locales/en/messages.json` | i18n | English UI strings |
@@ -101,212 +107,87 @@ There is **no build system**. This is a raw browser extension — edit files dir
 | Capture logs | Run `node tools/chrome-tools/fetch_logs.js` (requires Chrome remote debugging on port 9222) |
 | Git diff bundle (Windows) | Run `tools/git_changes_tool/gather_comparison_info.ps1` |
 
+**Run the extension after every non-trivial change** — there are no automated tests.
+
 ---
 
 ## Code Style & Conventions
 
 ### Language & Identifiers
-- The codebase uses **Russian (Cyrillic) identifiers** throughout — variable names, function names,
-  constants, and CSS class/ID names. This is intentional legacy style.
-- **Active translation effort is in progress** to rename all identifiers to English.
-  See `Documentation/legacy_code_translation_reference.md` for the full glossary.
-- See `.agent/rules/js-doc-master-template.md` for the mandatory JSDoc format when translating:
-  every function must document both its English alias and its original Russian name.
-- New code should use **English identifiers only**.
 
-### Hungarian-notation prefixes (Russian style)
-| Prefix | Meaning |
-|---|---|
-| `г_` / `g_` | Global variable |
-| `м_` / `m_` | Module-level variable |
-| `о` / `o` | Object |
-| `с` / `s` | String |
-| `ч` / `n` | Number (integer) |
-| `л` / `b` | Boolean |
-| `ф` / `f` | Float |
-| `цел` / `fn` | Function |
+- All new code: **English identifiers only**
+- Glossary for existing Russian names: `Documentation/legacy_code_translation_reference.md`
+- JSDoc standards when translating: `.agent/rules/js-doc-master-template.md`
+
+### Hungarian-Notation Prefixes (Russian style in legacy code)
+
+| Russian Prefix | English Equivalent | Meaning |
+|---|---|---|
+| `г_` | `g_` | Global variable |
+| `м_` | `m_` | Module-level variable |
+| `о` | `o` | Object |
+| `с` | `s` | String |
+| `ч` | `n` | Number (integer) |
+| `л` | `b` | Boolean |
+| `ф` | `f` | Float |
+| `цел` | `fn` | Function |
 
 ### Formatting
+
 - No bundler, no TypeScript, no ES modules — plain ES2020 JavaScript
 - IIFE singleton pattern per module: `const м_НазваниеМодуля = (function() { ... })()`
 - Semicolons required; 2-space indentation
-- Use `chrome.*` APIs — **not** `browser.*` (WebExtensions polyfill is not included)
-- Avoid `eval()` — blocked by MV3 Content Security Policy
+- Use `chrome.*` APIs — `browser.*` (WebExtensions polyfill) is not included
+- `eval()` is blocked by MV3 Content Security Policy
 
 ---
 
 ## i18n System
 
-All user-facing strings are externalized. **Never hardcode UI text.**
+All user-facing strings are externalized. **Hardcoded UI text is a bug.**
 
 - **Locale files:** `_locales/en/messages.json` and `_locales/ru/messages.json`
 - **HTML usage:** `<element data-i18n=F0539>` — sets innerHTML to message F0539
 - **HTML with tooltip:** `<element data-i18n=F0539^A0503>` — innerHTML + title attribute
 - **JS usage:** `м_i18n.GetMessage('F0539')` or the shorthand `Текст('F0539')`
 - **Key prefixes:** `F` = UI labels/buttons, `A` = tooltips/descriptions, `J` = short values/codes, `M` = metadata
-
-### Statistics Overlay Message Keys (F0539–F0573)
-
-| Key | English | Russian |
-|---|---|---|
-| F0539 | Resolution | Разрешение |
-| F0540 | Video | Видео |
-| F0541 | Audio | Звук |
-| F0542 | Server | Сервер |
-| F0543 | Queue, s | Очередь, с |
-| F0544 | Playlist, s | Список сегментов, с |
-| F0545 | Polling interval, s | Интервал опроса, с |
-| F0546 | Added segments | Добавлено сегментов |
-| F0547 | Added seconds | Добавлено секунд |
-| F0548 | Stream bit rate, Mbit/s | Битрейт трансляции, Мбит/с |
-| F0549 | Download rate, Mbit/s | Скорость загрузки, Мбит/с |
-| F0550 | Time to first byte, s | Ожидание ответа, с |
-| F0551 | Remux, ms | Преобразовано за, мс |
-| F0552 | Stream delay, s | Задержка трансляции, с |
-| F0554 | Watching duration | Продолжит-ть просмотра |
-| F0555 | Total downloaded, MB | Всего скачано, МБайт |
-| F0556 | Dropped frames | Пропущено кадров |
-| F0557 | Incomplete segments | Проблемных сегментов |
-| F0558 | Download errors | Ошибок скачивания |
-| F0559 | Buffer overflows | Переполнений буфера |
-| F0560 | Buffer underruns | Исчерпаний буфера |
-| F0573 | Buffer fullness, s | Заполненность буфера, с |
+- **Stats overlay keys (F0539–F0573):** see `_locales/en/messages.json` directly for the full list
 
 ---
 
-## Active Task: Russian → English UI Text Replacement
+## Active Translation Work
 
-The statistics overlay (opened with the **S** key) currently displays Russian text when the
-browser locale is Russian. The goal is to ensure English strings are the canonical display for
-English-locale users and to audit the player for any hardcoded Russian strings that bypass i18n.
+**Status:** Russian→English UI text replacement in progress. The stats overlay (opened with the **S** key) and other UI panels may still display Russian in Russian-locale browsers.
 
-See **Translation Plan** section below for the full execution plan.
+**Translation phases — see `HANDOFF.md` for detailed task tracking:**
 
----
+1. **Audit** — grep JS/HTML/CSS for user-visible Cyrillic outside the i18n system
+2. **Fix locale gaps** — add any missing English keys to `_locales/en/messages.json`; mirror in `_locales/ru/messages.json`
+3. **Replace hardcoded strings** — `.textContent`, `.innerHTML`, `alert()`, `player.html` literal text
+4. **CSS/ID rename** — Cyrillic class/ID names (cosmetic; rename all usages atomically)
+5. **Code identifier translation** — follow glossary; priority: `common.js` → `content.js` → `background.js` → `player.js` → `worker.js`
 
-## Key Constraints & Gotchas
-
-1. **No build step** — do not introduce npm, webpack, or any bundler. The extension loads files
-   directly as listed in `manifest.json`.
-2. **MV3 CSP** — `eval()` and `new Function(string)` are blocked. Do not add them.
-3. **Service worker lifecycle** — `background.js` is a service worker; it has no persistent DOM
-   and can be terminated at any time. Do not store state in module globals there.
-4. **Web Worker scope** — `worker.js` has no access to `chrome.*` APIs or the DOM.
-5. **wasm.wasm is a binary** — never open or edit it as text. Never delete it.
-6. **recycler.js** — the memory recycler in `worker.js` pools `Uint8Array` buffers. Do not
-   replace it with plain `new Uint8Array()` without understanding GC implications on long sessions.
-7. **gql_injection.js page context** — this script runs in the Twitch page context (not extension
-   context) to intercept the GQL token. Changes here affect token capture for follows/bonus claims.
-8. **Russian event-message names** — `background.js` listens for Cyrillic message names
-   (e.g., `ВставитьСторонниеРасширения`, `ЭтотКаналУжеОткрыт`). These must match exactly between
-   sender and listener. When translating, update **both** sides simultaneously.
-9. **Zombie Ads bug (open)** — expired `#EXT-X-DATERANGE` ad metadata is not filtered; this
-   causes black-screen flashes. The fix requires `START-DATE` timestamp validation in the HLS
-   parser inside `player.js`.
-10. **BTTV/FFZ IDs are hardcoded** — extension IDs for BetterTTV and FrankerFaceZ are hardcoded
-    in `background.js`. Only generic CDN versions load; authenticated features are unavailable.
-11. **i18n strings only** — all UI text must go through `_locales/*/messages.json` and
-    `data-i18n` attributes. Do not hardcode display strings in HTML or JS.
-12. **UTF-8 required** — all source files must be saved as UTF-8 (no BOM) to preserve Cyrillic
-    characters correctly.
-
----
-
-## Translation Plan: Russian UI Text → English
-
-### Root Cause
-The stats overlay and other UI panels display Russian because:
-1. `chrome.i18n.getMessage()` returns strings from whichever `_locales/{lang}/messages.json`
-   matches the browser's locale. Russian-locale Chrome → Russian strings displayed.
-2. Some labels inside `player.js` and `player.html` may also be **hardcoded in Russian** outside
-   of the i18n system (CSS class names, HTML IDs, data attributes written in Cyrillic).
-
-### What Needs to Change
-
-#### Phase 1 — Audit (Read Only)
-- [ ] Grep all `.js`, `.html`, `.css` files for Cyrillic characters outside of comments
-- [ ] Identify every hardcoded Russian string that is **displayed to the user** (not just identifiers)
-- [ ] Cross-reference each found string against `_locales/en/messages.json` to confirm an English
-      key exists
-- [ ] List any strings missing from the English locale
-
-#### Phase 2 — Fix Missing English Locale Entries
-- [ ] For every Russian string found without an English equivalent in `_locales/en/messages.json`,
-      add the English translation using the existing key naming convention (F/A/J prefix)
-- [ ] Mirror every new key in `_locales/ru/messages.json` as well (keep locales in sync)
-
-#### Phase 3 — Replace Hardcoded Russian Display Strings in HTML/JS
-- [ ] In `player.html`: replace any hardcoded Russian text content with `data-i18n=KEY` attributes
-- [ ] In `player.js`: replace any hardcoded Russian strings assigned to `.textContent`,
-      `.innerHTML`, or `.innerText` with `м_i18n.GetMessage('KEY')`
-- [ ] In `player.js`: replace any hardcoded Russian strings used in `alert()`, `console.log()`,
-      or user-visible error messages
-
-#### Phase 4 — CSS Class & ID Names (Cosmetic, Non-Breaking)
-- [ ] CSS class names and HTML IDs in Russian (e.g., `class=статистика-кнопка`, `id=статистика`)
-      are not user-visible but contribute to confusion
-- [ ] Rename cautiously — every reference in HTML, JS, and CSS must be updated atomically
-- [ ] Use `grep -r` / Grep tool to find all usages before renaming any class or ID
-
-#### Phase 5 — Code Identifier Translation (Long-Running)
-- [ ] Follow `Documentation/legacy_code_translation_reference.md` for the glossary
-- [ ] Follow `.agent/rules/js-doc-master-template.md` for JSDoc standards during translation
-- [ ] Translate module by module in this priority order:
-      1. `common.js` (shared utilities — highest leverage)
-      2. `content.js` (entry point — simpler)
-      3. `background.js` (service worker — small file)
-      4. `player.js` (largest — do in logical sections)
-      5. `worker.js` (self-contained — translate last)
-
-### Verification After Each Phase
-```
+**Verification after each phase:**
+```bash
 # Confirm no user-visible Cyrillic remains in HTML
 grep -rn "[А-Яа-яЁё]" player.html
-
-# Confirm English locale has all keys referenced in HTML
-# (manual cross-reference)
-
-# Reload extension in Chrome and set browser language to English
-# Open a Twitch stream, press S — confirm all stats labels are in English
 ```
 
 ---
 
-## Available Claude Skills
+## Key Constraints
 
-All skills live in `CLAUDE/skills/`. Invoke them by name when the task matches.
-
-### Engineering
-| Skill | Use When |
-|---|---|
-| `diagnose` | Tracking down a hard bug — structured reproduce → hypothesize → instrument → fix loop |
-| `triage` | Managing GitHub issues — applying state labels (needs-triage, ready-for-agent, etc.) |
-| `tdd` | Writing new features test-first (red → green → refactor) |
-| `to-issues` | Breaking a spec or PRD into vertical-slice GitHub issues |
-| `to-prd` | Synthesizing a conversation into a formal PRD document |
-| `zoom-out` | Getting a higher-level architectural view of a module |
-| `improve-codebase-architecture` | Finding shallow modules, tight coupling, refactor opportunities |
-| `grill-with-docs` | Stress-testing a design decision against domain docs and ADRs |
-| `prototype` | Throwaway spike to validate a design before committing |
-
-### Productivity
-| Skill | Use When |
-|---|---|
-| `caveman` | Ultra-compressed communication (75% token reduction for long sessions) |
-| `grill-me` | Interviewing Claude about a plan before implementing |
-| `handoff` | Generating a compact session summary for the next agent |
-| `write-a-skill` | Creating a new reusable Claude skill |
-
-### Misc
-| Skill | Use When |
-|---|---|
-| `setup-pre-commit` | Configuring Husky + lint-staged + Prettier commit hooks |
-| `scaffold-exercises` | Building course/training exercise directory structures |
-
-### Documentation
-| Skill | Use When |
-|---|---|
-| `repo-doc-audit` | Full 18-section audit of repo documentation quality |
+1. **No build step** — no npm, webpack, or bundler. Extension loads files as listed in `manifest.json`.
+2. **MV3 CSP** — `eval()` and `new Function(string)` are blocked.
+3. **Service worker lifecycle** — `background.js` has no persistent DOM and can be terminated at any time. Store no state in module globals there.
+4. **Web Worker scope** — `worker.js` has no access to `chrome.*` APIs or the DOM.
+5. **wasm.wasm is a binary** — edit or delete it and the transcoding pipeline breaks.
+6. **recycler.js** — pools `Uint8Array` buffers in `worker.js` to reduce GC pressure on long sessions; understand this before changing buffer allocation.
+7. **gql_injection.js page context** — runs in the Twitch page context, not extension context. Changes here affect token capture for follows/bonus claims.
+8. **Cyrillic event-message names** — `background.js` listens for Cyrillic message names (e.g., `ВставитьСторонниеРасширения`). These must match exactly between sender and listener; rename both sides simultaneously.
+9. **Zombie Ads bug (open)** — expired `#EXT-X-DATERANGE` metadata is not filtered, causing black-screen flashes. Fix requires `START-DATE` timestamp validation in the HLS parser in `player.js`.
+10. **BTTV/FFZ IDs are hardcoded** — only generic CDN versions load; authenticated features are unavailable.
+11. **UTF-8 required** — all source files must be saved as UTF-8 (no BOM) to preserve Cyrillic characters.
 
 ---
 
@@ -326,32 +207,31 @@ type(scope): short description
 feat(player): add English fallback for hardcoded stats labels
 fix(i18n): add missing buffer-fullness key to en locale
 translate(common): rename module-level variables to English
-docs: add CLAUDE.md with architecture and translation plan
+docs: update CLAUDE.md
 ```
-
-**Always push after committing:**
-```bash
-git push origin <branch>
-```
-
-**Token for HTTPS push:**
-Configure the remote URL with your personal access token (stored securely, not in this file).
 
 ---
 
-## Important Notes for AI Agents
+## Available Skills
 
-- **Read before editing.** `player.js` is ~8,000 lines. Always read the relevant section first.
-- **Stay within module boundaries.** Each IIFE module has a clear responsibility. Do not
-  move logic between modules without understanding the message-passing contracts.
-- **Do not delete `player-english-translating-test.js`** — it is the active translation
-  reference/test file.
-- **Do not edit `wasm.wasm` as text.** It is a compiled binary.
-- **Do not introduce npm or Node.js dependencies.** The extension runs natively in the browser.
-- **Do not use ES modules (`import`/`export`).** MV3 content scripts do not support them.
-- **Check `.agent/rules/`** before adding JSDoc comments — there are mandatory formatting rules.
-- **Translation commits must be atomic per file.** Do not mix translation of identifiers with
-  logic changes in the same commit.
-- **Cyrillic event names must be renamed in pairs.** When renaming a `chrome.runtime.sendMessage`
-  call, find and rename the matching `chrome.runtime.onMessage` listener simultaneously.
-- **Run the extension after every non-trivial change** — there are no automated tests.
+All skills live in `CLAUDE/skills/`. See `CLAUDE/skills/engineering/README.md` for the full listing with descriptions and invocation guidance.
+
+**Quick reference:**
+
+| Skill | Use When |
+|---|---|
+| `ask-matt` | Route to the right skill for your situation |
+| `diagnosing-bugs` | Hard bug — structured reproduce → hypothesize → instrument → fix loop |
+| `triage` | Managing GitHub issues |
+| `improve-codebase-architecture` | Finding shallow modules, tight coupling, refactor opportunities |
+| `grill-with-docs` | Sharpen an idea before building; maintains `CONTEXT.md` and ADRs |
+| `writing-for-agents` | Creating or editing skills, CLAUDE.md, or any agent-consumed doc |
+
+---
+
+## Notes for This File
+
+This file is always in the agent's context window — every line costs on every turn.
+- Keep reference material behind pointers (locale files, translation glossary, skill READMEs) rather than inlining it here.
+- Push operational tracking (checklists, task status) to `HANDOFF.md` or issue tracker.
+- Prune any section that restates what a file lookup would reveal.
