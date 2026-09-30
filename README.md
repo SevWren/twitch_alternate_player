@@ -3,21 +3,18 @@
 ## Project Overview
 This is an alternate player for Twitch.tv, optimized for performance and customizability. It minimizes buffering, provides detailed stream diagnostics, and includes a mechanism to bypass Twitch's Server-Side Ad Insertion (SSAI).
 
-## Technical Deep Dive: The Absolute Truth
-*Verified by 100% Line-by-Line Code Audit (December 2025)*
-
 ### 1. Ad Avoidance Mechanism & Status
 **Mechanism**:
-The player avoids ads not by magic, but by requesting a specific stream type that Twitch serves to "Picture-by-Picture" clients.
+The player avoids ads by requesting a specific stream type that Twitch serves to "Picture-by-Picture" clients.
 -   **Method**: When an ad is detected, the player switches to a backup stream requested with `playerType: "picture-by-picture"`.
 -   **Tracking Bypass**: Crucially, this request explicitly **omits** the `play_session_id` parameter (`player.js` line 8538), which prevents Twitch from attaching the stitched ad playlist.
 -   **Independence**: This process does **NOT** use the `tw5~gqltoken` (GQL Integrity Token). Code verification (`player.js` line 8480) confirms the GQL token argument is hardcoded to `false` for these requests.
 
-**Current Status: Work In Progress (WIP)**
+**Current Translation & Improvement Status: Work In Progress (WIP), Working partially**
 > [!WARNING]
 > **Ad Bypass Instability ("Black Screen")**
 > While the code mechanism is verified, users may experience "Black Screens" or frozen video during ads.
-> **Identified Issue**: "Zombie Ads" (Expired Ad Tags).
+> **Identified Issue**: "Zombie Ads" (Expired Ad Tags) resulting in a rare instance of the stream freezing with a black screen, when the player can't successfully fall back to a lower quality stream during ads.
 > **Details**: Twitch sometimes leaves expired Ad Metadata (`#EXT-X-DATERANGE`) in the live manifest. The current HLS parser can process these "zombie" tags *after* valid tags, corrupting the internal state (overwriting valid Ad Types/Tokens with expired ones).
 > **Investigation**: Debugging is focused on validating `START-DATE` in the parser to filter out these expired tags.
 
